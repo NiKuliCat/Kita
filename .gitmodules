@@ -1,0 +1,9 @@
+[submodule "engine/third-party/ImGui"]
+	path = engine/third-party/ImGui
+	url = https://github.com/NiKuliCat/imgui
+[submodule "engine/third-party/glfw"]
+	path = engine/third-party/glfw
+	url = https://github.com/NiKuliCat/glfw
+[submodule "engine/third-party/glm"]
+	path = engine/third-party/glm
+	url = https://github.com/NiKuliCat/glm
