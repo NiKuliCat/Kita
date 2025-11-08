@@ -11,6 +11,7 @@ workspace "Kita"
     IncludeDir["GLFW"] = "%{wks.location}/engine/third-party/glfw/include"
     IncludeDir["glad"] = "%{wks.location}/engine/third-party/glad/include"
     IncludeDir["ImGui"] = "%{wks.location}/engine/third-party/imgui"
+    IncludeDir["spdlog"] = "%{wks.location}/engine/third-party/spdlog/include"
     -- IncludeDir["glm"] = "%{wks.location}/engine/third-party/glm"
 
 

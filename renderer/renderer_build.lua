@@ -23,7 +23,12 @@ project "Renderer"
         "%{wks.location}/engine/src",
         "%{IncludeDir.GLFW}",
         "%{IncludeDir.glad}",
-        "%{IncludeDir.ImGui}"
+        "%{IncludeDir.ImGui}",
+        "%{IncludeDir.spdlog}"
+    }
+    buildoptions
+    {
+        "/utf-8"
     }
 
     links

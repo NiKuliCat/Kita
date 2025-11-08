@@ -1,7 +1,7 @@
 #include "EnginePch.h"
 #include "Application.h"
 
-#include "Base.h"
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 namespace Kita {
@@ -13,14 +13,12 @@ namespace Kita {
 		s_Instance = this;
 		std::string message = "launch current active app :  " + m_Descriptor.name;
 
-		Log::Message(message);
 
 		m_Active = true;
 	}
 
 	void Application::Run()
 	{
-		Log::Message("engine core running");
 		InitWindow();
 		InitImGuiLayer();
 		MainLoop();
@@ -48,7 +46,6 @@ namespace Kita {
 	{
 		m_ImGuiLayer = new ImGuiLayer();
 		PushOverlay(m_ImGuiLayer);
-		Log::Message("init imguiLayer");
 	}
 
 	void Application::MainLoop()

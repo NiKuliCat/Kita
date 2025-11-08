@@ -17,7 +17,7 @@
     <ClInclude Include="src\core\Application.h">
       <Filter>core</Filter>
     </ClInclude>
-    <ClInclude Include="src\core\Base.h">
+    <ClInclude Include="src\core\Core.h">
       <Filter>core</Filter>
     </ClInclude>
     <ClInclude Include="src\core\EntryPoint.h">

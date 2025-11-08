@@ -1,4 +1,5 @@
 #pragma once
+#include "Core.h"
 #include "Window.h"
 #include "Layer.h"
 #include "third_party/imgui/imgui_layer.h"

@@ -2,7 +2,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include "Base.h"
+#include "Core.h"
 namespace Kita {
 
 	struct WindowDescriptor

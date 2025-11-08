@@ -5,3 +5,6 @@
 	path = engine/third-party/imgui
 	url = https://github.com/NiKuliCat/imgui
 	branch = docking
+[submodule "engine/third-party/spdlog"]
+	path = engine/third-party/spdlog
+	url = https://github.com/gabime/spdlog
