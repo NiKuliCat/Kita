@@ -141,6 +141,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\event\ApplicationEvent.h" />
+    <ClInclude Include="src\event\Event.h" />
     <ClInclude Include="src\Engine.h" />
     <ClInclude Include="src\core\Application.h" />
     <ClInclude Include="src\core\Core.h" />
@@ -148,6 +150,9 @@
     <ClInclude Include="src\core\Layer.h" />
     <ClInclude Include="src\core\Log.h" />
     <ClInclude Include="src\core\Window.h" />
+    <ClInclude Include="src\event\KeyBoardEvent.h" />
+    <ClInclude Include="src\event\KeyCode.h" />
+    <ClInclude Include="src\event\MouseEvent.h" />
     <ClInclude Include="src\kita_pch.h" />
     <ClInclude Include="src\third_party\imgui\imgui_layer.h" />
   </ItemGroup>

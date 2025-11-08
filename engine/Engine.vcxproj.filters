@@ -35,6 +35,11 @@
     <ClInclude Include="src\third_party\imgui\imgui_layer.h">
       <Filter>third_party\imgui</Filter>
     </ClInclude>
+    <ClInclude Include="src\event\Event.h" />
+    <ClInclude Include="src\event\KeyCode.h" />
+    <ClInclude Include="src\event\KeyBoardEvent.h" />
+    <ClInclude Include="src\event\MouseEvent.h" />
+    <ClInclude Include="src\event\ApplicationEvent.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\core\Application.cpp">
