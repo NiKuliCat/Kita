@@ -1,0 +1,7 @@
+[submodule "engine/third-party/glfw"]
+	path = engine/third-party/glfw
+	url = https://github.com/NiKuliCat/glfw
+[submodule "engine/third-party/imgui"]
+	path = engine/third-party/imgui
+	url = https://github.com/NiKuliCat/imgui
+	branch = docking
