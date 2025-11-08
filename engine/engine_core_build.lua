@@ -8,8 +8,8 @@ project "Engine"
     objdir ("%{wks.location}/bin-int/" ..outputdir.. "/%{prj.name}")
 
 
-    pchheader "EnginePch.h"
-    pchsource "src/EnginePch.cpp"
+    pchheader "kita_pch.h"
+    pchsource "src/kita_pch.cpp"
 
     files
     {

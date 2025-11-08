@@ -13,7 +13,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Engine.h" />
-    <ClInclude Include="src\EnginePch.h" />
     <ClInclude Include="src\core\Application.h">
       <Filter>core</Filter>
     </ClInclude>
@@ -32,12 +31,12 @@
     <ClInclude Include="src\core\Window.h">
       <Filter>core</Filter>
     </ClInclude>
+    <ClInclude Include="src\kita_pch.h" />
     <ClInclude Include="src\third_party\imgui\imgui_layer.h">
       <Filter>third_party\imgui</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\EnginePch.cpp" />
     <ClCompile Include="src\core\Application.cpp">
       <Filter>core</Filter>
     </ClCompile>
@@ -50,6 +49,7 @@
     <ClCompile Include="src\core\Window.cpp">
       <Filter>core</Filter>
     </ClCompile>
+    <ClCompile Include="src\kita_pch.cpp" />
     <ClCompile Include="src\third_party\imgui\imgui_build.cpp">
       <Filter>third_party\imgui</Filter>
     </ClCompile>

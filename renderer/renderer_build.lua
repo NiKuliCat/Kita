@@ -9,8 +9,8 @@ project "Renderer"
     objdir ("%{wks.location}/bin-int/" ..outputdir.. "/%{prj.name}")
 
 
-    pchheader "RendererPch.h"
-    pchsource "src/RendererPch.cpp"
+    pchheader "renderer_pch.h"
+    pchsource "src/renderer_pch.cpp"
 
     files
     {

@@ -1,7 +1,7 @@
-#include "EnginePch.h"
+#include "kita_pch.h"
 #include "Application.h"
 
-
+#include "Log.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 namespace Kita {
@@ -11,8 +11,7 @@ namespace Kita {
 		:m_Descriptor(app_descriptor)
 	{
 		s_Instance = this;
-		std::string message = "launch current active app :  " + m_Descriptor.name;
-
+		KITA_CORE_TRACE("launch current active app: " + m_Descriptor.name);
 
 		m_Active = true;
 	}
@@ -22,7 +21,6 @@ namespace Kita {
 		InitWindow();
 		InitImGuiLayer();
 		MainLoop();
-
 		ShutDown();
 	}
 
@@ -34,7 +32,7 @@ namespace Kita {
 		descriptor.Height = m_Descriptor.height;
 
 		m_Window = Window::Create(descriptor);
-
+		KITA_CORE_TRACE("init glfw window");
 		glfwSetWindowUserPointer(m_Window->GetNativeWindow(), this);
 		glfwSetWindowCloseCallback(m_Window->GetNativeWindow(), [](GLFWwindow* window) {
 			auto app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
@@ -45,6 +43,7 @@ namespace Kita {
 	void Application::InitImGuiLayer()
 	{
 		m_ImGuiLayer = new ImGuiLayer();
+		KITA_CORE_TRACE("init imgui layer");
 		PushOverlay(m_ImGuiLayer);
 	}
 

@@ -1,4 +1,4 @@
-#include "RendererPch.h"
+#include "renderer_pch.h"
 #include <Engine.h>
 
 class EditorApp : public Kita::Application
