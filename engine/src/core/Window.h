@@ -1,8 +1,6 @@
 #pragma once
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-
 #include "Core.h"
+#include "event/Event.h"	
 namespace Kita {
 
 	struct WindowDescriptor
@@ -15,23 +13,23 @@ namespace Kita {
 	class Window
 	{
 	public:
-		Window(const WindowDescriptor& windowDescriptor);
-		~Window() {}
+		using EventCallbackFn = std::function<void(Event&)>; // 函数指针 接收 返回值为空 参数为event
+		virtual ~Window() = default;
 
-		static Ref<Window> Create(const WindowDescriptor& windowDescriptor) { return CreateRef<Window>(windowDescriptor); }
 	public:
-		void Init();
-		void OnUpdate();
-		void Destroy();
+		virtual void OnUpdate() = 0;
+		virtual void OnDestroy() = 0;
 
-		GLFWwindow* GetNativeWindow() { return m_WindowHandle; }
-		const uint32_t GetWidth() const { return m_Descriptor.Width; }
-		const uint32_t GetHeight() const { return m_Descriptor.Height; }
-	private:
+		virtual void* GetNativeWindow()  const = 0;
+		virtual uint32_t GetWidth() const = 0;
+		virtual uint32_t GetHeight() const = 0;
 
-	private:
-		WindowDescriptor m_Descriptor;
-		GLFWwindow* m_WindowHandle = nullptr;
+		virtual void SetVSync(bool enabled) = 0;
+		virtual bool isVSync() const = 0;
+
+		virtual void SetEventCallback(const EventCallbackFn& callback) = 0;
+
+		static Ref<Window> Create(const WindowDescriptor& windowDescriptor);
 	};
 }
 

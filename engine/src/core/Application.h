@@ -3,6 +3,8 @@
 #include "Window.h"
 #include "Layer.h"
 #include "third_party/imgui/imgui_layer.h"
+
+#include "event/ApplicationEvent.h"
 namespace Kita {
 
 	struct ApplicationDescriptor
@@ -26,6 +28,8 @@ namespace Kita {
 		void MainLoop();
 		void ShutDown();
 
+		void OnEvent(Event& event);
+
 		void SetActive(bool active) { m_Active = active; }
 
 
@@ -38,7 +42,8 @@ namespace Kita {
 
 
 	private:
-		void ReSize();
+		bool OnWindowClosed(WindowCloseEvent& event);
+		bool OnWindowResize(WindowResizeEvent& event);
 
 	private:
 		ApplicationDescriptor m_Descriptor{};
@@ -47,7 +52,8 @@ namespace Kita {
 		
 		LayerStack m_LayerStack;
 		ImGuiLayer* m_ImGuiLayer = nullptr;
-		bool m_Active;
+		bool m_Active = false;
+		bool m_Minimized = false;
 		static Application* s_Instance;
 	};
 

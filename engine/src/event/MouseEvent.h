@@ -41,10 +41,10 @@ namespace Kita {
 		MouseCode m_MouseCode;
 	};
 
-	class MouseButtonPressedButton : public MouseButtonEvent
+	class MouseButtonPressedEvent : public MouseButtonEvent
 	{
 	public:
-		MouseButtonPressedButton(const MouseCode mouseCode)
+		MouseButtonPressedEvent(const MouseCode mouseCode)
 			:MouseButtonEvent(mouseCode){ }
 
 		std::string ToString() const override

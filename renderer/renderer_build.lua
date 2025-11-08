@@ -42,18 +42,18 @@ project "Renderer"
       defines { "PLATFORM_WINDOWS" }
 
    filter "configurations:Debug"
-      defines { "PTA_DEBUG" }
+      defines { "KITA_DEBUG" }
       runtime "Debug"
       symbols "On"
 
    filter "configurations:Release"
-      defines { "PTA_RELEASE" }
+      defines { "KITA_RELEASE" }
       runtime "Release"
       optimize "On"
       symbols "On"
 
    filter "configurations:Dist"
-      defines { "PTA_DIST" }
+      defines { "KITA_DIST" }
       runtime "Release"
       optimize "On"
       symbols "Off"

@@ -4,6 +4,15 @@
     <Filter Include="core">
       <UniqueIdentifier>{4E40957C-3A77-960D-E363-7C10CF79120F}</UniqueIdentifier>
     </Filter>
+    <Filter Include="event">
+      <UniqueIdentifier>{071C650F-7330-8DC0-3CB2-3020A88589F1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="platform">
+      <UniqueIdentifier>{4A63C33C-3630-1E48-5F49-0CF04B7553D6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="platform\windows">
+      <UniqueIdentifier>{A44FC440-9048-E392-B97A-C817A5D2C29E}</UniqueIdentifier>
+    </Filter>
     <Filter Include="third_party">
       <UniqueIdentifier>{0FB18DF1-7B66-06E7-045B-00BE700FFDEA}</UniqueIdentifier>
     </Filter>
@@ -31,15 +40,30 @@
     <ClInclude Include="src\core\Window.h">
       <Filter>core</Filter>
     </ClInclude>
+    <ClInclude Include="src\event\ApplicationEvent.h">
+      <Filter>event</Filter>
+    </ClInclude>
+    <ClInclude Include="src\event\Event.h">
+      <Filter>event</Filter>
+    </ClInclude>
+    <ClInclude Include="src\event\KeyBoardEvent.h">
+      <Filter>event</Filter>
+    </ClInclude>
+    <ClInclude Include="src\event\KeyCode.h">
+      <Filter>event</Filter>
+    </ClInclude>
+    <ClInclude Include="src\event\MouseEvent.h">
+      <Filter>event</Filter>
+    </ClInclude>
     <ClInclude Include="src\kita_pch.h" />
+    <ClInclude Include="src\platform\windows\WindowsWindow.h">
+      <Filter>platform\windows</Filter>
+    </ClInclude>
     <ClInclude Include="src\third_party\imgui\imgui_layer.h">
       <Filter>third_party\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="src\event\Event.h" />
-    <ClInclude Include="src\event\KeyCode.h" />
-    <ClInclude Include="src\event\KeyBoardEvent.h" />
-    <ClInclude Include="src\event\MouseEvent.h" />
-    <ClInclude Include="src\event\ApplicationEvent.h" />
+    <ClInclude Include="src\render\GraphicsContext.h" />
+    <ClInclude Include="src\platform\opengl\OpenGLContext.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\core\Application.cpp">
@@ -51,15 +75,16 @@
     <ClCompile Include="src\core\Log.cpp">
       <Filter>core</Filter>
     </ClCompile>
-    <ClCompile Include="src\core\Window.cpp">
-      <Filter>core</Filter>
-    </ClCompile>
     <ClCompile Include="src\kita_pch.cpp" />
+    <ClCompile Include="src\platform\windows\WindowsWindow.cpp">
+      <Filter>platform\windows</Filter>
+    </ClCompile>
     <ClCompile Include="src\third_party\imgui\imgui_build.cpp">
       <Filter>third_party\imgui</Filter>
     </ClCompile>
     <ClCompile Include="src\third_party\imgui\imgui_layer.cpp">
       <Filter>third_party\imgui</Filter>
     </ClCompile>
+    <ClCompile Include="src\platform\opengl\OpenGLContext.cpp" />
   </ItemGroup>
 </Project>

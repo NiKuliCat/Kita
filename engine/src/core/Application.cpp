@@ -32,12 +32,7 @@ namespace Kita {
 		descriptor.Height = m_Descriptor.height;
 
 		m_Window = Window::Create(descriptor);
-		KITA_CORE_TRACE("init glfw window");
-		glfwSetWindowUserPointer(m_Window->GetNativeWindow(), this);
-		glfwSetWindowCloseCallback(m_Window->GetNativeWindow(), [](GLFWwindow* window) {
-			auto app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
-			app->SetActive(false);
-			});
+		m_Window->SetEventCallback(BIND_EVENT_FUNC(Application::OnEvent));
 	}
 
 	void Application::InitImGuiLayer()
@@ -51,7 +46,17 @@ namespace Kita {
 	{
 		while (m_Active)
 		{
-			ReSize();
+			glClearColor(0.12, 0.12, 0.13, 1);
+			glClear(GL_COLOR_BUFFER_BIT);
+
+			if (!m_Minimized)
+			{
+				for (Layer* layer : m_LayerStack)
+				{
+					layer->OnUpdate(0.1);
+				}
+			}
+
 			m_ImGuiLayer->Begin();
 			for (Layer* layer : m_LayerStack)
 			{
@@ -67,7 +72,19 @@ namespace Kita {
 
 	void Application::ShutDown()
 	{
-		m_Window->Destroy();
+	}
+
+	void Application::OnEvent(Event& event)
+	{
+		EventDisPatcher dispatcher(event);
+		dispatcher.Dispatcher<WindowCloseEvent>(BIND_EVENT_FUNC(Application::OnWindowClosed));
+		dispatcher.Dispatcher<WindowResizeEvent>(BIND_EVENT_FUNC(Application::OnWindowResize));
+		for (auto it = m_LayerStack.end(); it != m_LayerStack.begin();)
+		{
+			(*--it)->OnEvent(event);
+			if (event.m_Handled)
+				break;
+		}
 	}
 
 
@@ -82,12 +99,20 @@ namespace Kita {
 		m_LayerStack.PushOverlay(overlay);
 		overlay->OnCreate();
 	}
-	void Application::ReSize()
+	bool Application::OnWindowClosed(WindowCloseEvent& event)
 	{
-		int display_w, display_h;
-		glfwGetFramebufferSize(m_Window->GetNativeWindow(), &display_w, &display_h);
-		glViewport(0, 0, display_w, display_h);
-		glClearColor(0.3, 0.02, 0.04, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT);
+		m_Active = false;
+		return true;
+	}
+	bool Application::OnWindowResize(WindowResizeEvent& event)
+	{
+		if (event.GetWidth() == 0 || event.GetHeight() == 0)
+		{
+			m_Minimized = true;
+			return false;
+		}
+		glViewport(0, 0, event.GetWidth(), event.GetHeight());
+		m_Minimized = false;
+		return false;
 	}
 }
