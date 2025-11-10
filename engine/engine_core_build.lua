@@ -14,7 +14,9 @@ project "Engine"
     files
     {
         "src/**.h",
-        "src/**.cpp"
+        "src/**.cpp",
+        "third-party/glm/glm/**.hpp",
+         "third-party/glm/glm/**.inl"
     }
 
 
@@ -25,7 +27,8 @@ project "Engine"
         "%{IncludeDir.GLFW}",
         "%{IncludeDir.glad}",
         "%{IncludeDir.ImGui}",
-        "%{IncludeDir.spdlog}"
+        "%{IncludeDir.spdlog}",
+        "%{IncludeDir.glm}"
     }
     buildoptions
     {

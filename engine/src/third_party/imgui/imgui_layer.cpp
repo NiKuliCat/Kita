@@ -54,7 +54,7 @@ namespace Kita {
 	}
 	void ImGuiLayer::OnUpdate(float daltaTime)
 	{
-		KITA_CORE_TRACE("ImGuiLayer::OnUpdate");
+
 	}
 	void ImGuiLayer::OnImGuiRender()
 	{

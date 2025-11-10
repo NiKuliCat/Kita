@@ -8,3 +8,6 @@
 [submodule "engine/third-party/spdlog"]
 	path = engine/third-party/spdlog
 	url = https://github.com/gabime/spdlog
+[submodule "engine/third-party/glm"]
+	path = engine/third-party/glm
+	url = https://github.com/NiKuliCat/glm

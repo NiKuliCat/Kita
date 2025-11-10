@@ -2,6 +2,7 @@
 #include "EditorLayer.h"
 #include "imgui.h"
 
+#include <glm/glm.hpp>
 namespace Kita {
 
 	void EditorLayer::OnCreate()
@@ -11,7 +12,6 @@ namespace Kita {
 
 	void EditorLayer::OnUpdate(float daltaTime)
 	{
-		KITA_TRACE("EditorLayer::OnUpdate");
 	}
 
 	void EditorLayer::OnDestroy()
