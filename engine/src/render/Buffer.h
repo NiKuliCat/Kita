@@ -1,0 +1,103 @@
+#pragma once
+#include "core/Core.h"
+namespace Kita {
+
+
+	enum class ShaderDataType
+	{
+		None = 0, Float, Float2, Float3, Float4, Int, Int2, Int3, Int4, Mat3, Mat4, Bool
+	};
+
+	static uint32_t GetShaderDataTypeSize(ShaderDataType dateType)
+	{
+		switch (dateType)
+		{
+			case Kita::ShaderDataType::None:				return 0;
+			case Kita::ShaderDataType::Float:				return 4;
+			case Kita::ShaderDataType::Float2:				return 4 * 2;
+			case Kita::ShaderDataType::Float3:				return 4 * 3;
+			case Kita::ShaderDataType::Float4:				return 4 * 4;
+			case Kita::ShaderDataType::Int:					return 4;
+			case Kita::ShaderDataType::Int2:				return 4 * 2;
+			case Kita::ShaderDataType::Int3:				return 4 * 3;
+			case Kita::ShaderDataType::Int4:				return 4 * 4;
+			case Kita::ShaderDataType::Mat3:				return 4 * 3 * 3;
+			case Kita::ShaderDataType::Mat4:				return 4 * 4 * 4;
+			case Kita::ShaderDataType::Bool:				return 1;
+		}
+	}
+
+	static uint32_t GetShaderDataTypeCount(ShaderDataType type)
+	{
+		switch (type)
+		{
+		case ShaderDataType::None:			return 0;
+		case ShaderDataType::Float:			return 1;
+		case ShaderDataType::Float2:		return 2;
+		case ShaderDataType::Float3:		return 3;
+		case ShaderDataType::Float4:		return 4;
+		case ShaderDataType::Int:			return 1;
+		case ShaderDataType::Int2:			return 2;
+		case ShaderDataType::Int3:			return 3;
+		case ShaderDataType::Int4:			return 4;
+		case ShaderDataType::Mat3:			return 3;
+		case ShaderDataType::Mat4:			return 4;
+		case ShaderDataType::Bool:			return 1;
+		}
+	}
+
+
+	struct BufferElement
+	{
+		std::string Name;
+		ShaderDataType DataType;
+		uint32_t Size;
+		uint32_t Count;
+		uint32_t Offset;
+		bool Normalized;
+
+		BufferElement() = default;
+		BufferElement(ShaderDataType type, const std::string& name, bool normalized = false)
+			:Name(name), DataType(type), Size(GetShaderDataTypeSize(type)), Count(GetShaderDataTypeCount(type)), Offset(0), Normalized(normalized)
+		{
+
+		}
+
+	};
+
+	class VertexBuffer
+	{
+	public:
+		virtual ~VertexBuffer() {}
+
+		virtual void Bind() const = 0;
+		virtual void UnBind() const = 0;
+
+		virtual void SetLayout() = 0;
+
+
+
+	public:
+		static Ref<VertexBuffer> Create(uint32_t size);
+		static Ref<VertexBuffer> Create(float* vertices, uint32_t size);
+	};
+
+
+	class IndexBuffer
+	{
+	public:
+		virtual ~IndexBuffer() {}
+
+		virtual void Bind() const = 0;
+		virtual void UnBind() const = 0;
+
+		virtual uint32_t GetCount() const = 0;
+
+
+
+	public:
+		static Ref<IndexBuffer> Create(uint32_t* indices,uint32_t count);
+
+	};
+
+}

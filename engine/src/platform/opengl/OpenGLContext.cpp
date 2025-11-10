@@ -12,8 +12,6 @@ namespace Kita {
 		:m_WindowHandle(windowHandle)
 	{
 		KITA_CORE_ASSERT(windowHandle, "window handle is null !");
-
-
 	}
 
 

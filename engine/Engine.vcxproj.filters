@@ -93,13 +93,22 @@
     <ClInclude Include="src\kita_pch.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\platform\opengl\OpenGLBuffer.h">
+      <Filter>src\platform\opengl</Filter>
+    </ClInclude>
     <ClInclude Include="src\platform\opengl\OpenGLContext.h">
       <Filter>src\platform\opengl</Filter>
     </ClInclude>
     <ClInclude Include="src\platform\windows\WindowsWindow.h">
       <Filter>src\platform\windows</Filter>
     </ClInclude>
+    <ClInclude Include="src\render\Buffer.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
     <ClInclude Include="src\render\GraphicsContext.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\RendererAPI.h">
       <Filter>src\render</Filter>
     </ClInclude>
     <ClInclude Include="src\third_party\imgui\imgui_layer.h">
@@ -1376,6 +1385,9 @@
     <ClCompile Include="src\kita_pch.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\platform\opengl\OpenGLBuffer.cpp">
+      <Filter>src\platform\opengl</Filter>
+    </ClCompile>
     <ClCompile Include="src\platform\opengl\OpenGLContext.cpp">
       <Filter>src\platform\opengl</Filter>
     </ClCompile>
@@ -1384,6 +1396,12 @@
     </ClCompile>
     <ClCompile Include="src\platform\windows\WindowsWindow.cpp">
       <Filter>src\platform\windows</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\Buffer.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\RendererAPI.cpp">
+      <Filter>src\render</Filter>
     </ClCompile>
     <ClCompile Include="src\third_party\imgui\imgui_build.cpp">
       <Filter>src\third_party\imgui</Filter>
