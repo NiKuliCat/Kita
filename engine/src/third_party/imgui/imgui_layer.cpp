@@ -7,7 +7,7 @@
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
 #include "core/Application.h"
-
+#include "core/Log.h"
 
 namespace Kita {
 	ImGuiLayer::ImGuiLayer()
@@ -54,6 +54,7 @@ namespace Kita {
 	}
 	void ImGuiLayer::OnUpdate(float daltaTime)
 	{
+		KITA_CORE_TRACE("ImGuiLayer::OnUpdate");
 	}
 	void ImGuiLayer::OnImGuiRender()
 	{

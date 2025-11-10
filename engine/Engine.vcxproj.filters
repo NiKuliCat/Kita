@@ -64,6 +64,7 @@
     </ClInclude>
     <ClInclude Include="src\render\GraphicsContext.h" />
     <ClInclude Include="src\platform\opengl\OpenGLContext.h" />
+    <ClInclude Include="src\core\Input.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\core\Application.cpp">
@@ -86,5 +87,6 @@
       <Filter>third_party\imgui</Filter>
     </ClCompile>
     <ClCompile Include="src\platform\opengl\OpenGLContext.cpp" />
+    <ClCompile Include="src\platform\windows\WindowsInput.cpp" />
   </ItemGroup>
 </Project>

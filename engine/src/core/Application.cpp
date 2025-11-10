@@ -4,6 +4,10 @@
 #include "Log.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+
+
+#include "Input.h"
+#include "event/KeyCode.h"
 namespace Kita {
 
 	Application* Application::s_Instance = nullptr;
@@ -65,6 +69,12 @@ namespace Kita {
 			m_ImGuiLayer->End();
 			
 			m_Window->OnUpdate();
+
+
+
+			//auto [x, y] = Input::GetMousePosition();
+			//KITA_CORE_TRACE("mouse position :({0},{1})", x, y);
+
 			
 		}
 
