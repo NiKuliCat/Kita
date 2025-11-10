@@ -17,6 +17,8 @@ namespace Kita {
 		virtual void OnImGuiRender() override;
 
 
+
+		void SetDarkThemeSpace();
 		void Begin();
 		void End();
 
