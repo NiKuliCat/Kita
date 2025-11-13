@@ -10,6 +10,8 @@
 #include "event/KeyCode.h"
 
 #include "render/Buffer.h"
+
+#include "render/RenderCommand.h"
 namespace Kita {
 
 	Application* Application::s_Instance = nullptr;
@@ -80,8 +82,8 @@ namespace Kita {
 
 		while (m_Active)
 		{
-			glClearColor(0.12, 0.12, 0.13, 1);
-			glClear(GL_COLOR_BUFFER_BIT);
+			RenderCommand::SetClearColor(glm::vec4(0.12, 0.12, 0.13, 1));
+			RenderCommand::Clear();
 
 			if (!m_Minimized)
 			{
@@ -92,7 +94,7 @@ namespace Kita {
 			}
 
 			vertexArray->Bind();
-			glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
+			glDrawElements(GL_TRIANGLES, vertexArray->GetIndexCount(), GL_UNSIGNED_INT, 0);
 
 			m_ImGuiLayer->Begin();
 			for (Layer* layer : m_LayerStack)
@@ -105,12 +107,6 @@ namespace Kita {
 			
 			m_Window->OnUpdate();
 
-
-
-			//auto [x, y] = Input::GetMousePosition();
-			//KITA_CORE_TRACE("mouse position :({0},{1})", x, y);
-
-			
 		}
 
 	}

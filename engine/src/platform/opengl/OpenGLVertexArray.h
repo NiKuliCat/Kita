@@ -17,7 +17,10 @@ namespace Kita {
 		virtual void AddVertexBuffer(const Ref<VertexBuffer>& vertexBuffer) override;
 		virtual void SetIndexBuffer(const Ref<IndexBuffer>& indexBuffer) override;
 
+		virtual const  Ref<IndexBuffer>& GetIndexBuffer() const override { return m_IndexBuffer; }
+		virtual const uint32_t GetIndexCount() const override { return m_IndexBuffer->GetCount(); }
 
+		virtual const std::vector<Ref<VertexBuffer>>& GetVertexBuffers() const override { return m_VertexBuffers; }
 	private:
 
 		uint32_t m_VertexArrayID;
