@@ -8,6 +8,8 @@
 
 #include "Input.h"
 #include "event/KeyCode.h"
+
+#include "render/Buffer.h"
 namespace Kita {
 
 	Application* Application::s_Instance = nullptr;
@@ -24,6 +26,9 @@ namespace Kita {
 	{
 		InitWindow();
 		InitImGuiLayer();
+
+	//	RenderTest();
+
 		MainLoop();
 		ShutDown();
 	}
@@ -48,6 +53,31 @@ namespace Kita {
 
 	void Application::MainLoop()
 	{
+
+		BufferLayout layout = {
+			{ShaderDataType::Float3,"position"},
+			//{ShaderDataType::Float4,"color"},
+			//{ShaderDataType::Float3,"normal"}
+		};
+
+		float vectices[9] = {
+			-0.5f,-0.5f,0.0f,
+			0.5f,-0.5f,0.0f,
+			0.0f,0.5f,0.5f
+		};
+
+		uint32_t indices[3] = { 0,1,2 };
+
+
+
+		auto vertexbuffer = VertexBuffer::Create(vectices, sizeof(vectices));
+		vertexbuffer->SetLayout(layout);
+		auto indexbuffer = IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t));
+
+		auto vertexArray = VertexArray::Create();
+		vertexArray->AddVertexBuffer(vertexbuffer);
+		vertexArray->SetIndexBuffer(indexbuffer);
+
 		while (m_Active)
 		{
 			glClearColor(0.12, 0.12, 0.13, 1);
@@ -61,12 +91,17 @@ namespace Kita {
 				}
 			}
 
+			vertexArray->Bind();
+			glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
+
 			m_ImGuiLayer->Begin();
 			for (Layer* layer : m_LayerStack)
 			{
 				layer->OnImGuiRender();
 			}
 			m_ImGuiLayer->End();
+
+		
 			
 			m_Window->OnUpdate();
 
@@ -124,5 +159,34 @@ namespace Kita {
 		glViewport(0, 0, event.GetWidth(), event.GetHeight());
 		m_Minimized = false;
 		return false;
+	}
+	void Application::RenderTest()
+	{
+		BufferLayout layout = {
+			{ShaderDataType::Float3,"position"},
+			//{ShaderDataType::Float4,"color"},
+			//{ShaderDataType::Float3,"normal"}
+		};
+
+		float vectices[9] = {
+			-0.5f,-0.5f,0.0f,
+			0.5f,-0.5f,0.0f,
+			0.0f,0.5f,0.5f
+		};
+
+		uint32_t indices[3] = { 0,1,2 };
+
+
+
+		auto vertexbuffer = VertexBuffer::Create(vectices, sizeof(vectices));
+		vertexbuffer->SetLayout(layout);
+		auto indexbuffer = IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t));
+
+		auto vertexArray = VertexArray::Create();
+		vertexArray->AddVertexBuffer(vertexbuffer);
+		vertexArray->SetIndexBuffer(indexbuffer);
+
+
+
 	}
 }

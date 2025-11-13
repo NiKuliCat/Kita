@@ -1371,6 +1371,8 @@
     <ClInclude Include="third-party\glm\glm\vector_relational.hpp">
       <Filter>third-party\glm\glm</Filter>
     </ClInclude>
+    <ClInclude Include="src\render\VertexArray.h" />
+    <ClInclude Include="src\platform\opengl\OpenGLVertexArray.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\core\Application.cpp">
@@ -1409,5 +1411,7 @@
     <ClCompile Include="src\third_party\imgui\imgui_layer.cpp">
       <Filter>src\third_party\imgui</Filter>
     </ClCompile>
+    <ClCompile Include="src\render\VertexArray.cpp" />
+    <ClCompile Include="src\platform\opengl\OpenGLVertexArray.cpp" />
   </ItemGroup>
 </Project>

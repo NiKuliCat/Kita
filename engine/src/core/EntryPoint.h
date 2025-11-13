@@ -6,7 +6,7 @@ int main(int argc, char** argv)
 {
 	Kita::Log::Init();
 	KITA_CORE_INFO(" Core Log system Init");
-	KITA_INFO(" Client Log system Init");
+	KITA_CLENT_INFO(" Client Log system Init");
 
 	Kita::Application* app = Kita::CreateApplication(argc, argv);
 	app->Run();

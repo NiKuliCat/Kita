@@ -27,9 +27,9 @@ namespace Kita {
 
 
 // Clent Log macros
-#define KITA_TRACE(...)				::Kita::Log::GetClientLogger()->trace(__VA_ARGS__)
-#define KITA_DEBUG(...)				::Kita::Log::GetClientLogger()->debug(__VA_ARGS__)
-#define KITA_INFO(...)				::Kita::Log::GetClientLogger()->info(__VA_ARGS__)
-#define KITA_WARN(...)				::Kita::Log::GetClientLogger()->warn(__VA_ARGS__)
-#define KITA_ERROR(...)				::Kita::Log::GetClientLogger()->error(__VA_ARGS__)
-#define KITA_CRITICAL(...)			::Kita::Log::GetClientLogger()->critical(__VA_ARGS__)
+#define KITA_CLENT_TRACE(...)				::Kita::Log::GetClientLogger()->trace(__VA_ARGS__)
+#define KITA_CLENT_DEBUG(...)				::Kita::Log::GetClientLogger()->debug(__VA_ARGS__)
+#define KITA_CLENT_INFO(...)				::Kita::Log::GetClientLogger()->info(__VA_ARGS__)
+#define KITA_CLENT_WARN(...)				::Kita::Log::GetClientLogger()->warn(__VA_ARGS__)
+#define KITA_CLENT_ERROR(...)				::Kita::Log::GetClientLogger()->error(__VA_ARGS__)
+#define KITA_CLENT_CRITICAL(...)			::Kita::Log::GetClientLogger()->critical(__VA_ARGS__)

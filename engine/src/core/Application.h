@@ -5,6 +5,9 @@
 #include "third_party/imgui/imgui_layer.h"
 
 #include "event/ApplicationEvent.h"
+
+#include "render/Buffer.h"
+#include "render/VertexArray.h"
 namespace Kita {
 
 	struct ApplicationDescriptor
@@ -44,6 +47,11 @@ namespace Kita {
 	private:
 		bool OnWindowClosed(WindowCloseEvent& event);
 		bool OnWindowResize(WindowResizeEvent& event);
+
+
+	private:
+		void RenderTest();
+
 
 	private:
 		ApplicationDescriptor m_Descriptor{};

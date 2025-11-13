@@ -7,7 +7,7 @@ namespace Kita {
 
 	void EditorLayer::OnCreate()
 	{
-		KITA_TRACE("{0} init", m_name.c_str());
+		KITA_CLENT_TRACE("{0} init", m_name.c_str());
 	}
 
 	void EditorLayer::OnUpdate(float daltaTime)
