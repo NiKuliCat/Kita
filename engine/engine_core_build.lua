@@ -32,7 +32,8 @@ project "Engine"
         "%{IncludeDir.glad}",
         "%{IncludeDir.ImGui}",
         "%{IncludeDir.spdlog}",
-        "%{IncludeDir.glm}"
+        "%{IncludeDir.glm}",
+        "%{IncludeDir.assimp}"
     }
     buildoptions
     {
@@ -60,12 +61,39 @@ project "Engine"
         runtime "Debug"
         symbols "On"
 
+        links
+        {
+            "%{wks.location}/engine/third-party/assimp/bin/Debug/assimp-vc143-mtd.lib"
+        }
+        postbuildcommands
+        {
+            '{COPY} "%{wks.location}/engine/third-party/assimp/bin/Debug/assimp-vc143-mtd.dll" "%{cfg.targetdir}" '
+        }
+
     filter "configurations:Release"
         defines "KITA_RELEASE"
         runtime "Release"
         optimize "On"
 
+        links
+        {
+            "%{wks.location}/engine/third-party/assimp/bin/Release/assimp-vc143-mtd.lib"
+        }
+        postbuildcommands
+        {
+            '{COPY} "%{wks.location}/engine/third-party/assimp/bin/Release/assimp-vc143-mtd.dll" "%{cfg.targetdir}" '
+        }
+
     filter "configurations:Dist"
         defines "KITA_DIST"
         runtime "Release"
         optimize "On"
+
+        links
+        {
+            "%{wks.location}/engine/third-party/assimp/bin/Release/assimp-vc143-mtd.lib"
+        }
+        postbuildcommands
+        {
+            '{COPY} "%{wks.location}/engine/third-party/assimp/bin/Release/assimp-vc143-mtd.dll" "%{cfg.targetdir}" '
+        }

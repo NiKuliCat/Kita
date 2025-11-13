@@ -12,6 +12,7 @@
 #include "render/Buffer.h"
 
 #include "render/RenderCommand.h"
+#include "render/mesh/Mesh.h"
 namespace Kita {
 
 	Application* Application::s_Instance = nullptr;
@@ -79,6 +80,8 @@ namespace Kita {
 		auto vertexArray = VertexArray::Create();
 		vertexArray->AddVertexBuffer(vertexbuffer);
 		vertexArray->SetIndexBuffer(indexbuffer);
+
+		auto mesh = new Mesh("assets/box.fbx");
 
 		while (m_Active)
 		{

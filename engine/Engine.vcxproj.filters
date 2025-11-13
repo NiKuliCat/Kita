@@ -99,6 +99,12 @@
     <ClInclude Include="src\platform\opengl\OpenGLContext.h">
       <Filter>src\platform\opengl</Filter>
     </ClInclude>
+    <ClInclude Include="src\platform\opengl\OpenGLRendererAPI.h">
+      <Filter>src\platform\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\platform\opengl\OpenGLVertexArray.h">
+      <Filter>src\platform\opengl</Filter>
+    </ClInclude>
     <ClInclude Include="src\platform\windows\WindowsWindow.h">
       <Filter>src\platform\windows</Filter>
     </ClInclude>
@@ -108,7 +114,16 @@
     <ClInclude Include="src\render\GraphicsContext.h">
       <Filter>src\render</Filter>
     </ClInclude>
+    <ClInclude Include="src\render\RenderCommand.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\Renderer.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
     <ClInclude Include="src\render\RendererAPI.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\VertexArray.h">
       <Filter>src\render</Filter>
     </ClInclude>
     <ClInclude Include="src\third_party\imgui\imgui_layer.h">
@@ -1371,11 +1386,7 @@
     <ClInclude Include="third-party\glm\glm\vector_relational.hpp">
       <Filter>third-party\glm\glm</Filter>
     </ClInclude>
-    <ClInclude Include="src\render\VertexArray.h" />
-    <ClInclude Include="src\platform\opengl\OpenGLVertexArray.h" />
-    <ClInclude Include="src\render\Renderer.h" />
-    <ClInclude Include="src\platform\opengl\OpenGLRendererAPI.h" />
-    <ClInclude Include="src\render\RenderCommand.h" />
+    <ClInclude Include="src\render\mesh\Mesh.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\core\Application.cpp">
@@ -1396,6 +1407,12 @@
     <ClCompile Include="src\platform\opengl\OpenGLContext.cpp">
       <Filter>src\platform\opengl</Filter>
     </ClCompile>
+    <ClCompile Include="src\platform\opengl\OpenGLRendererAPI.cpp">
+      <Filter>src\platform\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\platform\opengl\OpenGLVertexArray.cpp">
+      <Filter>src\platform\opengl</Filter>
+    </ClCompile>
     <ClCompile Include="src\platform\windows\WindowsInput.cpp">
       <Filter>src\platform\windows</Filter>
     </ClCompile>
@@ -1405,7 +1422,13 @@
     <ClCompile Include="src\render\Buffer.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
+    <ClCompile Include="src\render\RenderCommand.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
     <ClCompile Include="src\render\RendererAPI.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\VertexArray.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
     <ClCompile Include="src\third_party\imgui\imgui_build.cpp">
@@ -1414,9 +1437,6 @@
     <ClCompile Include="src\third_party\imgui\imgui_layer.cpp">
       <Filter>src\third_party\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="src\render\VertexArray.cpp" />
-    <ClCompile Include="src\platform\opengl\OpenGLVertexArray.cpp" />
-    <ClCompile Include="src\platform\opengl\OpenGLRendererAPI.cpp" />
-    <ClCompile Include="src\render\RenderCommand.cpp" />
+    <ClCompile Include="src\render\mesh\Mesh.cpp" />
   </ItemGroup>
 </Project>
