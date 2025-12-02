@@ -34,11 +34,6 @@ namespace Kita {
 
 
 
-
-
-
-
-
 	OpenGLIndexBuffer::OpenGLIndexBuffer(uint32_t* indices, const uint32_t count)
 		:m_Count(count)
 	{

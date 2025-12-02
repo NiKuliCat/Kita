@@ -8,6 +8,7 @@
 
 #include "render/Buffer.h"
 #include "render/VertexArray.h"
+#include "render/Shader.h"
 namespace Kita {
 
 	struct ApplicationDescriptor

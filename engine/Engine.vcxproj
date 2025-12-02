@@ -176,6 +176,8 @@
     <ClInclude Include="src\platform\opengl\OpenGLBuffer.h" />
     <ClInclude Include="src\platform\opengl\OpenGLContext.h" />
     <ClInclude Include="src\platform\opengl\OpenGLRendererAPI.h" />
+    <ClInclude Include="src\platform\opengl\OpenGLShader.h" />
+    <ClInclude Include="src\platform\opengl\OpenGLUtil.h" />
     <ClInclude Include="src\platform\opengl\OpenGLVertexArray.h" />
     <ClInclude Include="src\platform\windows\WindowsWindow.h" />
     <ClInclude Include="src\render\Buffer.h" />
@@ -184,6 +186,9 @@
     <ClInclude Include="src\render\RenderCommand.h" />
     <ClInclude Include="src\render\Renderer.h" />
     <ClInclude Include="src\render\RendererAPI.h" />
+    <ClInclude Include="src\render\scene\Camera.h" />
+    <ClInclude Include="src\render\scene\OrthographicCamera.h" />
+    <ClInclude Include="src\render\Shader.h" />
     <ClInclude Include="src\render\VertexArray.h" />
     <ClInclude Include="src\third_party\imgui\imgui_layer.h" />
     <ClInclude Include="third-party\glm\glm\common.hpp" />
@@ -643,6 +648,8 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
+    <ClCompile Include="src\platform\opengl\OpenGLShader.cpp" />
+    <ClCompile Include="src\platform\opengl\OpenGLUtil.cpp" />
     <ClCompile Include="src\platform\opengl\OpenGLVertexArray.cpp">
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -674,6 +681,8 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
+    <ClCompile Include="src\render\scene\OrthographicCamera.cpp" />
+    <ClCompile Include="src\render\Shader.cpp" />
     <ClCompile Include="src\render\VertexArray.cpp">
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>

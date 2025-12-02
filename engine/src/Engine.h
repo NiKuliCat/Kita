@@ -11,4 +11,7 @@
 
 #include "core/Input.h"
 
+#include "render/Shader.h"
+#include "render/RenderCommand.h"
+
 #include "third_party/imgui/imgui_layer.h"

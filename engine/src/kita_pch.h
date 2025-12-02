@@ -11,6 +11,7 @@
 #include <functional>
 #include <algorithm>
 #include <cstdint>
+#include <filesystem>
 
 #include <optional>
 #include <array>
