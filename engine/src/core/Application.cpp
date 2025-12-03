@@ -10,6 +10,7 @@
 #include "event/KeyCode.h"
 
 #include "render/Buffer.h"
+#include "render/scene/OrthographicCamera.h"
 #include "render/RenderCommand.h"
 #include "render/mesh/Mesh.h"
 namespace Kita {
@@ -82,6 +83,11 @@ namespace Kita {
 		vertexArray->SetIndexBuffer(indexbuffer);
 
 		auto mesh = new Mesh("assets/box.fbx");
+
+		auto camera = new OrthographicCamera(1.0f, m_Descriptor.width / (float)m_Descriptor.height, -1.0f, 1.0f);
+
+		auto uniformBuffer = UniformBuffer::Create(sizeof(glm::mat4), 0);
+		uniformBuffer->SetData(&camera->GetProjectionMatrix(), sizeof(glm::mat4), 0);
 
 		while (m_Active)
 		{

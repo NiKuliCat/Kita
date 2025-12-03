@@ -18,7 +18,7 @@ layout(location = 0) out Attributes Attri_Output;
 void main()
 {
 	Attri_Output.color = VertexColor;
-	gl_Position = vec4(PositionOS, 1.0);
+	gl_Position = ViewProjection * vec4(PositionOS, 1.0);
 }
 
 
