@@ -20,6 +20,10 @@ namespace Kita {
 		{
 			s_RendererAPI->SetBlend(enable);
 		}
+		inline static void SetCullMode(RendererAPI::CullMode cullmode)
+		{
+			s_RendererAPI->SetCullMode(cullmode);
+		}
 		inline static void SetDepthTest(bool enable)
 		{
 			s_RendererAPI->SetDepthTest(enable);

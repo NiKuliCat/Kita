@@ -35,10 +35,35 @@ namespace Kita {
 		if (value)
 		{
 			glEnable(GL_DEPTH_TEST);
+			glCullFace(GL_BACK);
 		}
 		else
 		{
 			glDisable(GL_DEPTH_TEST);
+		}
+	}
+
+	void OpenGLRendererAPI::SetCullMode(CullMode cullmode)
+	{
+		switch (cullmode)
+		{
+			case CullMode::Back:
+			{
+				glEnable(GL_CULL_FACE);
+				glCullFace(GL_BACK);
+				break;
+			}
+			case CullMode::Front:
+			{
+				glEnable(GL_CULL_FACE);
+				glCullFace(GL_FRONT);
+				break;
+			}
+			case CullMode::None:
+			{
+				glDisable(GL_CULL_FACE);
+				break;
+			}
 		}
 	}
 

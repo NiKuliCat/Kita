@@ -14,6 +14,7 @@
 #include "render/RenderCommand.h"
 #include "component/Object.h"
 #include "render/Renderer.h"
+#include "render/Texture.h"
 namespace Kita {
 
 	Application* Application::s_Instance = nullptr;
@@ -60,8 +61,8 @@ namespace Kita {
 
 		BufferLayout layout = {
 			{ShaderDataType::Float3,"position"},
-			{ShaderDataType::Float4,"color"}
-			//{ShaderDataType::Float3,"normal"}
+			{ShaderDataType::Float4,"color"},
+			{ShaderDataType::Float2,"texcoords"}
 		};
 
 		BufferLayout boxLayout = {
@@ -73,13 +74,14 @@ namespace Kita {
 			{ShaderDataType::Float3,"bitangent"}
 		};
 
-		float vectices[21] = {
-			-0.5f,-0.5f,0.0f,1.0f,0.0f,0.0f,1.0f,
-			0.5f,-0.5f,0.0f,0.0f,1.0f,0.0f,1.0f,
-			0.0f,0.5f,0.5f,0.0f,0.0f,1.0f,1.0f
+		float vectices[36] = {
+			-0.5f,-0.5f,0.0f,1.0f,0.0f,1.0f,1.0f,0.0f,0.0f,
+			-0.5f,0.5f,0.0f,0.0f,1.0f,0.0f,1.0f,0.0f,1.0f,
+			0.5f,0.5f,0.0f,0.0f,0.0f,1.0f,1.0f,1.0f,1.0f,
+			0.5f,-0.5f,0.0f,1.0f,0.0f,0.0f,1.0f,1.0f,0.0f
 		};
 
-		uint32_t indices[3] = { 0,1,2 };
+		uint32_t indices[6] = { 0,2,1,0,3,2};
 
 		auto shader = Shader::Create("assets/shaders/EditorDefaultShader.glsl");
 
@@ -89,6 +91,9 @@ namespace Kita {
 		auto boxVertexBuffer = VertexBuffer::Create((float*)object->GetMeshs()[0]->GetVertices().data(), sizeof(Vertex) * object->GetMeshs()[0]->GetVertices().size());
 		auto boxIndexBuffer = IndexBuffer::Create(object->GetMeshs()[0]->GetIndices().data(), object->GetMeshs()[0]->GetIndices().size());
 		boxVertexBuffer->SetLayout(boxLayout);
+
+
+
 		auto vertexbuffer = VertexBuffer::Create(vectices, sizeof(vectices));
 		vertexbuffer->SetLayout(layout);
 		auto indexbuffer = IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t));
@@ -96,19 +101,26 @@ namespace Kita {
 
 
 		auto vertexArray = VertexArray::Create();
-		vertexArray->AddVertexBuffer(boxVertexBuffer);
-		vertexArray->SetIndexBuffer(boxIndexBuffer);
+		vertexArray->AddVertexBuffer(vertexbuffer);
+		vertexArray->SetIndexBuffer(indexbuffer);
 
 		
-		auto camera = new OrthographicCamera(2.0f, m_Descriptor.width / (float)m_Descriptor.height, -1.0f, 1.0f);
+		auto camera = new OrthographicCamera(1.0f, m_Descriptor.width / (float)m_Descriptor.height, -1.0f, 1.0f);
 
+		TextureDescriptor texDesc{};
+		auto texture = Texture::Create(texDesc, "assets/textures/test.jpg");
+
+		texture->Bind(0);
+		shader->SetInt("MainTex", 0);
 		auto uniformBuffer = UniformBuffer::Create(sizeof(glm::mat4), 0);
+		
 		uniformBuffer->SetData(&camera->GetProjectionMatrix(), sizeof(glm::mat4), 0);
 
 		while (m_Active)
 		{
 			RenderCommand::SetDepthTest(true);
 			RenderCommand::SetBlend(true);
+			RenderCommand::SetCullMode(RendererAPI::CullMode::Back);
 			RenderCommand::SetClearColor(glm::vec4(0.12, 0.12, 0.13, 1));
 			RenderCommand::Clear();
 

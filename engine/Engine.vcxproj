@@ -178,6 +178,7 @@
     <ClInclude Include="src\platform\opengl\OpenGLContext.h" />
     <ClInclude Include="src\platform\opengl\OpenGLRendererAPI.h" />
     <ClInclude Include="src\platform\opengl\OpenGLShader.h" />
+    <ClInclude Include="src\platform\opengl\OpenGLTexture.h" />
     <ClInclude Include="src\platform\opengl\OpenGLUniformBuffer.h" />
     <ClInclude Include="src\platform\opengl\OpenGLUtil.h" />
     <ClInclude Include="src\platform\opengl\OpenGLVertexArray.h" />
@@ -191,9 +192,11 @@
     <ClInclude Include="src\render\scene\Camera.h" />
     <ClInclude Include="src\render\scene\OrthographicCamera.h" />
     <ClInclude Include="src\render\Shader.h" />
+    <ClInclude Include="src\render\Texture.h" />
     <ClInclude Include="src\render\UniformBuffer.h" />
     <ClInclude Include="src\render\VertexArray.h" />
     <ClInclude Include="src\third_party\imgui\imgui_layer.h" />
+    <ClInclude Include="src\third_party\stb_image\stb_image.h" />
     <ClInclude Include="third-party\glm\glm\common.hpp" />
     <ClInclude Include="third-party\glm\glm\detail\_fixes.hpp" />
     <ClInclude Include="third-party\glm\glm\detail\_noise.hpp" />
@@ -653,6 +656,7 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <ClCompile Include="src\platform\opengl\OpenGLShader.cpp" />
+    <ClCompile Include="src\platform\opengl\OpenGLTexture.cpp" />
     <ClCompile Include="src\platform\opengl\OpenGLUniformBuffer.cpp" />
     <ClCompile Include="src\platform\opengl\OpenGLUtil.cpp" />
     <ClCompile Include="src\platform\opengl\OpenGLVertexArray.cpp">
@@ -688,6 +692,7 @@
     </ClCompile>
     <ClCompile Include="src\render\scene\OrthographicCamera.cpp" />
     <ClCompile Include="src\render\Shader.cpp" />
+    <ClCompile Include="src\render\Texture.cpp" />
     <ClCompile Include="src\render\UniformBuffer.cpp" />
     <ClCompile Include="src\render\VertexArray.cpp">
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -704,6 +709,7 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
+    <ClCompile Include="src\third_party\stb_image\stb_image.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="third-party\glfw\GLFW.vcxproj">

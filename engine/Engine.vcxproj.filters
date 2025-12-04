@@ -1395,6 +1395,9 @@
     <ClInclude Include="src\render\UniformBuffer.h" />
     <ClInclude Include="src\platform\opengl\OpenGLUniformBuffer.h" />
     <ClInclude Include="src\component\Object.h" />
+    <ClInclude Include="src\third_party\stb_image\stb_image.h" />
+    <ClInclude Include="src\render\Texture.h" />
+    <ClInclude Include="src\platform\opengl\OpenGLTexture.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\core\Application.cpp">
@@ -1453,5 +1456,8 @@
     <ClCompile Include="src\render\UniformBuffer.cpp" />
     <ClCompile Include="src\platform\opengl\OpenGLUniformBuffer.cpp" />
     <ClCompile Include="src\component\Object.cpp" />
+    <ClCompile Include="src\third_party\stb_image\stb_image.cpp" />
+    <ClCompile Include="src\render\Texture.cpp" />
+    <ClCompile Include="src\platform\opengl\OpenGLTexture.cpp" />
   </ItemGroup>
 </Project>

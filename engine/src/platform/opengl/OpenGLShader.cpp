@@ -60,6 +60,12 @@ namespace Kita {
 		glUseProgram(0);
 	}
 
+	void OpenGLShader::SetInt(const std::string& name, const uint32_t value)
+	{
+		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
+		glUniform1i(location, value);
+	}
+
 	uint32_t OpenGLShader::CompileShader(uint32_t type, const std::string& source)
 	{
 		uint32_t id = glCreateShader(type);

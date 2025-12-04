@@ -22,7 +22,7 @@ namespace Kita {
 		virtual const uint32_t GetID() const override { return m_ShaderID; }
 		virtual const std::string& GetName() const override { return m_Name; }
 
-
+		virtual void SetInt(const std::string& name, const uint32_t value) override;
 	private:
 		uint32_t CompileShader(uint32_t type, const std::string& source);
 
