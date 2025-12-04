@@ -1394,6 +1394,7 @@
     <ClInclude Include="src\platform\opengl\OpenGLUtil.h" />
     <ClInclude Include="src\render\UniformBuffer.h" />
     <ClInclude Include="src\platform\opengl\OpenGLUniformBuffer.h" />
+    <ClInclude Include="src\component\Object.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\core\Application.cpp">
@@ -1451,5 +1452,6 @@
     <ClCompile Include="src\platform\opengl\OpenGLUtil.cpp" />
     <ClCompile Include="src\render\UniformBuffer.cpp" />
     <ClCompile Include="src\platform\opengl\OpenGLUniformBuffer.cpp" />
+    <ClCompile Include="src\component\Object.cpp" />
   </ItemGroup>
 </Project>

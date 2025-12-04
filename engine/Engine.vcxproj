@@ -159,6 +159,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\component\Object.h" />
     <ClInclude Include="src\Engine.h" />
     <ClInclude Include="src\core\Application.h" />
     <ClInclude Include="src\core\Core.h" />
@@ -614,6 +615,7 @@
     <ClInclude Include="third-party\glm\glm\vector_relational.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\component\Object.cpp" />
     <ClCompile Include="src\core\Application.cpp">
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>

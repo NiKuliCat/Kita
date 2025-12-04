@@ -28,6 +28,10 @@ namespace Kita {
 		{
 			s_RendererAPI->DrawIndexed(vertexArray);
 		}
+		inline static void DrawIndexed(const Ref<VertexArray>& vertexArray,const Ref<Shader>& shader)
+		{
+			s_RendererAPI->DrawIndexed(vertexArray,shader);
+		}
 		inline static void DrawIndexed(const Ref<VertexArray>& vertexArray, const uint32_t count)
 		{
 			s_RendererAPI->DrawIndexed(vertexArray, count);

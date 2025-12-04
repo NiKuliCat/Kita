@@ -12,7 +12,8 @@
 #include "render/Buffer.h"
 #include "render/scene/OrthographicCamera.h"
 #include "render/RenderCommand.h"
-#include "render/mesh/Mesh.h"
+#include "component/Object.h"
+#include "render/Renderer.h"
 namespace Kita {
 
 	Application* Application::s_Instance = nullptr;
@@ -63,6 +64,15 @@ namespace Kita {
 			//{ShaderDataType::Float3,"normal"}
 		};
 
+		BufferLayout boxLayout = {
+			{ShaderDataType::Float3,"position"},
+			{ShaderDataType::Float4,"color"},
+			{ShaderDataType::Float2,"texcoord"},
+			{ShaderDataType::Float3,"normal"},
+			{ShaderDataType::Float3,"tangent"},
+			{ShaderDataType::Float3,"bitangent"}
+		};
+
 		float vectices[21] = {
 			-0.5f,-0.5f,0.0f,1.0f,0.0f,0.0f,1.0f,
 			0.5f,-0.5f,0.0f,0.0f,1.0f,0.0f,1.0f,
@@ -73,24 +83,32 @@ namespace Kita {
 
 		auto shader = Shader::Create("assets/shaders/EditorDefaultShader.glsl");
 
+		auto object = new Object("testObject");
+		object->LoadMeshs("assets/models/box.fbx");
 
+		auto boxVertexBuffer = VertexBuffer::Create((float*)object->GetMeshs()[0]->GetVertices().data(), sizeof(Vertex) * object->GetMeshs()[0]->GetVertices().size());
+		auto boxIndexBuffer = IndexBuffer::Create(object->GetMeshs()[0]->GetIndices().data(), object->GetMeshs()[0]->GetIndices().size());
+		boxVertexBuffer->SetLayout(boxLayout);
 		auto vertexbuffer = VertexBuffer::Create(vectices, sizeof(vectices));
 		vertexbuffer->SetLayout(layout);
 		auto indexbuffer = IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t));
 
+
+
 		auto vertexArray = VertexArray::Create();
-		vertexArray->AddVertexBuffer(vertexbuffer);
-		vertexArray->SetIndexBuffer(indexbuffer);
+		vertexArray->AddVertexBuffer(boxVertexBuffer);
+		vertexArray->SetIndexBuffer(boxIndexBuffer);
 
-		auto mesh = new Mesh("assets/box.fbx");
-
-		auto camera = new OrthographicCamera(1.0f, m_Descriptor.width / (float)m_Descriptor.height, -1.0f, 1.0f);
+		
+		auto camera = new OrthographicCamera(2.0f, m_Descriptor.width / (float)m_Descriptor.height, -1.0f, 1.0f);
 
 		auto uniformBuffer = UniformBuffer::Create(sizeof(glm::mat4), 0);
 		uniformBuffer->SetData(&camera->GetProjectionMatrix(), sizeof(glm::mat4), 0);
 
 		while (m_Active)
 		{
+			RenderCommand::SetDepthTest(true);
+			RenderCommand::SetBlend(true);
 			RenderCommand::SetClearColor(glm::vec4(0.12, 0.12, 0.13, 1));
 			RenderCommand::Clear();
 
@@ -102,9 +120,7 @@ namespace Kita {
 				}
 			}
 
-			vertexArray->Bind();
-			shader->Bind();
-			glDrawElements(GL_TRIANGLES, vertexArray->GetIndexCount(), GL_UNSIGNED_INT, 0);
+			Renderer::Submit(vertexArray, shader);
 
 			m_ImGuiLayer->Begin();
 			for (Layer* layer : m_LayerStack)
