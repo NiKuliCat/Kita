@@ -1398,6 +1398,7 @@
     <ClInclude Include="src\third_party\stb_image\stb_image.h" />
     <ClInclude Include="src\render\Texture.h" />
     <ClInclude Include="src\platform\opengl\OpenGLTexture.h" />
+    <ClInclude Include="src\render\ShaderLibrary.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\core\Application.cpp">
@@ -1459,5 +1460,6 @@
     <ClCompile Include="src\third_party\stb_image\stb_image.cpp" />
     <ClCompile Include="src\render\Texture.cpp" />
     <ClCompile Include="src\platform\opengl\OpenGLTexture.cpp" />
+    <ClCompile Include="src\render\ShaderLibrary.cpp" />
   </ItemGroup>
 </Project>

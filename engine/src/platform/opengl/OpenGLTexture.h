@@ -3,6 +3,9 @@
 #include "render/Texture.h"
 
 namespace Kita {
+	
+	
+
 	class OpenGLTexture : public Texture {
 	public:
 		OpenGLTexture(const TextureDescriptor& descriptor, const std::string& path);
@@ -12,6 +15,10 @@ namespace Kita {
 		virtual uint32_t GetID() const override { return m_TextureID; }
 
 		virtual void Bind(uint32_t slot = 0) const override;
+
+
+	private:
+		void  SetTextureData(int channels,int width,int height,void* data);
 	private:
 		uint32_t m_TextureID;
 		uint32_t m_Width, m_Height;

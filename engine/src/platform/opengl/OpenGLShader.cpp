@@ -29,7 +29,32 @@ namespace Kita {
 		
 	}
 
-	OpenGLShader::OpenGLShader(const std::string& vertexPath, const std::string& fragmentPath)
+
+	OpenGLShader::OpenGLShader(const std::string& name, const std::string& filepath)
+		:m_Name(name)
+	{
+		KITA_CORE_INFO("Reader Shader File:{0}", m_Name);
+
+		std::unordered_map<GLenum, std::string> src = OpenGLUtil::GLSLReader(filepath);
+
+		KITA_CORE_INFO("Vertex Shader Source:\n{0}", src[GL_VERTEX_SHADER]);
+		KITA_CORE_INFO("Fragment Shader Source:\n{0}", src[GL_FRAGMENT_SHADER]);
+		uint32_t program = glCreateProgram();
+
+		uint32_t vs = CompileShader(GL_VERTEX_SHADER, src[GL_VERTEX_SHADER]);
+		uint32_t fs = CompileShader(GL_FRAGMENT_SHADER, src[GL_FRAGMENT_SHADER]);
+
+		glAttachShader(program, vs);
+		glAttachShader(program, fs);
+		glLinkProgram(program);
+		glValidateProgram(program);
+		glDeleteShader(vs);
+		glDeleteShader(fs);
+
+		m_ShaderID = program;
+	}
+	OpenGLShader::OpenGLShader(const std::string& name, const std::string& vertexPath, const std::string& fragmentPath)
+		:m_Name(name)
 	{
 		std::string	 vertexSource = OpenGLUtil::GLSLReader(ShaderType::Vertex, vertexPath);
 		std::string	 fragmentSource = OpenGLUtil::GLSLReader(ShaderType::Fragment, fragmentPath);
@@ -43,8 +68,8 @@ namespace Kita {
 		glDeleteShader(vs);
 		glDeleteShader(fs);
 		m_ShaderID = program;
-		m_Name = OpenGLUtil::GetFileNameWithoutExtension(vertexPath);
 	}
+
 
 	OpenGLShader::~OpenGLShader()
 	{

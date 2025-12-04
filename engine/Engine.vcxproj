@@ -192,6 +192,7 @@
     <ClInclude Include="src\render\scene\Camera.h" />
     <ClInclude Include="src\render\scene\OrthographicCamera.h" />
     <ClInclude Include="src\render\Shader.h" />
+    <ClInclude Include="src\render\ShaderLibrary.h" />
     <ClInclude Include="src\render\Texture.h" />
     <ClInclude Include="src\render\UniformBuffer.h" />
     <ClInclude Include="src\render\VertexArray.h" />
@@ -692,6 +693,7 @@
     </ClCompile>
     <ClCompile Include="src\render\scene\OrthographicCamera.cpp" />
     <ClCompile Include="src\render\Shader.cpp" />
+    <ClCompile Include="src\render\ShaderLibrary.cpp" />
     <ClCompile Include="src\render\Texture.cpp" />
     <ClCompile Include="src\render\UniformBuffer.cpp" />
     <ClCompile Include="src\render\VertexArray.cpp">

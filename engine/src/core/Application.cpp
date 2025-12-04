@@ -15,6 +15,7 @@
 #include "component/Object.h"
 #include "render/Renderer.h"
 #include "render/Texture.h"
+#include "render/ShaderLibrary.h"
 namespace Kita {
 
 	Application* Application::s_Instance = nullptr;
@@ -83,7 +84,8 @@ namespace Kita {
 
 		uint32_t indices[6] = { 0,2,1,0,3,2};
 
-		auto shader = Shader::Create("assets/shaders/EditorDefaultShader.glsl");
+		auto shaderLibrary = ShaderLibrary::GetInstance();
+		shaderLibrary.Load("assets/shaders/EditorDefaultShader.glsl");
 
 		auto object = new Object("testObject");
 		object->LoadMeshs("assets/models/box.fbx");
@@ -111,6 +113,7 @@ namespace Kita {
 		auto texture = Texture::Create(texDesc, "assets/textures/test.jpg");
 
 		texture->Bind(0);
+		auto shader = shaderLibrary.Get("EditorDefaultShader");
 		shader->SetInt("MainTex", 0);
 		auto uniformBuffer = UniformBuffer::Create(sizeof(glm::mat4), 0);
 		

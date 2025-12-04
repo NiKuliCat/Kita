@@ -23,7 +23,8 @@ namespace Kita {
 		virtual void SetInt(const std::string& name, const uint32_t value) = 0;
 
 		static Ref<Shader> Create(const std::string& filepath);
-		static Ref<Shader> Create(const std::string& vertexPath, const std::string& fragmentPath);
+		static Ref<Shader> Create(const std::string& name, const std::string& filepath);
+		static Ref<Shader> Create(const std::string& name, const std::string& vertexPath, const std::string& fragmentPath);
 	};
 
 }

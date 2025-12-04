@@ -8,34 +8,49 @@ namespace Kita {
 	{
 		switch (RendererAPI::GetAPI())
 		{
-		case  RendererAPI::API::None:
-		{
-			return nullptr;
-			break;
-		}
-		case  RendererAPI::API::OpenGL:
-		{
-			return CreateRef<OpenGLShader>(filepath);
-			break;
-		}
+			case  RendererAPI::API::None:
+			{
+				return nullptr;
+				break;
+			}
+			case  RendererAPI::API::OpenGL:
+			{
+				return CreateRef<OpenGLShader>(filepath);
+				break;
+			}
 		}
 	}
 
-
-	Ref<Shader> Shader::Create(const std::string& vertexPath, const std::string& fragmentPath)
+	Ref<Shader>  Shader::Create(const std::string& name, const std::string& filepath)
 	{
 		switch (RendererAPI::GetAPI())
 		{
-		case  RendererAPI::API::None:
-		{
-			return nullptr;
-			break;
+			case  RendererAPI::API::None:
+			{
+				return nullptr;
+				break;
+			}
+			case  RendererAPI::API::OpenGL:
+			{
+				return CreateRef<OpenGLShader>(name,filepath);
+				break;
+			}
 		}
-		case  RendererAPI::API::OpenGL:
+	}
+	Ref<Shader>  Shader::Create(const std::string& name, const std::string& vertexPath, const std::string& fragmentPath)
+	{
+		switch (RendererAPI::GetAPI())
 		{
-			return CreateRef<OpenGLShader>(vertexPath,fragmentPath);
-			break;
-		}
+			case  RendererAPI::API::None:
+			{
+				return nullptr;
+				break;
+			}
+			case  RendererAPI::API::OpenGL:
+			{
+				return CreateRef<OpenGLShader>(name,vertexPath, fragmentPath);
+				break;
+			}
 		}
 	}
 
