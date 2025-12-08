@@ -30,5 +30,7 @@ namespace Kita {
 		OrthographicCamera*  m_Camera = nullptr;
 
 		uint32_t m_SceneTexID = 0;
+		glm::vec2 m_ViewportSize;
+
 	};
 }

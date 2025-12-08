@@ -53,6 +53,8 @@ namespace Kita {
 		disc.Width = 1280;
 		disc.Height = 720;
 
+		m_ViewportSize = { 1280,720 };
+
 		m_FrameBuffer = FrameBuffer::Create(disc);
 		m_SceneTexID = m_FrameBuffer->GetColorAttachment(0);
 		RenderCommand::SetDepthTest(true);
@@ -63,6 +65,14 @@ namespace Kita {
 
 	void EditorLayer::OnUpdate(float daltaTime)
 	{
+		auto desc = m_FrameBuffer->GetDescriptor();
+		if (m_ViewportSize.x != desc.Width || m_ViewportSize.y != desc.Height)
+		{
+			m_FrameBuffer->ReSize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+			m_Camera->SetAspectRatio(m_ViewportSize.x / m_ViewportSize.y);
+			m_UniformBuffer->SetData(&m_Camera->GetProjectionMatrix(), sizeof(glm::mat4), 0);
+		}
+		
 		m_FrameBuffer->Bind();
 		RenderCommand::SetClearColor(glm::vec4(0.12, 0.12, 0.13, 1));
 		RenderCommand::Clear();
@@ -135,7 +145,12 @@ namespace Kita {
 
 		ImGui::Begin("Viewport");
 		uint32_t ScreenRT_ID = m_FrameBuffer->GetColorAttachment(0);
-		ImGui::Image(ScreenRT_ID, ImVec2{1280,720 }, ImVec2(0, 1), ImVec2(1, 0));
+		{
+			ImVec2 ViewportSize = ImGui::GetContentRegionAvail();
+			m_ViewportSize = { ViewportSize.x,ViewportSize.y };
+		}
+		ImGui::Image(ScreenRT_ID, ImVec2{ m_ViewportSize.x,m_ViewportSize.y }, ImVec2(0, 1), ImVec2(1, 0));
+
 		ImGui::End();
 
 		ImGui::End();

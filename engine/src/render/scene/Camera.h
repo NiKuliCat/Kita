@@ -23,7 +23,7 @@ namespace Kita {
 
 		virtual void  CaculateProjectionMatrix() = 0;
 		virtual void  CaculateViewMatrix() = 0;
-
+		virtual void  SetAspectRatio(float ratio) = 0;
 
 	protected:
 

@@ -31,6 +31,10 @@ namespace Kita {
 
 	void OpenGLFrameBuffer::ReSize(uint32_t width, uint32_t height)
 	{
+		m_Descriptor.Width = width;
+		m_Descriptor.Height = height;
+
+		Invalidate();
 	}
 
 	void OpenGLFrameBuffer::Bind()
@@ -46,6 +50,16 @@ namespace Kita {
 
 	void OpenGLFrameBuffer::Invalidate()
 	{
+
+		if (m_FrameBufferID)
+		{
+			glDeleteFramebuffers(1, &m_FrameBufferID);
+			glDeleteTextures(1, &m_ColorAttachment);
+			//glDeleteTextures(1, &m_DepthAttachment);
+
+			m_ColorAttachment = 0;
+		//	m_DepthAttachment = 0;
+		}
 		glCreateFramebuffers(1, &m_FrameBufferID);
 
 		Bind();
