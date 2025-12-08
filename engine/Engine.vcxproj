@@ -159,8 +159,8 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="src\component\Object.h" />
     <ClInclude Include="src\Engine.h" />
+    <ClInclude Include="src\component\Object.h" />
     <ClInclude Include="src\core\Application.h" />
     <ClInclude Include="src\core\Core.h" />
     <ClInclude Include="src\core\EntryPoint.h" />
@@ -176,6 +176,7 @@
     <ClInclude Include="src\kita_pch.h" />
     <ClInclude Include="src\platform\opengl\OpenGLBuffer.h" />
     <ClInclude Include="src\platform\opengl\OpenGLContext.h" />
+    <ClInclude Include="src\platform\opengl\OpenGLFrameBuffer.h" />
     <ClInclude Include="src\platform\opengl\OpenGLRendererAPI.h" />
     <ClInclude Include="src\platform\opengl\OpenGLShader.h" />
     <ClInclude Include="src\platform\opengl\OpenGLTexture.h" />
@@ -184,18 +185,19 @@
     <ClInclude Include="src\platform\opengl\OpenGLVertexArray.h" />
     <ClInclude Include="src\platform\windows\WindowsWindow.h" />
     <ClInclude Include="src\render\Buffer.h" />
+    <ClInclude Include="src\render\FrameBuffer.h" />
     <ClInclude Include="src\render\GraphicsContext.h" />
-    <ClInclude Include="src\render\mesh\Mesh.h" />
     <ClInclude Include="src\render\RenderCommand.h" />
     <ClInclude Include="src\render\Renderer.h" />
     <ClInclude Include="src\render\RendererAPI.h" />
-    <ClInclude Include="src\render\scene\Camera.h" />
-    <ClInclude Include="src\render\scene\OrthographicCamera.h" />
     <ClInclude Include="src\render\Shader.h" />
     <ClInclude Include="src\render\ShaderLibrary.h" />
     <ClInclude Include="src\render\Texture.h" />
     <ClInclude Include="src\render\UniformBuffer.h" />
     <ClInclude Include="src\render\VertexArray.h" />
+    <ClInclude Include="src\render\mesh\Mesh.h" />
+    <ClInclude Include="src\render\scene\Camera.h" />
+    <ClInclude Include="src\render\scene\OrthographicCamera.h" />
     <ClInclude Include="src\third_party\imgui\imgui_layer.h" />
     <ClInclude Include="src\third_party\stb_image\stb_image.h" />
     <ClInclude Include="third-party\glm\glm\common.hpp" />
@@ -619,7 +621,11 @@
     <ClInclude Include="third-party\glm\glm\vector_relational.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\component\Object.cpp" />
+    <ClCompile Include="src\component\Object.cpp">
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
     <ClCompile Include="src\core\Application.cpp">
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -651,15 +657,36 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
+    <ClCompile Include="src\platform\opengl\OpenGLFrameBuffer.cpp">
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
     <ClCompile Include="src\platform\opengl\OpenGLRendererAPI.cpp">
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
-    <ClCompile Include="src\platform\opengl\OpenGLShader.cpp" />
-    <ClCompile Include="src\platform\opengl\OpenGLTexture.cpp" />
-    <ClCompile Include="src\platform\opengl\OpenGLUniformBuffer.cpp" />
-    <ClCompile Include="src\platform\opengl\OpenGLUtil.cpp" />
+    <ClCompile Include="src\platform\opengl\OpenGLShader.cpp">
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <ClCompile Include="src\platform\opengl\OpenGLTexture.cpp">
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <ClCompile Include="src\platform\opengl\OpenGLUniformBuffer.cpp">
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <ClCompile Include="src\platform\opengl\OpenGLUtil.cpp">
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
     <ClCompile Include="src\platform\opengl\OpenGLVertexArray.cpp">
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -680,7 +707,11 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
-    <ClCompile Include="src\render\mesh\Mesh.cpp" />
+    <ClCompile Include="src\render\FrameBuffer.cpp">
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
     <ClCompile Include="src\render\RenderCommand.cpp">
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -691,12 +722,37 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
-    <ClCompile Include="src\render\scene\OrthographicCamera.cpp" />
-    <ClCompile Include="src\render\Shader.cpp" />
-    <ClCompile Include="src\render\ShaderLibrary.cpp" />
-    <ClCompile Include="src\render\Texture.cpp" />
-    <ClCompile Include="src\render\UniformBuffer.cpp" />
+    <ClCompile Include="src\render\Shader.cpp">
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <ClCompile Include="src\render\ShaderLibrary.cpp">
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <ClCompile Include="src\render\Texture.cpp">
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <ClCompile Include="src\render\UniformBuffer.cpp">
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
     <ClCompile Include="src\render\VertexArray.cpp">
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <ClCompile Include="src\render\mesh\Mesh.cpp">
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
+    <ClCompile Include="src\render\scene\OrthographicCamera.cpp">
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
@@ -711,7 +767,11 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
-    <ClCompile Include="src\third_party\stb_image\stb_image.cpp" />
+    <ClCompile Include="src\third_party\stb_image\stb_image.cpp">
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+      <ExternalWarningLevel>Level3</ExternalWarningLevel>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="third-party\glfw\GLFW.vcxproj">

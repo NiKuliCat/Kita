@@ -80,7 +80,7 @@
       <PrecompiledHeaderFile>renderer_pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>PLATFORM_WINDOWS;KITA_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\engine\src;..\engine\third-party\glfw\include;..\engine\third-party\glad\include;..\engine\third-party\imgui;..\engine\third-party\spdlog\include;..\engine\third-party\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\engine\src;..\engine\third-party\glfw\include;..\engine\third-party\glad\include;..\engine\third-party\imgui;..\engine\third-party\spdlog\include;..\engine\third-party\glm;..\engine\third-party\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -105,7 +105,7 @@
       <PrecompiledHeaderFile>renderer_pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>PLATFORM_WINDOWS;KITA_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\engine\src;..\engine\third-party\glfw\include;..\engine\third-party\glad\include;..\engine\third-party\imgui;..\engine\third-party\spdlog\include;..\engine\third-party\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\engine\src;..\engine\third-party\glfw\include;..\engine\third-party\glad\include;..\engine\third-party\imgui;..\engine\third-party\spdlog\include;..\engine\third-party\glm;..\engine\third-party\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -135,7 +135,7 @@
       <PrecompiledHeaderFile>renderer_pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>PLATFORM_WINDOWS;KITA_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\engine\src;..\engine\third-party\glfw\include;..\engine\third-party\glad\include;..\engine\third-party\imgui;..\engine\third-party\spdlog\include;..\engine\third-party\glm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\engine\src;..\engine\third-party\glfw\include;..\engine\third-party\glad\include;..\engine\third-party\imgui;..\engine\third-party\spdlog\include;..\engine\third-party\glm;..\engine\third-party\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>None</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>

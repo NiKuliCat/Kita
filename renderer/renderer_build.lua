@@ -26,8 +26,10 @@ project "Renderer"
         "%{IncludeDir.glad}",
         "%{IncludeDir.ImGui}",
         "%{IncludeDir.spdlog}",
-        "%{IncludeDir.glm}"
+        "%{IncludeDir.glm}",
+        "%{IncludeDir.assimp}"
     }
+    
     buildoptions
     {
         "/utf-8"

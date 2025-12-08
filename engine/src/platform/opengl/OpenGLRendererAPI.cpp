@@ -35,7 +35,6 @@ namespace Kita {
 		if (value)
 		{
 			glEnable(GL_DEPTH_TEST);
-			glCullFace(GL_BACK);
 		}
 		else
 		{

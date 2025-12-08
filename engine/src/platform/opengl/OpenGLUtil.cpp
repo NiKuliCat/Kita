@@ -104,6 +104,11 @@ namespace Kita {
 		std::filesystem::path path(filepath);
 		return path.stem().string();
 	}
+	/*bool OpenGLUtil::IsDepthFormat(const FrameBufferTexFormat format)
+	{
+		if (format == FrameBufferTexFormat::DEPTH24STENCIL8)   return true;
+		return false;
+	}*/
 	inline std::string OpenGLUtil::Trim(const std::string& str)
 	{
 		size_t start = str.find_first_not_of(" \t");

@@ -13,7 +13,6 @@ namespace Kita {
 		EditorApp(const ApplicationDescriptor& createApplication)
 			:Application(createApplication) {
 
-
 			PushLayer(new EditorLayer());
 		}
 		~EditorApp() {}

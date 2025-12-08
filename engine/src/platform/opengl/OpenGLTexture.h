@@ -14,7 +14,7 @@ namespace Kita {
 		virtual uint32_t GetHeight() const override { return m_Height; }
 		virtual uint32_t GetID() const override { return m_TextureID; }
 
-		virtual void Bind(uint32_t slot = 0) const override;
+		virtual void Bind(uint32_t slot = 3) const override;
 
 
 	private:

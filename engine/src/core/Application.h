@@ -51,8 +51,6 @@ namespace Kita {
 		bool OnWindowResize(WindowResizeEvent& event);
 
 
-	private:
-		void RenderTest();
 
 
 	private:

@@ -4,6 +4,9 @@
     <Filter Include="src">
       <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\component">
+      <UniqueIdentifier>{EF3F6682-5B00-E2B8-243B-2B3690BA2695}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\core">
       <UniqueIdentifier>{C55F2ECF-B12C-89DA-DA45-7782C671BE68}</UniqueIdentifier>
     </Filter>
@@ -22,11 +25,20 @@
     <Filter Include="src\render">
       <UniqueIdentifier>{1CA98B76-0861-CDC3-7168-A61F5D3F68B4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\render\mesh">
+      <UniqueIdentifier>{78BC1DC2-E447-8B86-ED58-0E7B5963E786}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\render\scene">
+      <UniqueIdentifier>{598B4006-4584-5F58-6EB6-44DD5A0E3F64}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\third_party">
       <UniqueIdentifier>{A6E46709-1270-D5CD-1B81-58C2878B31CE}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\third_party\imgui">
       <UniqueIdentifier>{90565278-FCC2-0D73-C5B6-A5D031E22FDB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\third_party\stb_image">
+      <UniqueIdentifier>{C01C6DBE-2CDF-A048-758F-2FD5E1907926}</UniqueIdentifier>
     </Filter>
     <Filter Include="third-party">
       <UniqueIdentifier>{9DC1EB7C-0977-6472-926B-5E49FE1F5B76}</UniqueIdentifier>
@@ -53,6 +65,9 @@
   <ItemGroup>
     <ClInclude Include="src\Engine.h">
       <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\component\Object.h">
+      <Filter>src\component</Filter>
     </ClInclude>
     <ClInclude Include="src\core\Application.h">
       <Filter>src\core</Filter>
@@ -99,7 +114,22 @@
     <ClInclude Include="src\platform\opengl\OpenGLContext.h">
       <Filter>src\platform\opengl</Filter>
     </ClInclude>
+    <ClInclude Include="src\platform\opengl\OpenGLFrameBuffer.h">
+      <Filter>src\platform\opengl</Filter>
+    </ClInclude>
     <ClInclude Include="src\platform\opengl\OpenGLRendererAPI.h">
+      <Filter>src\platform\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\platform\opengl\OpenGLShader.h">
+      <Filter>src\platform\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\platform\opengl\OpenGLTexture.h">
+      <Filter>src\platform\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\platform\opengl\OpenGLUniformBuffer.h">
+      <Filter>src\platform\opengl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\platform\opengl\OpenGLUtil.h">
       <Filter>src\platform\opengl</Filter>
     </ClInclude>
     <ClInclude Include="src\platform\opengl\OpenGLVertexArray.h">
@@ -109,6 +139,9 @@
       <Filter>src\platform\windows</Filter>
     </ClInclude>
     <ClInclude Include="src\render\Buffer.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\FrameBuffer.h">
       <Filter>src\render</Filter>
     </ClInclude>
     <ClInclude Include="src\render\GraphicsContext.h">
@@ -123,11 +156,35 @@
     <ClInclude Include="src\render\RendererAPI.h">
       <Filter>src\render</Filter>
     </ClInclude>
+    <ClInclude Include="src\render\Shader.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\ShaderLibrary.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\Texture.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\UniformBuffer.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
     <ClInclude Include="src\render\VertexArray.h">
       <Filter>src\render</Filter>
     </ClInclude>
+    <ClInclude Include="src\render\mesh\Mesh.h">
+      <Filter>src\render\mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\scene\Camera.h">
+      <Filter>src\render\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\scene\OrthographicCamera.h">
+      <Filter>src\render\scene</Filter>
+    </ClInclude>
     <ClInclude Include="src\third_party\imgui\imgui_layer.h">
       <Filter>src\third_party\imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\third_party\stb_image\stb_image.h">
+      <Filter>src\third_party\stb_image</Filter>
     </ClInclude>
     <ClInclude Include="third-party\glm\glm\common.hpp">
       <Filter>third-party\glm\glm</Filter>
@@ -1386,21 +1443,11 @@
     <ClInclude Include="third-party\glm\glm\vector_relational.hpp">
       <Filter>third-party\glm\glm</Filter>
     </ClInclude>
-    <ClInclude Include="src\render\mesh\Mesh.h" />
-    <ClInclude Include="src\render\scene\Camera.h" />
-    <ClInclude Include="src\render\scene\OrthographicCamera.h" />
-    <ClInclude Include="src\render\Shader.h" />
-    <ClInclude Include="src\platform\opengl\OpenGLShader.h" />
-    <ClInclude Include="src\platform\opengl\OpenGLUtil.h" />
-    <ClInclude Include="src\render\UniformBuffer.h" />
-    <ClInclude Include="src\platform\opengl\OpenGLUniformBuffer.h" />
-    <ClInclude Include="src\component\Object.h" />
-    <ClInclude Include="src\third_party\stb_image\stb_image.h" />
-    <ClInclude Include="src\render\Texture.h" />
-    <ClInclude Include="src\platform\opengl\OpenGLTexture.h" />
-    <ClInclude Include="src\render\ShaderLibrary.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\component\Object.cpp">
+      <Filter>src\component</Filter>
+    </ClCompile>
     <ClCompile Include="src\core\Application.cpp">
       <Filter>src\core</Filter>
     </ClCompile>
@@ -1419,7 +1466,22 @@
     <ClCompile Include="src\platform\opengl\OpenGLContext.cpp">
       <Filter>src\platform\opengl</Filter>
     </ClCompile>
+    <ClCompile Include="src\platform\opengl\OpenGLFrameBuffer.cpp">
+      <Filter>src\platform\opengl</Filter>
+    </ClCompile>
     <ClCompile Include="src\platform\opengl\OpenGLRendererAPI.cpp">
+      <Filter>src\platform\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\platform\opengl\OpenGLShader.cpp">
+      <Filter>src\platform\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\platform\opengl\OpenGLTexture.cpp">
+      <Filter>src\platform\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\platform\opengl\OpenGLUniformBuffer.cpp">
+      <Filter>src\platform\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="src\platform\opengl\OpenGLUtil.cpp">
       <Filter>src\platform\opengl</Filter>
     </ClCompile>
     <ClCompile Include="src\platform\opengl\OpenGLVertexArray.cpp">
@@ -1434,14 +1496,35 @@
     <ClCompile Include="src\render\Buffer.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
+    <ClCompile Include="src\render\FrameBuffer.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
     <ClCompile Include="src\render\RenderCommand.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
     <ClCompile Include="src\render\RendererAPI.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
+    <ClCompile Include="src\render\Shader.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\ShaderLibrary.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\Texture.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\UniformBuffer.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
     <ClCompile Include="src\render\VertexArray.cpp">
       <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\mesh\Mesh.cpp">
+      <Filter>src\render\mesh</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\scene\OrthographicCamera.cpp">
+      <Filter>src\render\scene</Filter>
     </ClCompile>
     <ClCompile Include="src\third_party\imgui\imgui_build.cpp">
       <Filter>src\third_party\imgui</Filter>
@@ -1449,17 +1532,8 @@
     <ClCompile Include="src\third_party\imgui\imgui_layer.cpp">
       <Filter>src\third_party\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="src\render\mesh\Mesh.cpp" />
-    <ClCompile Include="src\render\scene\OrthographicCamera.cpp" />
-    <ClCompile Include="src\render\Shader.cpp" />
-    <ClCompile Include="src\platform\opengl\OpenGLShader.cpp" />
-    <ClCompile Include="src\platform\opengl\OpenGLUtil.cpp" />
-    <ClCompile Include="src\render\UniformBuffer.cpp" />
-    <ClCompile Include="src\platform\opengl\OpenGLUniformBuffer.cpp" />
-    <ClCompile Include="src\component\Object.cpp" />
-    <ClCompile Include="src\third_party\stb_image\stb_image.cpp" />
-    <ClCompile Include="src\render\Texture.cpp" />
-    <ClCompile Include="src\platform\opengl\OpenGLTexture.cpp" />
-    <ClCompile Include="src\render\ShaderLibrary.cpp" />
+    <ClCompile Include="src\third_party\stb_image\stb_image.cpp">
+      <Filter>src\third_party\stb_image</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

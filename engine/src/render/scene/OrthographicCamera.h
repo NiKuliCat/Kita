@@ -9,6 +9,7 @@ namespace Kita {
 	class OrthographicCamera : public Camera
 	{
 	public:
+		OrthographicCamera() = default;
 		OrthographicCamera(const float orthoSize, const float aspect, const float nearPlane, const float farPlane);
 		~OrthographicCamera();
 

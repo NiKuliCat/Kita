@@ -37,9 +37,11 @@ struct Attributes
 layout(location = 0) in Attributes Attri_Input;
 
 layout(location = 0) out vec4 FragColor;
+
+
 uniform sampler2D MainTex;
 void main()
 {
-//	FragColor = Attri_Input.color;
+	//FragColor = vec4(Attri_Input.uv,0.0,1.0);
 	FragColor = vec4(texture(MainTex, Attri_Input.uv).rgb,1.0);
 }

@@ -10,9 +10,6 @@ namespace Kita {
 		KITA_CORE_INFO("Reader Shader File:{0}", m_Name);
 
 		std::unordered_map<GLenum, std::string> src = OpenGLUtil::GLSLReader(filepath);
-
-		KITA_CORE_INFO("Vertex Shader Source:\n{0}", src[GL_VERTEX_SHADER]);
-		KITA_CORE_INFO("Fragment Shader Source:\n{0}", src[GL_FRAGMENT_SHADER]);
 		uint32_t program = glCreateProgram();
 
 		uint32_t vs = CompileShader(GL_VERTEX_SHADER, src[GL_VERTEX_SHADER]);
@@ -87,6 +84,7 @@ namespace Kita {
 
 	void OpenGLShader::SetInt(const std::string& name, const uint32_t value)
 	{
+		Bind();
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
 		glUniform1i(location, value);
 	}

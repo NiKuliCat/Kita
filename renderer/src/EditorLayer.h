@@ -6,8 +6,7 @@ namespace Kita {
 	class EditorLayer :public Layer{
 
 	public:
-		EditorLayer()
-			:Layer("Editor Layer"){}
+		EditorLayer();
 
 
 		virtual ~EditorLayer() = default;
@@ -19,5 +18,17 @@ namespace Kita {
 
 		virtual void OnImGuiRender()  override;
 		virtual void OnEvent(Event& event)  override;
+
+
+	
+	private:
+		Ref<FrameBuffer> m_FrameBuffer = nullptr;
+		Ref<VertexArray> m_VertexArray = nullptr;
+		Ref<Shader> m_Shader = nullptr;
+		Ref<Texture> m_Texture = nullptr;
+		Ref<UniformBuffer> m_UniformBuffer = nullptr;
+		OrthographicCamera*  m_Camera = nullptr;
+
+		uint32_t m_SceneTexID = 0;
 	};
 }
