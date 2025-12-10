@@ -77,7 +77,13 @@ namespace Kita {
 	EditorLayer::EditorLayer()
 		:Layer("EditorLayer")
 	{
-		m_Camera = new OrthographicCamera(0.5f, 16.0f / 9.0f, -1.0f, 1.0f);
+		m_Camera = new PerspectiveCamera(45.0f, 16.0f / 9.0f, 0.1f, 100.0f);
+	
+		m_CameraTransform = Transform();
+		m_ObjTransform = Transform();
+
+		m_ObjTransform.SetPosition({ 0.0f,0.0f,-2.0f });
+		m_CameraTransform.SetPosition({ 0.0f,0.0f,-5.0f });
 	}
 	void EditorLayer::OnCreate()
 	{
@@ -115,7 +121,7 @@ namespace Kita {
 		m_Texture = Texture::Create(texDesc, "assets/textures/test.jpg");
 		m_Texture->Bind(3);
 		m_Shader->SetInt("MainTex", 3);
-		m_UniformBuffer = UniformBuffer::Create(sizeof(glm::mat4), 0);
+		m_VPUniformBuffer = UniformBuffer::Create(sizeof(glm::mat4), 0);
 
 	
 
@@ -137,14 +143,18 @@ namespace Kita {
 	void EditorLayer::OnUpdate(float daltaTime)
 	{
 	
-		glm::mat4 mvp = m_Camera->GetProjectionMatrix() * m_ObjTransform.GetTransformMatrix();
-		m_UniformBuffer->SetData(&mvp, sizeof(glm::mat4), 0);
+		glm::mat4 vp = m_Camera->GetProjectionMatrix() * m_CameraTransform.GetViewMatrix() ;
+		glm::mat4 m = m_ObjTransform.GetTransformMatrix();
+		m_VPUniformBuffer->SetData(&vp, sizeof(glm::mat4), 0);
+		m_Shader->SetMat4("Model", m);
 		auto desc = m_FrameBuffer->GetDescriptor();
 		if (m_ViewportSize.x != desc.Width || m_ViewportSize.y != desc.Height)
 		{
 			m_FrameBuffer->ReSize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 			m_Camera->SetAspectRatio(m_ViewportSize.x / m_ViewportSize.y);
-			m_UniformBuffer->SetData(&m_Camera->GetProjectionMatrix(), sizeof(glm::mat4), 0);
+			auto vp = m_Camera->GetProjectionMatrix() * m_CameraTransform.GetViewMatrix();
+			m_VPUniformBuffer->SetData(&vp, sizeof(glm::mat4), 0);
+			KITA_CLENT_TRACE("Resize FrameBuffer to : {0},{1}", m_ViewportSize.x, m_ViewportSize.y);
 		}
 		
 		m_FrameBuffer->Bind();
@@ -214,9 +224,14 @@ namespace Kita {
 
 		ImGui::Begin("Test Window");
 		ImGui::Text("Hello from another window!");
+		ImGui::DragFloat3("##position", glm::value_ptr(m_CameraTransform.GetPosition()), 0.04f, 0.0f, 0.0f, "%.2f");
+		ImGui::DragFloat3("##rotate", glm::value_ptr(m_CameraTransform.GetRotation()), 0.04f, 0.0f, 0.0f, "%.2f");
+		ImGui::DragFloat3("##scale", glm::value_ptr(m_CameraTransform.GetScale()), 0.04f, 0.0f, 0.0f, "%.2f");
+		ImGui::PushID(1);
 		ImGui::DragFloat3("##position", glm::value_ptr(m_ObjTransform.GetPosition()), 0.04f, 0.0f, 0.0f, "%.2f");
 		ImGui::DragFloat3("##rotate", glm::value_ptr(m_ObjTransform.GetRotation()), 0.04f, 0.0f, 0.0f, "%.2f");
 		ImGui::DragFloat3("##scale", glm::value_ptr(m_ObjTransform.GetScale()), 0.04f, 0.0f, 0.0f, "%.2f");
+		ImGui::PopID();
 		ImGui::End();
 
 

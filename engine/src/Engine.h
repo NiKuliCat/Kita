@@ -18,6 +18,7 @@
 #include "render/VertexArray.h"
 #include "render/Texture.h"
 #include "render/scene/OrthographicCamera.h"	
+#include "render/scene/PerspectiveCamera.h"
 
 #include "render/FrameBuffer.h"
 #include "render/UniformBuffer.h"

@@ -89,6 +89,13 @@ namespace Kita {
 		glUniform1i(location, value);
 	}
 
+	void OpenGLShader::SetMat4(const std::string& name, const glm::mat4& matrix)
+	{
+		Bind();
+		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
+		glUniformMatrix4fv(location, 1, GL_FALSE, &matrix[0][0]);
+	}
+
 	uint32_t OpenGLShader::CompileShader(uint32_t type, const std::string& source)
 	{
 		uint32_t id = glCreateShader(type);

@@ -4,6 +4,8 @@ layout(location = 0) in vec3 PositionOS;
 layout(location = 1) in vec4 VertexColor;
 layout(location = 2) in vec2 Texcoord;
 
+uniform mat4 Model;
+
 layout(std140, binding = 0) uniform Camera
 {
 	mat4 ViewProjection;
@@ -21,7 +23,7 @@ void main()
 {
 	Attri_Output.color = VertexColor;
 	Attri_Output.uv =  Texcoord;
-	gl_Position = ViewProjection * vec4(PositionOS, 1.0);
+	gl_Position = ViewProjection * Model *  vec4(PositionOS, 1.0);
 }
 
 

@@ -1444,6 +1444,7 @@
       <Filter>third-party\glm\glm</Filter>
     </ClInclude>
     <ClInclude Include="src\component\Transform.h" />
+    <ClInclude Include="src\render\scene\PerspectiveCamera.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\component\Object.cpp">
@@ -1537,5 +1538,6 @@
       <Filter>src\third_party\stb_image</Filter>
     </ClCompile>
     <ClCompile Include="src\component\Transform.cpp" />
+    <ClCompile Include="src\render\scene\PerspectiveCamera.cpp" />
   </ItemGroup>
 </Project>

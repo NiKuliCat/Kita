@@ -17,7 +17,6 @@ namespace Kita {
 	public:
 
 		virtual void  CaculateProjectionMatrix() override;
-		virtual void  CaculateViewMatrix() override;
 		virtual void  SetAspectRatio(float ratio) override {
 			m_Aspect = ratio; CaculateProjectionMatrix();
 		}

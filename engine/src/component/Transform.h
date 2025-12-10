@@ -21,9 +21,11 @@ namespace Kita {
 		const glm::vec3& GetScale() const { return m_Scale; }
 
 		void SetRotation(const glm::vec3& rotation) { m_Rotation = rotation; }
+		void SetPosition(const glm::vec3& position) { m_Position = position; }	
+		void SetScale(const glm::vec3& scale) { m_Scale = scale; }
 
-		glm::mat4 GetTransformMatrix();
-		glm::mat4 GetViewMatrix();
+		glm::mat4& GetTransformMatrix();
+		glm::mat4& GetViewMatrix();
 
 	private:
 		glm::vec3 m_Position = {0.0,0.0,0.0 };

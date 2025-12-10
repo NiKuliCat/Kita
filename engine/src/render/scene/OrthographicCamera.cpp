@@ -24,8 +24,4 @@ namespace Kita{
 		m_ProjectionMatrix = glm::ortho(-width, width, -height, height, m_Near, m_Far);
 	}
 
-	void OrthographicCamera::CaculateViewMatrix()
-	{
-	}
-
 }

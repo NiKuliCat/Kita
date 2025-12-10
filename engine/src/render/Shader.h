@@ -1,6 +1,6 @@
 #pragma once
 #include "core/Core.h"
-
+#include <glm/glm.hpp>
 namespace Kita {
 
 
@@ -21,6 +21,7 @@ namespace Kita {
 		virtual const std::string& GetName() const = 0;
 
 		virtual void SetInt(const std::string& name, const uint32_t value) = 0;
+		virtual void SetMat4(const std::string& name, const glm::mat4& matrix) = 0;
 
 		static Ref<Shader> Create(const std::string& filepath);
 		static Ref<Shader> Create(const std::string& name, const std::string& filepath);
