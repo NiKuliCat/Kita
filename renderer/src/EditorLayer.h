@@ -31,6 +31,8 @@ namespace Kita {
 		Transform m_CameraTransform;
 		PerspectiveCamera*  m_Camera = nullptr;
 
+		Ref<Object> m_Object = nullptr;
+
 		uint32_t m_SceneTexID = 0;
 		glm::vec2 m_ViewportSize{};
 

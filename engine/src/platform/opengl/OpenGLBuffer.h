@@ -8,7 +8,7 @@ namespace Kita {
 	{
 	public:
 		OpenGLVertexBuffer(const uint32_t size);
-		OpenGLVertexBuffer(float* vertices,const  uint32_t size);
+		OpenGLVertexBuffer(void* vertices,const  uint32_t size);
 
 		virtual ~OpenGLVertexBuffer();
 

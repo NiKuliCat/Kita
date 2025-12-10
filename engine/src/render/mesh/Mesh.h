@@ -7,7 +7,7 @@ namespace Kita {
 	{
 		glm::vec3 position;
 		glm::vec4 color;
-		std::vector<glm::vec2> texcoords;
+		glm::vec2 texcoords;
 		glm::vec3 normal;
 		glm::vec3 tangent;
 		glm::vec3 bitangent;

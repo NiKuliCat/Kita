@@ -55,10 +55,14 @@ namespace Kita {
 			vertex.tangent = glm::vec3(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z);
 			vertex.bitangent = glm::vec3(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z);
             
-           for(int j = 0;j< mesh->GetNumUVChannels();j++)
-           {
-               vertex.texcoords.push_back(glm::vec2(mesh->mTextureCoords[j]->x, mesh->mTextureCoords[j]->y));
-		   }
+            if (mesh->mTextureCoords[0]) 
+            {
+                vertex.texcoords = glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
+            }
+            else 
+            {
+                vertex.texcoords = glm::vec2(0.0f, 0.0f);
+            }
 
 		   vertices.push_back(vertex);
         }
