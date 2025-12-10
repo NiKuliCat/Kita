@@ -159,6 +159,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\component\Transform.h" />
     <ClInclude Include="src\Engine.h" />
     <ClInclude Include="src\component\Object.h" />
     <ClInclude Include="src\core\Application.h" />
@@ -626,6 +627,7 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
+    <ClCompile Include="src\component\Transform.cpp" />
     <ClCompile Include="src\core\Application.cpp">
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>

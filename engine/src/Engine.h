@@ -18,12 +18,15 @@
 #include "render/VertexArray.h"
 #include "render/Texture.h"
 #include "render/scene/OrthographicCamera.h"	
-#include "component/Object.h"
+
 #include "render/FrameBuffer.h"
 #include "render/UniformBuffer.h"
 
 #include "render/RenderCommand.h"
 #include "render/Renderer.h"
 
+
+#include "component/Object.h"
+#include "component/Transform.h"
 
 #include "third_party/imgui/imgui_layer.h"

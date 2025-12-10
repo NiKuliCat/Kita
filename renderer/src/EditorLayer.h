@@ -27,10 +27,11 @@ namespace Kita {
 		Ref<Shader> m_Shader = nullptr;
 		Ref<Texture> m_Texture = nullptr;
 		Ref<UniformBuffer> m_UniformBuffer = nullptr;
+		Transform m_ObjTransform;
 		OrthographicCamera*  m_Camera = nullptr;
 
 		uint32_t m_SceneTexID = 0;
-		glm::vec2 m_ViewportSize;
+		glm::vec2 m_ViewportSize{};
 
 	};
 }

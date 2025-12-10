@@ -1443,6 +1443,7 @@
     <ClInclude Include="third-party\glm\glm\vector_relational.hpp">
       <Filter>third-party\glm\glm</Filter>
     </ClInclude>
+    <ClInclude Include="src\component\Transform.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\component\Object.cpp">
@@ -1535,5 +1536,6 @@
     <ClCompile Include="src\third_party\stb_image\stb_image.cpp">
       <Filter>src\third_party\stb_image</Filter>
     </ClCompile>
+    <ClCompile Include="src\component\Transform.cpp" />
   </ItemGroup>
 </Project>
