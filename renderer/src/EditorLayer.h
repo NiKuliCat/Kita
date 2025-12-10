@@ -32,6 +32,9 @@ namespace Kita {
 		PerspectiveCamera*  m_Camera = nullptr;
 
 		Ref<Object> m_Object = nullptr;
+		Light* m_DirectLight = nullptr;
+		Transform m_LightTransform;
+		Ref<UniformBuffer> m_LightUnifromBuffer = nullptr;
 
 		uint32_t m_SceneTexID = 0;
 		glm::vec2 m_ViewportSize{};

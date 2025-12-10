@@ -6,9 +6,39 @@
 
 namespace Kita {
 
+	enum class FrameBufferTexFormat
+	{
+		None = 0,
+		RGBA8,
+		RGBA16F,
+		RED_INTEGER,
+		DEPTH24STENCIL8,
+		DEPTH = DEPTH24STENCIL8
+	};
+
+	struct FrameBufferTexDescription
+	{
+		FrameBufferTexFormat Format;
+
+		FrameBufferTexDescription() = default;
+		FrameBufferTexDescription(FrameBufferTexFormat format)
+			:Format(format){}
+	};
+
+	struct FrameBufferAttachmentsDescription
+	{
+		std::vector<FrameBufferTexDescription>  AttachmentsDesc;
+		FrameBufferAttachmentsDescription() = default;
+		FrameBufferAttachmentsDescription(std::initializer_list<FrameBufferTexDescription> attachments)
+			:AttachmentsDesc(attachments) {
+		}
+	};
+
 
 	struct FrameBufferDescriptor
 	{
+
+		FrameBufferAttachmentsDescription AttachmentsDescription;
 		uint32_t Width, Height;
 		uint32_t Samples = 1;
 

@@ -33,8 +33,14 @@ namespace Kita {
 
 	private:
 		FrameBufferDescriptor m_Descriptor;
-		uint32_t  m_FrameBufferID;
-		uint32_t m_ColorAttachment;
-		uint32_t m_DepthAttachment;
+	
+		std::vector<FrameBufferTexDescription> m_ColorAttachmentsDesc;
+		FrameBufferTexDescription m_DepthAttachmentDesc;
+
+
+
+		uint32_t  m_FrameBufferID = 0;
+		std::vector<uint32_t> m_ColorAttachments;
+		uint32_t m_DepthAttachment = 0;
 	};
 }

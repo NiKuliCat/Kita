@@ -188,6 +188,7 @@
     <ClInclude Include="src\render\Buffer.h" />
     <ClInclude Include="src\render\FrameBuffer.h" />
     <ClInclude Include="src\render\GraphicsContext.h" />
+    <ClInclude Include="src\render\Light.h" />
     <ClInclude Include="src\render\RenderCommand.h" />
     <ClInclude Include="src\render\Renderer.h" />
     <ClInclude Include="src\render\RendererAPI.h" />
@@ -715,6 +716,7 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
+    <ClCompile Include="src\render\Light.cpp" />
     <ClCompile Include="src\render\RenderCommand.cpp">
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>

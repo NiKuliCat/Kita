@@ -26,6 +26,7 @@ namespace Kita {
 
 		glm::mat4& GetTransformMatrix();
 		glm::mat4& GetViewMatrix();
+		glm::vec3& GetFrontDir();
 
 	private:
 		glm::vec3 m_Position = {0.0,0.0,0.0 };

@@ -1445,6 +1445,7 @@
     </ClInclude>
     <ClInclude Include="src\component\Transform.h" />
     <ClInclude Include="src\render\scene\PerspectiveCamera.h" />
+    <ClInclude Include="src\render\Light.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\component\Object.cpp">
@@ -1539,5 +1540,6 @@
     </ClCompile>
     <ClCompile Include="src\component\Transform.cpp" />
     <ClCompile Include="src\render\scene\PerspectiveCamera.cpp" />
+    <ClCompile Include="src\render\Light.cpp" />
   </ItemGroup>
 </Project>

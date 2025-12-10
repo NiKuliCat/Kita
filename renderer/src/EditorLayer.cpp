@@ -14,9 +14,13 @@ namespace Kita {
 	
 		m_CameraTransform = Transform();
 		m_ObjTransform = Transform();
+		m_LightTransform = Transform();
 
-		m_ObjTransform.SetPosition({ 0.0f,0.0f,-2.0f });
-		m_CameraTransform.SetPosition({ 0.0f,0.0f,-5.0f });
+		m_ObjTransform.SetPosition({ 0.0f,0.0f,0.0f });
+		m_CameraTransform.SetPosition({ 0.0f,0.0f,5.0f });
+		m_LightTransform.SetRotation({ 135.0,60.0f,0.0f });
+
+		m_DirectLight = new Light();
 	}
 	void EditorLayer::OnCreate()
 	{
@@ -46,7 +50,7 @@ namespace Kita {
 
 
 		m_Object = CreateRef<Object>("TestObject");
-		m_Object->LoadMeshs("assets/models/box.fbx");
+		m_Object->LoadMeshs("assets/models/Sphere.fbx");
 
 		auto boxVectices = m_Object->GetMeshs()[0]->GetVertices();
 		auto boxIndices = m_Object->GetMeshs()[0]->GetIndices();
@@ -69,10 +73,7 @@ namespace Kita {
 		shaderLibrary.Load("assets/shaders/EditorDefaultShader.glsl");
 		m_Shader = shaderLibrary.Get("EditorDefaultShader");
 
-		
-
-		
-
+	
 		TextureDescriptor texDesc{};
 		m_Texture = Texture::Create(texDesc, "assets/textures/test.jpg");
 		m_Texture->Bind(3);
@@ -80,9 +81,12 @@ namespace Kita {
 		m_VPUniformBuffer = UniformBuffer::Create(sizeof(glm::mat4), 0);
 
 	
-
+	
+		m_LightUnifromBuffer = UniformBuffer::Create(sizeof(DirectLightData), 1);
+		
 
 		FrameBufferDescriptor disc;
+		disc.AttachmentsDescription = { FrameBufferTexFormat::RGBA16F,FrameBufferTexFormat::DEPTH };
 		disc.Width = 1280;
 		disc.Height = 720;
 
@@ -98,7 +102,12 @@ namespace Kita {
 
 	void EditorLayer::OnUpdate(float daltaTime)
 	{
-	
+		DirectLightData data = DirectLightData();
+		data.Color = glm::vec4(1.0, 1.0, 1.0, 1.0);
+		data.intensity = 1.0f;
+		data.Direction = m_LightTransform.GetFrontDir();
+		m_LightUnifromBuffer->SetData(&data, sizeof(DirectLightData), 0);
+
 		glm::mat4 vp = m_Camera->GetProjectionMatrix() * m_CameraTransform.GetViewMatrix() ;
 		glm::mat4 m = m_ObjTransform.GetTransformMatrix();
 		m_VPUniformBuffer->SetData(&vp, sizeof(glm::mat4), 0);
@@ -187,6 +196,10 @@ namespace Kita {
 		ImGui::DragFloat3("##position", glm::value_ptr(m_ObjTransform.GetPosition()), 0.04f, 0.0f, 0.0f, "%.2f");
 		ImGui::DragFloat3("##rotate", glm::value_ptr(m_ObjTransform.GetRotation()), 0.04f, 0.0f, 0.0f, "%.2f");
 		ImGui::DragFloat3("##scale", glm::value_ptr(m_ObjTransform.GetScale()), 0.04f, 0.0f, 0.0f, "%.2f");
+		ImGui::PopID();
+		ImGui::PushID(2);
+
+		ImGui::DragFloat3("##rotate", glm::value_ptr(m_LightTransform.GetRotation()), 0.04f, 0.0f, 0.0f, "%.2f");
 		ImGui::PopID();
 		ImGui::End();
 

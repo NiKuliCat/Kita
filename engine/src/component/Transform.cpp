@@ -22,4 +22,11 @@ namespace Kita {
 		glm::mat4 rotate = glm::toMat4(glm::quat(glm::radians(m_Rotation)));
 		return glm::inverse(translate * rotate);
 	}
+	glm::vec3& Transform::GetFrontDir()
+	{
+		glm::quat q = glm::quat(glm::radians(m_Rotation));
+		glm::vec3  front = glm::vec3(0.0, 0.0, -1.0f);
+
+		return glm::normalize(q * front);
+	}
 }

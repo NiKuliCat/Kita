@@ -19,6 +19,7 @@
 #include "render/Texture.h"
 #include "render/scene/OrthographicCamera.h"	
 #include "render/scene/PerspectiveCamera.h"
+#include "render/Light.h"
 
 #include "render/FrameBuffer.h"
 #include "render/UniformBuffer.h"
@@ -29,5 +30,6 @@
 
 #include "component/Object.h"
 #include "component/Transform.h"
+
 
 #include "third_party/imgui/imgui_layer.h"
