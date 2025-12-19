@@ -11,7 +11,7 @@ namespace Kita {
 		:Layer("EditorLayer")
 	{
 		m_Camera = new PerspectiveCamera(45.0f, 16.0f / 9.0f, 0.1f, 100.0f);
-	
+		m_ViewportCamera = new ViewportCamera();
 		m_CameraTransform = Transform();
 		m_ObjTransform = Transform();
 		m_LightTransform = Transform();
@@ -67,21 +67,16 @@ namespace Kita {
 		m_VertexArray->AddVertexBuffer(vertexbuffer);
 		m_VertexArray->SetIndexBuffer(indexbuffer);
 
-
-
 		auto shaderLibrary = ShaderLibrary::GetInstance();
 		shaderLibrary.Load("assets/shaders/EditorDefaultShader.glsl");
 		m_Shader = shaderLibrary.Get("EditorDefaultShader");
 
-	
 		TextureDescriptor texDesc{};
 		m_Texture = Texture::Create(texDesc, "assets/textures/test.jpg");
 		m_Texture->Bind(3);
 		m_Shader->SetInt("MainTex", 3);
-		m_VPUniformBuffer = UniformBuffer::Create(sizeof(glm::mat4), 0);
 
-	
-	
+		m_VPUniformBuffer = UniformBuffer::Create(sizeof(glm::mat4), 0);
 		m_LightUnifromBuffer = UniformBuffer::Create(sizeof(DirectLightData), 1);
 		
 
@@ -102,13 +97,15 @@ namespace Kita {
 
 	void EditorLayer::OnUpdate(float daltaTime)
 	{
+		m_ViewportCamera->OnUpdate(daltaTime);
 		DirectLightData data = DirectLightData();
 		data.Color = glm::vec4(1.0, 1.0, 1.0, 1.0);
 		data.intensity = 1.0f;
 		data.Direction = m_LightTransform.GetFrontDir();
 		m_LightUnifromBuffer->SetData(&data, sizeof(DirectLightData), 0);
 
-		glm::mat4 vp = m_Camera->GetProjectionMatrix() * m_CameraTransform.GetViewMatrix() ;
+		//glm::mat4 vp = m_Camera->GetProjectionMatrix() * m_CameraTransform.GetViewMatrix() ;
+		glm::mat4 vp = m_ViewportCamera->GetViewProjectionMatrix();
 		glm::mat4 m = m_ObjTransform.GetTransformMatrix();
 		m_VPUniformBuffer->SetData(&vp, sizeof(glm::mat4), 0);
 		m_Shader->SetMat4("Model", m);
@@ -117,9 +114,10 @@ namespace Kita {
 		{
 			m_FrameBuffer->ReSize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 			m_Camera->SetAspectRatio(m_ViewportSize.x / m_ViewportSize.y);
-			auto vp = m_Camera->GetProjectionMatrix() * m_CameraTransform.GetViewMatrix();
+			m_ViewportCamera->SetViewport(m_ViewportSize.x, m_ViewportSize.y);
+			//auto vp = m_Camera->GetProjectionMatrix() * m_CameraTransform.GetViewMatrix();
+			auto vp = m_ViewportCamera->GetViewProjectionMatrix();
 			m_VPUniformBuffer->SetData(&vp, sizeof(glm::mat4), 0);
-			KITA_CLENT_TRACE("Resize FrameBuffer to : {0},{1}", m_ViewportSize.x, m_ViewportSize.y);
 		}
 		
 		m_FrameBuffer->Bind();
@@ -222,6 +220,7 @@ namespace Kita {
 
 	void EditorLayer::OnEvent(Event& event)
 	{
+		m_ViewportCamera->OnEvent(event);
 	}
 
 	

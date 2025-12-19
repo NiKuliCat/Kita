@@ -162,6 +162,7 @@
   <ItemGroup>
     <ClInclude Include="src\EditorLayer.h" />
     <ClInclude Include="src\renderer_pch.h" />
+    <ClInclude Include="src\scene\ViewportCamera.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\EditorApp.cpp">
@@ -180,6 +181,7 @@
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\scene\ViewportCamera.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\engine\Engine.vcxproj">

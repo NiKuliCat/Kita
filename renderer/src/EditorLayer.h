@@ -1,6 +1,6 @@
 #pragma once
 #include <Engine.h>
-
+#include "scene/ViewportCamera.h"
 namespace Kita {
 
 	class EditorLayer :public Layer{
@@ -30,6 +30,7 @@ namespace Kita {
 		Transform m_ObjTransform;
 		Transform m_CameraTransform;
 		PerspectiveCamera*  m_Camera = nullptr;
+		ViewportCamera* m_ViewportCamera = nullptr;
 
 		Ref<Object> m_Object = nullptr;
 		Light* m_DirectLight = nullptr;

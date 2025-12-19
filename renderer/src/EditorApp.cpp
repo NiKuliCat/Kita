@@ -1,8 +1,6 @@
 #include "renderer_pch.h"
 #include <Engine.h>
 #include <core/EntryPoint.h>
-
-
 #include "EditorLayer.h"
 
 namespace Kita {
