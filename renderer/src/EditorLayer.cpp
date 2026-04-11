@@ -1,10 +1,11 @@
-#include "renderer_pch.h"
+﻿#include "renderer_pch.h"
 #include "EditorLayer.h"
 #include "imgui.h"
 
 #include <glm/glm.hpp>
 #include <imgui_internal.h>
 #include <glm/gtc/type_ptr.hpp>
+#include <limits>
 namespace Kita {
 
 	EditorLayer::EditorLayer()
@@ -51,13 +52,23 @@ namespace Kita {
 
 		m_Object = CreateRef<Object>("TestObject");
 		m_Object->LoadMeshs("assets/models/Sphere.fbx");
+		KITA_CORE_ASSERT(!m_Object->GetMeshs().empty(), "Failed to load any mesh from Sphere.fbx");
 
 		auto boxVectices = m_Object->GetMeshs()[0]->GetVertices();
 		auto boxIndices = m_Object->GetMeshs()[0]->GetIndices();
+		m_MeshVertexCount = static_cast<uint32_t>(boxVectices.size());
+		m_MeshIndexCount = static_cast<uint32_t>(boxIndices.size());
+		m_MeshBoundsMin = glm::vec3(std::numeric_limits<float>::max());
+		m_MeshBoundsMax = glm::vec3(std::numeric_limits<float>::lowest());
+		for (const auto& vertex : boxVectices)
+		{
+			m_MeshBoundsMin = glm::min(m_MeshBoundsMin, vertex.position);
+			m_MeshBoundsMax = glm::max(m_MeshBoundsMax, vertex.position);
+		}
 
-		auto vertexbuffer = VertexBuffer::Create(boxVectices.data(), sizeof(Vertex) * boxVectices.size());
+		auto vertexbuffer = VertexBuffer::Create(boxVectices.data(), static_cast<uint32_t>(sizeof(Vertex) * boxVectices.size()));
 		vertexbuffer->SetLayout(boxLayout);
-		auto indexbuffer = IndexBuffer::Create(boxIndices.data(), boxIndices.size());
+		auto indexbuffer = IndexBuffer::Create(boxIndices.data(), static_cast<uint32_t>(boxIndices.size()));
 
 	/*	auto vertexbuffer = VertexBuffer::Create(vectices, sizeof(vectices));
 		vertexbuffer->SetLayout(layout);
@@ -91,7 +102,7 @@ namespace Kita {
 		m_SceneTexID = m_FrameBuffer->GetColorAttachment(0);
 		RenderCommand::SetDepthTest(true);
 		RenderCommand::SetBlend(true);
-		RenderCommand::SetCullMode(RendererAPI::CullMode::Back);
+		RenderCommand::SetCullMode(RendererAPI::CullMode::None);
 
 	}
 
@@ -121,8 +132,10 @@ namespace Kita {
 		}
 		
 		m_FrameBuffer->Bind();
+		RenderCommand::SetCullMode(m_DisableFaceCulling ? RendererAPI::CullMode::None : RendererAPI::CullMode::Back);
 		RenderCommand::SetClearColor(glm::vec4(0.12, 0.12, 0.13, 1));
 		RenderCommand::Clear();
+		m_Texture->Bind(3);
 		Renderer::Submit(m_VertexArray,m_Shader);
 		m_FrameBuffer->UnBind();
 	}
@@ -187,9 +200,19 @@ namespace Kita {
 
 		ImGui::Begin("Test Window");
 		ImGui::Text("Hello from another window!");
-		ImGui::DragFloat3("##position", glm::value_ptr(m_CameraTransform.GetPosition()), 0.04f, 0.0f, 0.0f, "%.2f");
-		ImGui::DragFloat3("##rotate", glm::value_ptr(m_CameraTransform.GetRotation()), 0.04f, 0.0f, 0.0f, "%.2f");
-		ImGui::DragFloat3("##scale", glm::value_ptr(m_CameraTransform.GetScale()), 0.04f, 0.0f, 0.0f, "%.2f");
+		const glm::vec3& viewportCameraPos = m_ViewportCamera->GetPosition();
+		ImGui::Text("Viewport Camera");
+		ImGui::Text("Pos: %.2f, %.2f, %.2f", viewportCameraPos.x, viewportCameraPos.y, viewportCameraPos.z);
+		ImGui::Text("Pitch/Yaw: %.2f, %.2f", m_ViewportCamera->GetPitch(), m_ViewportCamera->GetYaw());
+		ImGui::Text("Distance: %.2f", m_ViewportCamera->GetDistance());
+		ImGui::Separator();
+		ImGui::Text("Imported Mesh");
+		ImGui::Text("Vertices/Indices: %u / %u", m_MeshVertexCount, m_MeshIndexCount);
+		ImGui::Text("Bounds Min: %.2f, %.2f, %.2f", m_MeshBoundsMin.x, m_MeshBoundsMin.y, m_MeshBoundsMin.z);
+		ImGui::Text("Bounds Max: %.2f, %.2f, %.2f", m_MeshBoundsMax.x, m_MeshBoundsMax.y, m_MeshBoundsMax.z);
+		ImGui::Checkbox("Disable Face Culling", &m_DisableFaceCulling);
+		ImGui::Separator();
+		ImGui::Text("Object");
 		ImGui::PushID(1);
 		ImGui::DragFloat3("##position", glm::value_ptr(m_ObjTransform.GetPosition()), 0.04f, 0.0f, 0.0f, "%.2f");
 		ImGui::DragFloat3("##rotate", glm::value_ptr(m_ObjTransform.GetRotation()), 0.04f, 0.0f, 0.0f, "%.2f");
@@ -226,3 +249,4 @@ namespace Kita {
 	
 
 }
+

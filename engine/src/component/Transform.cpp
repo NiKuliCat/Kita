@@ -7,7 +7,7 @@
 #include <glm/gtx/euler_angles.hpp>
 namespace Kita {
 
-	glm::mat4& Transform::GetTransformMatrix()
+	glm::mat4 Transform::GetTransformMatrix() const
 	{
 		glm::mat4 translate = glm::translate(glm::mat4(1.0f), m_Position);
 		glm::mat4 scale = glm::scale(glm::mat4(1.0f), m_Scale);
@@ -16,13 +16,13 @@ namespace Kita {
 		return  translate * rotate * scale;
 	}
 
-	glm::mat4& Transform::GetViewMatrix()
+	glm::mat4 Transform::GetViewMatrix() const
 	{
 		glm::mat4 translate = glm::translate(glm::mat4(1.0f), m_Position);
 		glm::mat4 rotate = glm::toMat4(glm::quat(glm::radians(m_Rotation)));
 		return glm::inverse(translate * rotate);
 	}
-	glm::vec3& Transform::GetFrontDir()
+	glm::vec3 Transform::GetFrontDir() const
 	{
 		glm::quat q = glm::quat(glm::radians(m_Rotation));
 		glm::vec3  front = glm::vec3(0.0, 0.0, -1.0f);

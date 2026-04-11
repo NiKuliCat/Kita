@@ -26,19 +26,19 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset>v145</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -55,22 +55,22 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\bin\Debug-windows-x86_64\Renderer\</OutDir>
-    <IntDir>..\bin-int\Debug-windows-x86_64\Renderer\</IntDir>
+    <OutDir>$(ProjectDir)..\bin\Debug-windows-x86_64\Renderer\</OutDir>
+    <IntDir>$(ProjectDir)..\bin-int\Debug-windows-x86_64\Renderer\</IntDir>
     <TargetName>Renderer</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\bin\Release-windows-x86_64\Renderer\</OutDir>
-    <IntDir>..\bin-int\Release-windows-x86_64\Renderer\</IntDir>
+    <OutDir>$(ProjectDir)..\bin\Release-windows-x86_64\Renderer\</OutDir>
+    <IntDir>$(ProjectDir)..\bin-int\Release-windows-x86_64\Renderer\</IntDir>
     <TargetName>Renderer</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\bin\Dist-windows-x86_64\Renderer\</OutDir>
-    <IntDir>..\bin-int\Dist-windows-x86_64\Renderer\</IntDir>
+    <OutDir>$(ProjectDir)..\bin\Dist-windows-x86_64\Renderer\</OutDir>
+    <IntDir>$(ProjectDir)..\bin-int\Dist-windows-x86_64\Renderer\</IntDir>
     <TargetName>Renderer</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
@@ -79,7 +79,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>renderer_pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>PLATFORM_WINDOWS;KITA_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PLATFORM_WINDOWS;KITA_DEBUG;KITA_HAS_ASSIMP=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\engine\src;..\engine\third-party\glfw\include;..\engine\third-party\glad\include;..\engine\third-party\imgui;..\engine\third-party\spdlog\include;..\engine\third-party\glm;..\engine\third-party\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
@@ -93,10 +93,12 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>..\engine\third-party\assimp\bin\Debug\assimp-vc143-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\engine\third-party\assimp\bin\Debug\assimp-vc145-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <ProjectReference>
+    </ProjectReference>
     <PostBuildEvent>
-      <Command>IF EXIST "$(SolutionDir)\engine\third-party\assimp\bin\Debug\assimp-vc143-mtd.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)\engine\third-party\assimp\bin\Debug\assimp-vc143-mtd.dll" "..\bin\Debug-windows-x86_64\Renderer" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)\engine\third-party\assimp\bin\Debug\assimp-vc143-mtd.dll" "..\bin\Debug-windows-x86_64\Renderer" &gt; nul)</Command>
+      <Command>IF EXIST "$(SolutionDir)\engine\third-party\assimp\bin\Debug\assimp-vc145-mtd.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)\engine\third-party\assimp\bin\Debug\assimp-vc145-mtd.dll" "..\bin\Debug-windows-x86_64\Renderer" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)\engine\third-party\assimp\bin\Debug\assimp-vc145-mtd.dll" "..\bin\Debug-windows-x86_64\Renderer" &gt; nul)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -104,7 +106,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>renderer_pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>PLATFORM_WINDOWS;KITA_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PLATFORM_WINDOWS;KITA_RELEASE;KITA_HAS_ASSIMP=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\engine\src;..\engine\third-party\glfw\include;..\engine\third-party\glad\include;..\engine\third-party\imgui;..\engine\third-party\spdlog\include;..\engine\third-party\glm;..\engine\third-party\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
@@ -123,10 +125,12 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>..\engine\third-party\assimp\bin\Release\assimp-vc143-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\engine\third-party\assimp\bin\Release\assimp-vc145-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <ProjectReference>
+    </ProjectReference>
     <PostBuildEvent>
-      <Command>IF EXIST "$(SolutionDir)\engine\third-party\assimp\bin\Release\assimp-vc143-mtd.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)\engine\third-party\assimp\bin\Release\assimp-vc143-mtd.dll" "..\bin\Release-windows-x86_64\Renderer" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)\engine\third-party\assimp\bin\Release\assimp-vc143-mtd.dll" "..\bin\Release-windows-x86_64\Renderer" &gt; nul)</Command>
+      <Command>IF EXIST "$(SolutionDir)\engine\third-party\assimp\bin\Release\assimp-vc145-mt.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)\engine\third-party\assimp\bin\Release\assimp-vc145-mt.dll" "..\bin\Release-windows-x86_64\Renderer" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)\engine\third-party\assimp\bin\Release\assimp-vc145-mt.dll" "..\bin\Release-windows-x86_64\Renderer" &gt; nul)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
@@ -134,7 +138,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>renderer_pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>PLATFORM_WINDOWS;KITA_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>PLATFORM_WINDOWS;KITA_DIST;KITA_HAS_ASSIMP=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\engine\src;..\engine\third-party\glfw\include;..\engine\third-party\glad\include;..\engine\third-party\imgui;..\engine\third-party\spdlog\include;..\engine\third-party\glm;..\engine\third-party\assimp\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>None</DebugInformationFormat>
       <Optimization>Full</Optimization>
@@ -153,10 +157,12 @@
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>..\engine\third-party\assimp\bin\Release\assimp-vc143-mtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\engine\third-party\assimp\bin\Release\assimp-vc145-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <ProjectReference>
+    </ProjectReference>
     <PostBuildEvent>
-      <Command>IF EXIST "$(SolutionDir)\engine\third-party\assimp\bin\Release\assimp-vc143-mtd.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)\engine\third-party\assimp\bin\Release\assimp-vc143-mtd.dll" "..\bin\Dist-windows-x86_64\Renderer" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)\engine\third-party\assimp\bin\Release\assimp-vc143-mtd.dll" "..\bin\Dist-windows-x86_64\Renderer" &gt; nul)</Command>
+      <Command>IF EXIST "$(SolutionDir)\engine\third-party\assimp\bin\Release\assimp-vc145-mt.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)\engine\third-party\assimp\bin\Release\assimp-vc145-mt.dll" "..\bin\Dist-windows-x86_64\Renderer" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)\engine\third-party\assimp\bin\Release\assimp-vc145-mt.dll" "..\bin\Dist-windows-x86_64\Renderer" &gt; nul)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -165,20 +171,9 @@
     <ClInclude Include="src\scene\ViewportCamera.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\EditorApp.cpp">
-      <ExternalWarningLevel>Level3</ExternalWarningLevel>
-      <ExternalWarningLevel>Level3</ExternalWarningLevel>
-      <ExternalWarningLevel>Level3</ExternalWarningLevel>
-    </ClCompile>
-    <ClCompile Include="src\EditorLayer.cpp">
-      <ExternalWarningLevel>Level3</ExternalWarningLevel>
-      <ExternalWarningLevel>Level3</ExternalWarningLevel>
-      <ExternalWarningLevel>Level3</ExternalWarningLevel>
-    </ClCompile>
+    <ClCompile Include="src\EditorApp.cpp" />
+    <ClCompile Include="src\EditorLayer.cpp" />
     <ClCompile Include="src\renderer_pch.cpp">
-      <ExternalWarningLevel>Level3</ExternalWarningLevel>
-      <ExternalWarningLevel>Level3</ExternalWarningLevel>
-      <ExternalWarningLevel>Level3</ExternalWarningLevel>
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\scene\ViewportCamera.cpp" />

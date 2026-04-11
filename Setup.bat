@@ -1,6 +1,6 @@
 @echo off
 
-pushd 
-premake\premake5.exe --file=Build.lua vs2022
+pushd "%~dp0"
+premake\premake5.exe --file=Build.lua vs2026
 popd
 pause

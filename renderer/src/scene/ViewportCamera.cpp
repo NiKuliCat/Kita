@@ -4,7 +4,13 @@
 #include <glfw/glfw3.h>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
+
 namespace Kita {
+
+	ViewportCamera::ViewportCamera()
+		: ViewportCamera(45.0f, 16.0f / 9.0f, 0.1f, 1000.0f)
+	{
+	}
 
 	ViewportCamera::ViewportCamera(const float fov, const float aspect, const float nearPlane, const float farPlane)
 		:m_FOV(fov), m_Aspect(aspect), m_Near(nearPlane), m_Far(farPlane)
@@ -42,17 +48,17 @@ namespace Kita {
 		dispatcher.Dispatcher<MouseScrolledEvent>(BIND_EVENT_FUNC(ViewportCamera::OnMouseScroll));
 	}
 
-	glm::vec3& ViewportCamera::GetUpDirection() const
+	glm::vec3 ViewportCamera::GetUpDirection() const
 	{
 		return glm::rotate(GetOrientation(), glm::vec3(0.0f, 1.0f, 0.0f));
 	}
 
-	glm::vec3& ViewportCamera::GetForwardDirection() const
+	glm::vec3 ViewportCamera::GetForwardDirection() const
 	{
-		return glm::rotate(GetOrientation(), glm::vec3(0.0f, 0.0f, -1.0f)); //  为什么不是1.0f
+		return glm::rotate(GetOrientation(), glm::vec3(0.0f, 0.0f, -1.0f));
 	}
 
-	glm::vec3& ViewportCamera::GetRightDirection() const
+	glm::vec3 ViewportCamera::GetRightDirection() const
 	{
 		return glm::rotate(GetOrientation(), glm::vec3(1.0f, 0.0f, 0.0f));
 	}
@@ -115,10 +121,10 @@ namespace Kita {
 
 	std::pair<float, float> ViewportCamera::PanSpeed() const
 	{
-		float x = std::min(m_ViewportWidth / 1000.0f, 2.4f); // max = 2.4f
+		float x = std::min(m_ViewportWidth / 1000.0f, 2.4f);
 		float xFactor = 0.0366f * (x * x) - 0.1778f * x + 0.3021f;
 
-		float y = std::min(m_ViewportHeight / 1000.0f, 2.4f); // max = 2.4f
+		float y = std::min(m_ViewportHeight / 1000.0f, 2.4f);
 		float yFactor = 0.0366f * (y * y) - 0.1778f * y + 0.3021f;
 
 		return { xFactor, yFactor };
@@ -134,10 +140,8 @@ namespace Kita {
 		float distance = m_Distance * 0.2f;
 		distance = std::max(distance, 0.0f);
 		float speed = distance * distance;
-		speed = std::min(speed, 100.0f); // max speed = 100
+		speed = std::min(speed, 100.0f);
 		return speed;
 	}
-
-
 
 }

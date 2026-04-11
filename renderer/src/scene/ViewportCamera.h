@@ -8,7 +8,7 @@ namespace Kita {
 	class ViewportCamera
 	{
 	public:
-		ViewportCamera() = default;
+		ViewportCamera();
 		ViewportCamera(const float fov, const float aspect, const float nearPlane, const float farPlane);
 
 		~ViewportCamera() = default;
@@ -28,9 +28,9 @@ namespace Kita {
 		const glm::mat4& GetProjectionMatrix() const { return m_ProjectionMatrix; }
 		glm::mat4 GetViewProjectionMatrix() const { return m_ProjectionMatrix * m_ViewMatrix; }
 
-		glm::vec3& GetUpDirection() const;
-		glm::vec3& GetForwardDirection() const;	
-		glm::vec3& GetRightDirection() const;
+		glm::vec3 GetUpDirection() const;
+		glm::vec3 GetForwardDirection() const;	
+		glm::vec3 GetRightDirection() const;
 
 		const glm::vec3& GetPosition() const { return m_Position; }
 		glm::quat GetOrientation() const;

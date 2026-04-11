@@ -55,7 +55,7 @@ void main()
 {
 	vec3 normalWS = normalize(Attri_Input.normal);
 	vec3 lightDir = normalize(LightDirection);
-	float NdotL =  max(dot(Attri_Input.normal, lightDir),0.0);
-	float half_NdotL = (NdotL + 1.0f) * 0.5f;
-	FragColor = vec4(texture(MainTex, Attri_Input.uv).rgb * NdotL,1.0) ;
+	float NdotL = max(dot(normalWS, lightDir), 0.0);
+	float diffuse = max(NdotL, 0.15);
+	FragColor = vec4(texture(MainTex, Attri_Input.uv).rgb * diffuse, 1.0);
 }

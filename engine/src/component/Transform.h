@@ -24,9 +24,9 @@ namespace Kita {
 		void SetPosition(const glm::vec3& position) { m_Position = position; }	
 		void SetScale(const glm::vec3& scale) { m_Scale = scale; }
 
-		glm::mat4& GetTransformMatrix();
-		glm::mat4& GetViewMatrix();
-		glm::vec3& GetFrontDir();
+		glm::mat4 GetTransformMatrix() const;
+		glm::mat4 GetViewMatrix() const;
+		glm::vec3 GetFrontDir() const;
 
 	private:
 		glm::vec3 m_Position = {0.0,0.0,0.0 };

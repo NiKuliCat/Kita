@@ -4,9 +4,17 @@
 #include "render/mesh/Mesh.h"
 
 
-#include <assimp/Importer.hpp>
+#ifndef KITA_HAS_ASSIMP
+#define KITA_HAS_ASSIMP 1
+#endif
+
+#if KITA_HAS_ASSIMP
 #include <assimp/scene.h>
-#include <assimp/postprocess.h>
+#else
+struct aiScene;
+struct aiNode;
+struct aiMesh;
+#endif
 
 namespace Kita {
 

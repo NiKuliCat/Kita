@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="src">
@@ -67,6 +67,9 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\component\Object.h">
+      <Filter>src\component</Filter>
+    </ClInclude>
+    <ClInclude Include="src\component\Transform.h">
       <Filter>src\component</Filter>
     </ClInclude>
     <ClInclude Include="src\core\Application.h">
@@ -147,6 +150,9 @@
     <ClInclude Include="src\render\GraphicsContext.h">
       <Filter>src\render</Filter>
     </ClInclude>
+    <ClInclude Include="src\render\Light.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
     <ClInclude Include="src\render\RenderCommand.h">
       <Filter>src\render</Filter>
     </ClInclude>
@@ -178,6 +184,9 @@
       <Filter>src\render\scene</Filter>
     </ClInclude>
     <ClInclude Include="src\render\scene\OrthographicCamera.h">
+      <Filter>src\render\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\scene\PerspectiveCamera.h">
       <Filter>src\render\scene</Filter>
     </ClInclude>
     <ClInclude Include="src\third_party\imgui\imgui_layer.h">
@@ -1443,12 +1452,12 @@
     <ClInclude Include="third-party\glm\glm\vector_relational.hpp">
       <Filter>third-party\glm\glm</Filter>
     </ClInclude>
-    <ClInclude Include="src\component\Transform.h" />
-    <ClInclude Include="src\render\scene\PerspectiveCamera.h" />
-    <ClInclude Include="src\render\Light.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\component\Object.cpp">
+      <Filter>src\component</Filter>
+    </ClCompile>
+    <ClCompile Include="src\component\Transform.cpp">
       <Filter>src\component</Filter>
     </ClCompile>
     <ClCompile Include="src\core\Application.cpp">
@@ -1502,6 +1511,9 @@
     <ClCompile Include="src\render\FrameBuffer.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
+    <ClCompile Include="src\render\Light.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
     <ClCompile Include="src\render\RenderCommand.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
@@ -1529,6 +1541,9 @@
     <ClCompile Include="src\render\scene\OrthographicCamera.cpp">
       <Filter>src\render\scene</Filter>
     </ClCompile>
+    <ClCompile Include="src\render\scene\PerspectiveCamera.cpp">
+      <Filter>src\render\scene</Filter>
+    </ClCompile>
     <ClCompile Include="src\third_party\imgui\imgui_build.cpp">
       <Filter>src\third_party\imgui</Filter>
     </ClCompile>
@@ -1538,8 +1553,5 @@
     <ClCompile Include="src\third_party\stb_image\stb_image.cpp">
       <Filter>src\third_party\stb_image</Filter>
     </ClCompile>
-    <ClCompile Include="src\component\Transform.cpp" />
-    <ClCompile Include="src\render\scene\PerspectiveCamera.cpp" />
-    <ClCompile Include="src\render\Light.cpp" />
   </ItemGroup>
 </Project>

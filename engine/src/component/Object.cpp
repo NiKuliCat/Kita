@@ -1,9 +1,16 @@
 #include "kita_pch.h"
 #include "Object.h"
 #include "core/Log.h"
+
+#if KITA_HAS_ASSIMP
+#include <assimp/Importer.hpp>
+#include <assimp/postprocess.h>
+#endif
+
 namespace Kita {
 	void Object::LoadMeshs(const std::string& filepath)
 	{
+#if KITA_HAS_ASSIMP
         Assimp::Importer import;
         const aiScene* scene = import.ReadFile(filepath, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace );
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
@@ -13,10 +20,14 @@ namespace Kita {
         }
 
         ProcessNode(scene->mRootNode, scene);
+#else
+        KITA_CORE_ERROR("assimp binary dependency is missing, cannot load mesh: {0}", filepath);
+#endif
 	}
 
 
 
+#if KITA_HAS_ASSIMP
     void Object::ProcessNode(aiNode* node, const aiScene* scene)
     {
         for (unsigned int i = 0; i < node->mNumMeshes; i++)
@@ -24,7 +35,7 @@ namespace Kita {
             aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
             ProcessMesh(mesh, scene);
         }
-        // 接下来对它的子节点重复这一过程
+        // Recurse into child nodes.
         for (unsigned int i = 0; i < node->mNumChildren; i++)
         {
             ProcessNode(node->mChildren[i], scene);
@@ -80,4 +91,17 @@ namespace Kita {
 
 		m_Meshs.push_back(meshObj);
     }
+#else
+    void Object::ProcessNode(aiNode* node, const aiScene* scene)
+    {
+        (void)node;
+        (void)scene;
+    }
+
+    void Object::ProcessMesh(aiMesh* mesh, const aiScene* scene)
+    {
+        (void)mesh;
+        (void)scene;
+    }
+#endif
 }
