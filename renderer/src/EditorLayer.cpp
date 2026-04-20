@@ -80,7 +80,10 @@ namespace Kita {
 
 		auto shaderLibrary = ShaderLibrary::GetInstance();
 		shaderLibrary.Load("assets/shaders/EditorDefaultShader.glsl");
+		shaderLibrary.Load("assets/shaders/EditorLineShader.glsl");
+
 		m_Shader = shaderLibrary.Get("EditorDefaultShader");
+		m_LineShader = shaderLibrary.Get("EditorLineShader");
 
 		TextureDescriptor texDesc{};
 		m_Texture = Texture::Create(texDesc, "assets/textures/test.jpg");
@@ -120,13 +123,14 @@ namespace Kita {
 		glm::mat4 m = m_ObjTransform.GetTransformMatrix();
 		m_VPUniformBuffer->SetData(&vp, sizeof(glm::mat4), 0);
 		m_Shader->SetMat4("Model", m);
+		m_LineShader->SetMat4("Model", m);
+		m_LineShader->SetColor("Color", glm::vec4(1.0,0.0,1.0,0.0));
 		auto desc = m_FrameBuffer->GetDescriptor();
 		if (m_ViewportSize.x != desc.Width || m_ViewportSize.y != desc.Height)
 		{
 			m_FrameBuffer->ReSize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 			m_Camera->SetAspectRatio(m_ViewportSize.x / m_ViewportSize.y);
 			m_ViewportCamera->SetViewport(m_ViewportSize.x, m_ViewportSize.y);
-			//auto vp = m_Camera->GetProjectionMatrix() * m_CameraTransform.GetViewMatrix();
 			auto vp = m_ViewportCamera->GetViewProjectionMatrix();
 			m_VPUniformBuffer->SetData(&vp, sizeof(glm::mat4), 0);
 		}
@@ -136,7 +140,7 @@ namespace Kita {
 		RenderCommand::SetClearColor(glm::vec4(0.12, 0.12, 0.13, 1));
 		RenderCommand::Clear();
 		m_Texture->Bind(3);
-		Renderer::Submit(m_VertexArray,m_Shader);
+		Renderer::SubmitAsLine(m_VertexArray,m_LineShader);
 		m_FrameBuffer->UnBind();
 	}
 

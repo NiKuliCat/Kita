@@ -82,12 +82,20 @@ namespace Kita {
 		vertexArray->Bind();
 		shader->Bind();
 		glDrawElements(GL_TRIANGLES, vertexArray->GetIndexCount(), GL_UNSIGNED_INT, nullptr);
+		
 	}
 
 	void OpenGLRendererAPI::DrawIndexed(const Ref<VertexArray>& vertexArray, const uint32_t count)
 	{
 		vertexArray->Bind();
 		glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
+	}
+
+	void OpenGLRendererAPI::DrawLine(const Ref<VertexArray>& vertexArray,const Ref<Shader>& shader)
+	{
+		vertexArray->Bind();
+		shader->Bind();
+		glDrawElements(GL_LINES, vertexArray->GetIndexCount(), GL_UNSIGNED_INT, nullptr);
 	}
 
 

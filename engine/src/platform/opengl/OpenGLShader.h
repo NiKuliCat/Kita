@@ -25,6 +25,7 @@ namespace Kita {
 
 		virtual void SetInt(const std::string& name, const uint32_t value) override;
 		virtual void SetMat4(const std::string& name, const glm::mat4& matrix) override;
+		virtual void SetColor(const std::string& name, const glm::vec4& color) override;
 	private:
 		uint32_t CompileShader(uint32_t type, const std::string& source);
 

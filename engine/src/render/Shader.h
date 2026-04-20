@@ -22,6 +22,7 @@ namespace Kita {
 
 		virtual void SetInt(const std::string& name, const uint32_t value) = 0;
 		virtual void SetMat4(const std::string& name, const glm::mat4& matrix) = 0;
+		virtual void SetColor(const std::string& name, const glm::vec4& color) = 0;
 
 		static Ref<Shader> Create(const std::string& filepath);
 		static Ref<Shader> Create(const std::string& name, const std::string& filepath);

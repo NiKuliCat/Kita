@@ -31,6 +31,9 @@ namespace Kita {
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray) = 0;
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray,const Ref<Shader>& shader) = 0;
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, const uint32_t count) = 0;
+
+		virtual void DrawLine(const Ref<VertexArray>& vertexArray, const Ref<Shader>& shader) = 0;
+
 	private:
 		static API s_API;
 

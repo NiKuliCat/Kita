@@ -2,6 +2,8 @@
 #include "OpenGLShader.h"
 #include "OpenGLUtil.h"
 #include "core/Log.h"
+#include <glm/gtc/type_ptr.hpp>
+
 namespace Kita {
 
 	OpenGLShader::OpenGLShader(const std::string& filepath)
@@ -94,6 +96,13 @@ namespace Kita {
 		Bind();
 		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
 		glUniformMatrix4fv(location, 1, GL_FALSE, &matrix[0][0]);
+	}
+
+	void OpenGLShader::SetColor(const std::string& name, const glm::vec4& color)
+	{
+		Bind();
+		GLint location = glGetUniformLocation(m_ShaderID, name.c_str());
+		glUniform4fv(location, 1, glm::value_ptr(color));
 	}
 
 	uint32_t OpenGLShader::CompileShader(uint32_t type, const std::string& source)

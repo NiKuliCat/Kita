@@ -17,5 +17,8 @@ namespace Kita {
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray) override;
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray,const Ref<Shader>& shader) override;
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, const uint32_t count) override;
+
+		virtual void DrawLine(const Ref<VertexArray>& vertexArray,const Ref<Shader>& shader) override;
+
 	};
 }

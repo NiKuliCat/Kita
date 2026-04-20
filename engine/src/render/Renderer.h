@@ -12,5 +12,8 @@ namespace  Kita{
 
 		static void Submit(const Ref<VertexArray>& vertexArray) { RenderCommand::DrawIndexed(vertexArray);}
 		static void Submit(const Ref<VertexArray>& vertexArray,const Ref<Shader>& shader) { RenderCommand::DrawIndexed(vertexArray,shader);}
+
+
+		static void SubmitAsLine(const Ref<VertexArray>& vertexArray, const Ref<Shader>& shader) { RenderCommand::DrawLine(vertexArray,shader);}
 	};
 }

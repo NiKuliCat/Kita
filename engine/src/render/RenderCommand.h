@@ -40,6 +40,14 @@ namespace Kita {
 		{
 			s_RendererAPI->DrawIndexed(vertexArray, count);
 		}
+
+		inline static void DrawLine(const Ref<VertexArray>& vertexArray,const Ref<Shader>& shader)
+		{
+			s_RendererAPI->DrawLine(vertexArray, shader);
+		}
+
+
+
 		inline static void  SetViewport(const uint32_t x, const  uint32_t y, const uint32_t width, const uint32_t height)
 		{
 			s_RendererAPI->SetViewport(x, y, width, height);

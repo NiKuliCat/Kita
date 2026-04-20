@@ -24,7 +24,7 @@ namespace Kita {
 	private:
 		Ref<FrameBuffer> m_FrameBuffer = nullptr;
 		Ref<VertexArray> m_VertexArray = nullptr;
-		Ref<Shader> m_Shader = nullptr;
+		Ref<Shader> m_Shader = nullptr, m_LineShader = nullptr;
 		Ref<Texture> m_Texture = nullptr;
 		Ref<UniformBuffer> m_VPUniformBuffer = nullptr;
 		Transform m_ObjTransform;
