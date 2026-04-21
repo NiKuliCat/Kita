@@ -48,12 +48,15 @@ namespace Kita {
 		void MousePan(const glm::vec2& delta);
 		void MouseRotate(const glm::vec2& delta);
 		void MouseZoom(float delta);
+		void FlightRotate(const glm::vec2& delta);
+		void FlightMove(float deltaTime);
 
 		glm::vec3 CalculatePosition() const;
 
 		std::pair<float, float> PanSpeed() const;
 		float RotationSpeed() const;
 		float ZoomSpeed() const;
+		float FlightSpeed() const;
 
 
 	private:

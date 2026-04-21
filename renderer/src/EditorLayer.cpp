@@ -11,7 +11,6 @@ namespace Kita {
 	EditorLayer::EditorLayer()
 		:Layer("EditorLayer")
 	{
-		m_Camera = new PerspectiveCamera(45.0f, 16.0f / 9.0f, 0.1f, 100.0f);
 		m_ViewportCamera = new ViewportCamera();
 		m_CameraTransform = Transform();
 		m_LightTransform = Transform();
@@ -26,16 +25,13 @@ namespace Kita {
 
 
 		m_Scene = CreateRef<Scene>();
+
 		{
 			auto& obj = m_Scene->CreateObject("sphere");
 			auto& meshrenderer = obj.AddComponent<MeshRenderer>();
 			meshrenderer.LoadMeshs("assets/models/Sphere.fbx");
 		}
 		
-
-
-
-
 		FrameBufferDescriptor disc;
 		disc.AttachmentsDescription = { FrameBufferTexFormat::RGBA16F,FrameBufferTexFormat::DEPTH };
 		disc.Width = 1280;
@@ -48,7 +44,6 @@ namespace Kita {
 		RenderCommand::SetDepthTest(true);
 		RenderCommand::SetBlend(true);
 		RenderCommand::SetCullMode(RendererAPI::CullMode::None);
-
 	}
 
 	void EditorLayer::OnUpdate(float daltaTime)
@@ -62,14 +57,15 @@ namespace Kita {
 		if (m_ViewportSize.x != desc.Width || m_ViewportSize.y != desc.Height)
 		{
 			m_FrameBuffer->ReSize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-			m_Camera->SetAspectRatio(m_ViewportSize.x / m_ViewportSize.y);
 			m_ViewportCamera->SetViewport(m_ViewportSize.x, m_ViewportSize.y);
 		
 		}
 		auto vp = m_ViewportCamera->GetViewProjectionMatrix();
-		Renderer::BeginScene(vp, light_data);
+
+
 		m_FrameBuffer->Bind();
-		RenderCommand::SetCullMode(m_DisableFaceCulling ? RendererAPI::CullMode::None : RendererAPI::CullMode::Back);
+		Renderer::BeginScene(vp, light_data);
+
 		RenderCommand::SetClearColor(glm::vec4(0.12, 0.12, 0.13, 1));
 		RenderCommand::Clear();
 
@@ -77,6 +73,7 @@ namespace Kita {
 
 		Renderer::EndScene();
 		m_FrameBuffer->UnBind();
+
 	}
 
 	void EditorLayer::OnDestroy()
@@ -145,10 +142,6 @@ namespace Kita {
 		ImGui::Text("Distance: %.2f", m_ViewportCamera->GetDistance());
 		ImGui::Separator();
 		ImGui::Text("Imported Mesh");
-		ImGui::Text("Vertices/Indices: %u / %u", m_MeshVertexCount, m_MeshIndexCount);
-		ImGui::Text("Bounds Min: %.2f, %.2f, %.2f", m_MeshBoundsMin.x, m_MeshBoundsMin.y, m_MeshBoundsMin.z);
-		ImGui::Text("Bounds Max: %.2f, %.2f, %.2f", m_MeshBoundsMax.x, m_MeshBoundsMax.y, m_MeshBoundsMax.z);
-		ImGui::Checkbox("Disable Face Culling", &m_DisableFaceCulling);
 		ImGui::Separator();
 		ImGui::Text("Object");
 		ImGui::PushID(1);

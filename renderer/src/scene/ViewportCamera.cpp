@@ -22,14 +22,18 @@ namespace Kita {
 
 	void ViewportCamera::OnUpdate(float deltaTime)
 	{
-		if (Input::IsKeyPressed(Key::LeftAlt))
+		const glm::vec2 mouse{ Input::GetMouseX(), Input::GetMouseY() };
+		glm::vec2 delta = (mouse - m_MousePosition) * 0.003f;
+		m_MousePosition = mouse;
+
+		if (Input::IsMouseButtonPressed(Mouse::ButtonRight) && !Input::IsKeyPressed(Key::LeftAlt))
 		{
-			const glm::vec2 mouse{ Input::GetMouseX(), Input::GetMouseY() };
-			glm::vec2 delta = (mouse - m_MousePosition) * 0.003f;
-
-			m_MousePosition = mouse;
-
-
+			FlightRotate(delta);
+			FlightMove(deltaTime);
+			UpdateViewMatrix();
+		}
+		else if (Input::IsKeyPressed(Key::LeftAlt))
+		{
 			if (Input::IsMouseButtonPressed(Mouse::ButtonMiddle))
 				MousePan(delta);
 			else if (Input::IsMouseButtonPressed(Mouse::ButtonLeft))
@@ -114,6 +118,37 @@ namespace Kita {
 		}
 	}
 
+	void ViewportCamera::FlightRotate(const glm::vec2& delta)
+	{
+		float yawSign = GetUpDirection().y < 0 ? -1.0f : 1.0f;
+		m_Yaw += yawSign * delta.x * RotationSpeed();
+		m_Pitch += delta.y * RotationSpeed();
+	}
+
+	void ViewportCamera::FlightMove(float deltaTime)
+	{
+		glm::vec3 velocity(0.0f);
+		const float speed = FlightSpeed() * deltaTime;
+
+		if (Input::IsKeyPressed(Key::W))
+			velocity += GetForwardDirection();
+		if (Input::IsKeyPressed(Key::S))
+			velocity -= GetForwardDirection();
+		if (Input::IsKeyPressed(Key::D))
+			velocity += GetRightDirection();
+		if (Input::IsKeyPressed(Key::A))
+			velocity -= GetRightDirection();
+		if (Input::IsKeyPressed(Key::E))
+			velocity += GetUpDirection();
+		if (Input::IsKeyPressed(Key::Q))
+			velocity -= GetUpDirection();
+
+		if (glm::dot(velocity, velocity) > 0.0f)
+			velocity = glm::normalize(velocity);
+
+		m_FocusePosition += velocity * speed;
+	}
+
 	glm::vec3 ViewportCamera::CalculatePosition() const
 	{
 		return m_FocusePosition - GetForwardDirection() * m_Distance;
@@ -141,6 +176,14 @@ namespace Kita {
 		distance = std::max(distance, 0.0f);
 		float speed = distance * distance;
 		speed = std::min(speed, 100.0f);
+		return speed;
+	}
+
+	float ViewportCamera::FlightSpeed() const
+	{
+		float speed = std::max(m_Distance, 1.0f) * 0.01f;
+		if (Input::IsKeyPressed(Key::LeftShift) || Input::IsKeyPressed(Key::RightShift))
+			speed *= 2.5f;
 		return speed;
 	}
 
