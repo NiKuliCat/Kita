@@ -59,7 +59,7 @@ namespace Kita {
 	}
 	void ImGuiLayer::OnImGuiRender()
 	{
-		ImGui::ShowDemoWindow();
+		//ImGui::ShowDemoWindow();
 	}
 
 	void ImGuiLayer::SetDarkThemeSpace()

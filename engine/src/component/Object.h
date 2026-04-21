@@ -2,19 +2,8 @@
 
 #include "core/Core.h"
 #include "render/mesh/Mesh.h"
-
-
-#ifndef KITA_HAS_ASSIMP
-#define KITA_HAS_ASSIMP 1
-#endif
-
-#if KITA_HAS_ASSIMP
 #include <assimp/scene.h>
-#else
-struct aiScene;
-struct aiNode;
-struct aiMesh;
-#endif
+#include "entt.hpp"
 
 namespace Kita {
 
@@ -34,6 +23,8 @@ namespace Kita {
 		void ProcessMesh(aiMesh* mesh, const aiScene* scene);
 		
 	private:
+
+		entt::entity m_EntityHandle{ entt::null };
 		std::string m_Name;
 		std::vector<Ref<Mesh>> m_Meshs;
 	};

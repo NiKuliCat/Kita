@@ -200,7 +200,6 @@ namespace Kita {
 
 
 
-		ImGui::ShowDemoWindow();
 
 		ImGui::Begin("Test Window");
 		ImGui::Text("Hello from another window!");

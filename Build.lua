@@ -58,21 +58,19 @@ AssimpBinary = {
 function configure_assimp(config_name, should_link)
     local assimp = AssimpBinary[config_name]
 
-    if assimp and assimp.lib then
-        defines { "KITA_HAS_ASSIMP=1" }
+    if not assimp or not assimp.lib then
+        error(string.format("assimp library not found for configuration '%s'", config_name))
+    end
 
-        if should_link then
-            links { workspace_path(assimp.lib) }
+    if should_link then
+        links { workspace_path(assimp.lib) }
 
-            if assimp.dll then
-                postbuildcommands
-                {
-                    string.format('{COPY} "%s" "%%{cfg.targetdir}" ', workspace_path(assimp.dll))
-                }
-            end
+        if assimp.dll then
+            postbuildcommands
+            {
+                string.format('{COPY} "%s" "%%{cfg.targetdir}" ', workspace_path(assimp.dll))
+            }
         end
-    else
-        defines { "KITA_HAS_ASSIMP=0" }
     end
 end
 
@@ -92,6 +90,7 @@ workspace "Kita"
     IncludeDir["spdlog"] = "%{wks.location}/engine/third-party/spdlog/include"
     IncludeDir["glm"] = "%{wks.location}/engine/third-party/glm"
     IncludeDir["assimp"] = "%{wks.location}/engine/third-party/assimp/include"
+    IncludeDir["entt"] = "%{wks.location}/engine/third-party/entt"
 
 
 
