@@ -422,3 +422,6 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Generated VS solution wrapper
+Kita.slnx
