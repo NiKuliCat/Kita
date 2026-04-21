@@ -6,7 +6,7 @@
 
 - Windows 10/11
 - Git
-- Visual Studio 2026（包含 C++ 桌面开发组件）
+- Visual Studio 2022/2026（包含 C++ 桌面开发组件）
 
 ### 克隆项目（包含子模块）
 
@@ -25,6 +25,20 @@ git submodule update --init --recursive
 
 ```powershell
 .\Setup.bat
+```
+
+默认生成 VS2026 工程。也可以显式指定版本：
+
+```powershell
+.\Setup.bat 2022
+.\Setup.bat 2026
+```
+
+等价写法：
+
+```powershell
+.\Setup.bat vs2022
+.\Setup.bat vs2026
 ```
 
 执行后会生成 `Kita.slnx` 解决方案。
