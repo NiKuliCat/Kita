@@ -33,6 +33,12 @@ namespace Kita {
 
 		SetDarkThemeSpace();
 		ImGuiStyle& style = ImGui::GetStyle();
+
+
+		ImFont* mainFont = io.Fonts->AddFontFromFileTTF("assets/fonts/DroidSans.ttf", 21.0f, nullptr );
+		KITA_CORE_ASSERT(mainFont, "Failed to load ImGui font!");
+		io.FontDefault = mainFont;
+
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 		{
 			style.WindowRounding = 0.0f;
@@ -43,9 +49,6 @@ namespace Kita {
 		ImGui_ImplGlfw_InitForOpenGL(window, true);
 		ImGui_ImplOpenGL3_Init("#version 410");
 
-
-		//ImGui_ImplOpenGL3_DestroyFontsTexture();
-		//ImGui_ImplOpenGL3_CreateFontsTexture();
 	}
 	void ImGuiLayer::OnDestroy()
 	{

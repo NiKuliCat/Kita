@@ -130,6 +130,52 @@ namespace Kita {
 		}
 		style.WindowMinSize = minWindowSize;
 
+		if (ImGui::BeginMenuBar())
+		{
+
+			if (ImGui::BeginMenu("File"))
+			{
+				if (ImGui::MenuItem("New"))
+				{
+
+				}
+
+				ImGui::EndMenu();
+			}
+			if (ImGui::BeginMenu("Window"))
+			{
+				if (ImGui::MenuItem("New"))
+				{
+
+				}
+
+				ImGui::EndMenu();
+			}
+
+			if (ImGui::BeginMenu("Setting"))
+			{
+				if (ImGui::MenuItem("New"))
+				{
+
+				}
+
+				ImGui::EndMenu();
+			}
+
+			if (ImGui::BeginMenu("Help"))
+			{
+				if (ImGui::MenuItem("New"))
+				{
+
+				}
+
+				ImGui::EndMenu();
+			}
+
+
+			ImGui::EndMenuBar();
+		}
+
 
 
 
