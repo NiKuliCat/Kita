@@ -22,6 +22,8 @@ namespace Kita {
 
 		void OnUpdate(float deltaTime);
 
+		std::string& GetName() { return m_Name; }
+
 	private:
 		void RenderSceneEditor();
 	private:

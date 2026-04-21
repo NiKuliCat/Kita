@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <Engine.h>
 #include "scene/ViewportCamera.h"
+#include "ui/SceneHierarchyPanel.h"
 namespace Kita {
 
 	class EditorLayer :public Layer{
@@ -33,11 +34,11 @@ namespace Kita {
 
 		uint32_t m_SceneTexID = 0;
 		glm::vec2 m_ViewportSize{};
-		bool m_DisableFaceCulling = true;
-		uint32_t m_MeshVertexCount = 0;
-		uint32_t m_MeshIndexCount = 0;
-		glm::vec3 m_MeshBoundsMin = glm::vec3(0.0f);
-		glm::vec3 m_MeshBoundsMax = glm::vec3(0.0f);
+
+
+		//ui
+		SceneHierarchyPanel m_SceneHierarchyPanel;
+
 
 	};
 }

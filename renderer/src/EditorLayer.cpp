@@ -31,6 +31,8 @@ namespace Kita {
 			auto& meshrenderer = obj.AddComponent<MeshRenderer>();
 			meshrenderer.LoadMeshs("assets/models/Sphere.fbx");
 		}
+
+		m_SceneHierarchyPanel = SceneHierarchyPanel(m_Scene);
 		
 		FrameBufferDescriptor disc;
 		disc.AttachmentsDescription = { FrameBufferTexFormat::RGBA16F,FrameBufferTexFormat::DEPTH };
@@ -198,7 +200,7 @@ namespace Kita {
 		ImGui::PopID();
 		ImGui::End();
 
-
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
 		ImGui::Begin("Viewport");
 		uint32_t ScreenRT_ID = m_FrameBuffer->GetColorAttachment(0);
 		{
@@ -208,6 +210,11 @@ namespace Kita {
 		ImGui::Image(ScreenRT_ID, ImVec2{ m_ViewportSize.x,m_ViewportSize.y }, ImVec2(0, 1), ImVec2(1, 0));
 
 		ImGui::End();
+
+
+		m_SceneHierarchyPanel.OnImGuiRender();
+		ImGui::PopStyleVar();
+
 
 
 		ImGui::End();
