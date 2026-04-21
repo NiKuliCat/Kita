@@ -189,6 +189,7 @@
     <ClInclude Include="src\render\FrameBuffer.h" />
     <ClInclude Include="src\render\GraphicsContext.h" />
     <ClInclude Include="src\render\Light.h" />
+    <ClInclude Include="src\render\Material.h" />
     <ClInclude Include="src\render\RenderCommand.h" />
     <ClInclude Include="src\render\Renderer.h" />
     <ClInclude Include="src\render\RendererAPI.h" />
@@ -649,6 +650,7 @@
     <ClCompile Include="src\render\Buffer.cpp" />
     <ClCompile Include="src\render\FrameBuffer.cpp" />
     <ClCompile Include="src\render\Light.cpp" />
+    <ClCompile Include="src\render\Material.cpp" />
     <ClCompile Include="src\render\RenderCommand.cpp" />
     <ClCompile Include="src\render\Renderer.cpp" />
     <ClCompile Include="src\render\RendererAPI.cpp" />

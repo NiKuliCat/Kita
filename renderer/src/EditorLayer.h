@@ -23,18 +23,12 @@ namespace Kita {
 	
 	private:
 		Ref<FrameBuffer> m_FrameBuffer = nullptr;
-		Ref<VertexArray> m_VertexArray = nullptr;
-		Ref<Shader> m_Shader = nullptr, m_LineShader = nullptr;
-		Ref<Texture> m_Texture = nullptr;
-		Transform m_ObjTransform;
 		Transform m_CameraTransform;
 		PerspectiveCamera*  m_Camera = nullptr;
 		ViewportCamera* m_ViewportCamera = nullptr;
 
 
 		Ref<Scene> m_Scene = nullptr;
-		//Ref<Object> m_Object = nullptr;
-		Ref<MeshRenderer> m_MeshRenderer = nullptr;
 		Light* m_DirectLight = nullptr;
 		Transform m_LightTransform;
 

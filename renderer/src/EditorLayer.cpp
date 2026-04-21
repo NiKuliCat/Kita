@@ -14,10 +14,8 @@ namespace Kita {
 		m_Camera = new PerspectiveCamera(45.0f, 16.0f / 9.0f, 0.1f, 100.0f);
 		m_ViewportCamera = new ViewportCamera();
 		m_CameraTransform = Transform();
-		m_ObjTransform = Transform();
 		m_LightTransform = Transform();
 
-		m_ObjTransform.SetPosition({ 0.0f,0.0f,0.0f });
 		m_CameraTransform.SetPosition({ 0.0f,0.0f,5.0f });
 		m_LightTransform.SetRotation({ 135.0,60.0f,0.0f });
 
@@ -25,80 +23,18 @@ namespace Kita {
 	}
 	void EditorLayer::OnCreate()
 	{
-		float vectices[36] = {
-		-0.5f,-0.5f,0.0f,1.0f,0.0f,1.0f,1.0f,0.0f,0.0f,
-		-0.5f,0.5f,0.0f,0.0f,1.0f,0.0f,1.0f,0.0f,1.0f,
-		0.5f,0.5f,0.0f,0.0f,0.0f,1.0f,1.0f,1.0f,1.0f,
-		0.5f,-0.5f,0.0f,1.0f,0.0f,0.0f,1.0f,1.0f,0.0f
-		};
-
-		uint32_t indices[6] = { 0,2,1,0,3,2 };
-
-		BufferLayout layout = {
-			{ShaderDataType::Float3,"position"},
-			{ShaderDataType::Float4,"color"},
-			{ShaderDataType::Float2,"texcoords"}
-		};
-
-		BufferLayout boxLayout = {
-			{ShaderDataType::Float3,"position"},
-			{ShaderDataType::Float4,"color"},
-			{ShaderDataType::Float2,"texcoords"},
-			{ShaderDataType::Float3,"normal"},
-			{ShaderDataType::Float3,"tangent"},
-			{ShaderDataType::Float3,"bitangent"}
-		};
 
 
 		m_Scene = CreateRef<Scene>();
 		{
-			auto obj = m_Scene->CreateObject("sphere");
-			auto meshrenderer = obj.AddComponent<MeshRenderer>();
+			auto& obj = m_Scene->CreateObject("sphere");
+			auto& meshrenderer = obj.AddComponent<MeshRenderer>();
 			meshrenderer.LoadMeshs("assets/models/Sphere.fbx");
 		}
 		
 
-		m_MeshRenderer = CreateRef<MeshRenderer>();
-		m_MeshRenderer->LoadMeshs("assets/models/Sphere.fbx");
 
-		auto view = m_Scene->GetRegistry().view<MeshRenderer>();
-		KITA_CORE_ASSERT(!m_MeshRenderer->GetMeshs().empty(), "Failed to load any mesh from Sphere.fbx");
 
-		auto boxVectices = m_MeshRenderer->GetMeshs()[0]->GetVertices();
-		auto boxIndices = m_MeshRenderer->GetMeshs()[0]->GetIndices();
-		m_MeshVertexCount = static_cast<uint32_t>(boxVectices.size());
-		m_MeshIndexCount = static_cast<uint32_t>(boxIndices.size());
-		m_MeshBoundsMin = glm::vec3(std::numeric_limits<float>::max());
-		m_MeshBoundsMax = glm::vec3(std::numeric_limits<float>::lowest());
-		for (const auto& vertex : boxVectices)
-		{
-			m_MeshBoundsMin = glm::min(m_MeshBoundsMin, vertex.position);
-			m_MeshBoundsMax = glm::max(m_MeshBoundsMax, vertex.position);
-		}
-
-		auto vertexbuffer = VertexBuffer::Create(boxVectices.data(), static_cast<uint32_t>(sizeof(Vertex) * boxVectices.size()));
-		vertexbuffer->SetLayout(boxLayout);
-		auto indexbuffer = IndexBuffer::Create(boxIndices.data(), static_cast<uint32_t>(boxIndices.size()));
-
-	/*	auto vertexbuffer = VertexBuffer::Create(vectices, sizeof(vectices));
-		vertexbuffer->SetLayout(layout);
-		auto indexbuffer = IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t));*/
-
-		m_VertexArray = VertexArray::Create();
-		m_VertexArray->AddVertexBuffer(vertexbuffer);
-		m_VertexArray->SetIndexBuffer(indexbuffer);
-
-		auto shaderLibrary = ShaderLibrary::GetInstance();
-		shaderLibrary.Load("assets/shaders/EditorDefaultShader.glsl");
-		shaderLibrary.Load("assets/shaders/EditorLineShader.glsl");
-
-		m_Shader = shaderLibrary.Get("EditorDefaultShader");
-		m_LineShader = shaderLibrary.Get("EditorLineShader");
-
-		TextureDescriptor texDesc{};
-		m_Texture = Texture::Create(texDesc, "assets/textures/test.jpg");
-		m_Texture->Bind(3);
-		m_Shader->SetInt("MainTex", 3);
 
 		FrameBufferDescriptor disc;
 		disc.AttachmentsDescription = { FrameBufferTexFormat::RGBA16F,FrameBufferTexFormat::DEPTH };
@@ -122,10 +58,6 @@ namespace Kita {
 		light_data.Color = glm::vec4(1.0, 1.0, 1.0, 1.0);
 		light_data.Direction = glm::vec4(m_LightTransform.GetFrontDir(),1.0);
 
-		glm::mat4 m = m_ObjTransform.GetTransformMatrix();
-		m_Shader->SetMat4("Model", m);
-		m_LineShader->SetMat4("Model", m);
-		m_LineShader->SetColor("Color", glm::vec4(1.0,0.0,1.0,0.0));
 		auto desc = m_FrameBuffer->GetDescriptor();
 		if (m_ViewportSize.x != desc.Width || m_ViewportSize.y != desc.Height)
 		{
@@ -140,9 +72,9 @@ namespace Kita {
 		RenderCommand::SetCullMode(m_DisableFaceCulling ? RendererAPI::CullMode::None : RendererAPI::CullMode::Back);
 		RenderCommand::SetClearColor(glm::vec4(0.12, 0.12, 0.13, 1));
 		RenderCommand::Clear();
-		m_Texture->Bind(3);
-		Renderer::Submit(m_VertexArray,m_Shader);
-		Renderer::SubmitAsLine(m_VertexArray,m_LineShader);
+
+		m_Scene->OnUpdate(daltaTime);
+
 		Renderer::EndScene();
 		m_FrameBuffer->UnBind();
 	}
@@ -220,9 +152,6 @@ namespace Kita {
 		ImGui::Separator();
 		ImGui::Text("Object");
 		ImGui::PushID(1);
-		ImGui::DragFloat3("##position", glm::value_ptr(m_ObjTransform.GetPosition()), 0.04f, 0.0f, 0.0f, "%.2f");
-		ImGui::DragFloat3("##rotate", glm::value_ptr(m_ObjTransform.GetRotation()), 0.04f, 0.0f, 0.0f, "%.2f");
-		ImGui::DragFloat3("##scale", glm::value_ptr(m_ObjTransform.GetScale()), 0.04f, 0.0f, 0.0f, "%.2f");
 		ImGui::PopID();
 		ImGui::PushID(2);
 

@@ -20,6 +20,10 @@ namespace Kita {
 
 		void DestroyObject(Object object);
 
+		void OnUpdate(float deltaTime);
+
+	private:
+		void RenderSceneEditor();
 	private:
 		std::string m_Name = "New Scene";
 		entt::registry m_Registry;

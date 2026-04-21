@@ -1,6 +1,8 @@
 #pragma once
 #include <glm/glm.hpp>
 #include "core/Core.h"
+#include "render/Buffer.h"
+#include "render/VertexArray.h"
 namespace Kita {
 
 	struct Vertex
@@ -30,13 +32,20 @@ namespace Kita {
 
 		static Ref<Mesh> Create(const std::vector<Vertex>& vertex, const std::vector<uint32_t> indices) { return CreateRef<Mesh>(vertex, indices); }
 
-
+		const Ref<VertexArray>& GetVAO() const { return m_VAO; }
 	private:
 
+		void InitBuffer();
 
 	private:
 		std::vector<Vertex> m_Vertices;
 		std::vector<uint32_t> m_Indices;
+
+		Ref<VertexBuffer>	m_VBO = nullptr;
+		Ref<IndexBuffer>	m_IBO = nullptr;
+		Ref<VertexArray>	m_VAO = nullptr;
+
+
 
 	};
 }

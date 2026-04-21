@@ -1459,6 +1459,7 @@
       <Filter>third-party\glm\glm</Filter>
     </ClInclude>
     <ClInclude Include="src\component\TagComponent.h" />
+    <ClInclude Include="src\render\Material.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\component\MeshRenderer.cpp">
@@ -1568,5 +1569,6 @@
     </ClCompile>
     <ClCompile Include="src\component\TagComponent.cpp" />
     <ClCompile Include="src\render\Renderer.cpp" />
+    <ClCompile Include="src\render\Material.cpp" />
   </ItemGroup>
 </Project>

@@ -4,7 +4,10 @@
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 namespace Kita {
-
+    MeshRenderer::MeshRenderer()
+    {
+        m_Material = CreateRef<Material>("assets/shaders/EditorDefaultShader.glsl", "assets/textures/test.jpg");
+    }
     void MeshRenderer::LoadMeshs(const std::string& filepath)
     {
         Assimp::Importer import;
@@ -14,7 +17,6 @@ namespace Kita {
             KITA_CORE_ERROR("assimp import error : {0}", import.GetErrorString());
             return;
         }
-
         ProcessNode(scene->mRootNode, scene);
     }
 
@@ -82,6 +84,11 @@ namespace Kita {
         auto  meshObj = Mesh::Create(vertices, indices);
 
         m_Meshs.push_back(meshObj);
+    }
+
+    void MeshRenderer::InitBuffer()
+    {
+       
     }
 
 }
