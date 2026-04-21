@@ -50,12 +50,22 @@ namespace Kita {
 		};
 
 
-		m_Object = CreateRef<Object>("TestObject");
-		m_Object->LoadMeshs("assets/models/Sphere.fbx");
-		KITA_CORE_ASSERT(!m_Object->GetMeshs().empty(), "Failed to load any mesh from Sphere.fbx");
+		m_Scene = CreateRef<Scene>();
+		{
+			auto obj = m_Scene->CreateObject("sphere");
+			auto meshrenderer = obj.AddComponent<MeshRenderer>();
+			meshrenderer.LoadMeshs("assets/models/Sphere.fbx");
+		}
+		
 
-		auto boxVectices = m_Object->GetMeshs()[0]->GetVertices();
-		auto boxIndices = m_Object->GetMeshs()[0]->GetIndices();
+		m_MeshRenderer = CreateRef<MeshRenderer>();
+		m_MeshRenderer->LoadMeshs("assets/models/Sphere.fbx");
+
+		auto view = m_Scene->GetRegistry().view<MeshRenderer>();
+		KITA_CORE_ASSERT(!m_MeshRenderer->GetMeshs().empty(), "Failed to load any mesh from Sphere.fbx");
+
+		auto boxVectices = m_MeshRenderer->GetMeshs()[0]->GetVertices();
+		auto boxIndices = m_MeshRenderer->GetMeshs()[0]->GetIndices();
 		m_MeshVertexCount = static_cast<uint32_t>(boxVectices.size());
 		m_MeshIndexCount = static_cast<uint32_t>(boxIndices.size());
 		m_MeshBoundsMin = glm::vec3(std::numeric_limits<float>::max());
@@ -90,10 +100,6 @@ namespace Kita {
 		m_Texture->Bind(3);
 		m_Shader->SetInt("MainTex", 3);
 
-		m_VPUniformBuffer = UniformBuffer::Create(sizeof(glm::mat4), 0);
-		m_LightUnifromBuffer = UniformBuffer::Create(sizeof(DirectLightData), 1);
-		
-
 		FrameBufferDescriptor disc;
 		disc.AttachmentsDescription = { FrameBufferTexFormat::RGBA16F,FrameBufferTexFormat::DEPTH };
 		disc.Width = 1280;
@@ -112,16 +118,11 @@ namespace Kita {
 	void EditorLayer::OnUpdate(float daltaTime)
 	{
 		m_ViewportCamera->OnUpdate(daltaTime);
-		DirectLightData data = DirectLightData();
-		data.Color = glm::vec4(1.0, 1.0, 1.0, 1.0);
-		data.intensity = 1.0f;
-		data.Direction = m_LightTransform.GetFrontDir();
-		m_LightUnifromBuffer->SetData(&data, sizeof(DirectLightData), 0);
+		DirectLightData light_data = DirectLightData();
+		light_data.Color = glm::vec4(1.0, 1.0, 1.0, 1.0);
+		light_data.Direction = glm::vec4(m_LightTransform.GetFrontDir(),1.0);
 
-		//glm::mat4 vp = m_Camera->GetProjectionMatrix() * m_CameraTransform.GetViewMatrix() ;
-		glm::mat4 vp = m_ViewportCamera->GetViewProjectionMatrix();
 		glm::mat4 m = m_ObjTransform.GetTransformMatrix();
-		m_VPUniformBuffer->SetData(&vp, sizeof(glm::mat4), 0);
 		m_Shader->SetMat4("Model", m);
 		m_LineShader->SetMat4("Model", m);
 		m_LineShader->SetColor("Color", glm::vec4(1.0,0.0,1.0,0.0));
@@ -131,16 +132,18 @@ namespace Kita {
 			m_FrameBuffer->ReSize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 			m_Camera->SetAspectRatio(m_ViewportSize.x / m_ViewportSize.y);
 			m_ViewportCamera->SetViewport(m_ViewportSize.x, m_ViewportSize.y);
-			auto vp = m_ViewportCamera->GetViewProjectionMatrix();
-			m_VPUniformBuffer->SetData(&vp, sizeof(glm::mat4), 0);
-		}
 		
+		}
+		auto vp = m_ViewportCamera->GetViewProjectionMatrix();
+		Renderer::BeginScene(vp, light_data);
 		m_FrameBuffer->Bind();
 		RenderCommand::SetCullMode(m_DisableFaceCulling ? RendererAPI::CullMode::None : RendererAPI::CullMode::Back);
 		RenderCommand::SetClearColor(glm::vec4(0.12, 0.12, 0.13, 1));
 		RenderCommand::Clear();
 		m_Texture->Bind(3);
+		Renderer::Submit(m_VertexArray,m_Shader);
 		Renderer::SubmitAsLine(m_VertexArray,m_LineShader);
+		Renderer::EndScene();
 		m_FrameBuffer->UnBind();
 	}
 

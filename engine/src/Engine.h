@@ -28,8 +28,11 @@
 #include "render/Renderer.h"
 
 
+#include "component/Scene.h"
 #include "component/Object.h"
+#include "component/TagComponent.h"
 #include "component/Transform.h"
+#include "component/MeshRenderer.h"
 
 
 #include "third_party/imgui/imgui_layer.h"

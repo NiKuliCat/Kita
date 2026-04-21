@@ -26,16 +26,17 @@ namespace Kita {
 		Ref<VertexArray> m_VertexArray = nullptr;
 		Ref<Shader> m_Shader = nullptr, m_LineShader = nullptr;
 		Ref<Texture> m_Texture = nullptr;
-		Ref<UniformBuffer> m_VPUniformBuffer = nullptr;
 		Transform m_ObjTransform;
 		Transform m_CameraTransform;
 		PerspectiveCamera*  m_Camera = nullptr;
 		ViewportCamera* m_ViewportCamera = nullptr;
 
-		Ref<Object> m_Object = nullptr;
+
+		Ref<Scene> m_Scene = nullptr;
+		//Ref<Object> m_Object = nullptr;
+		Ref<MeshRenderer> m_MeshRenderer = nullptr;
 		Light* m_DirectLight = nullptr;
 		Transform m_LightTransform;
-		Ref<UniformBuffer> m_LightUnifromBuffer = nullptr;
 
 		uint32_t m_SceneTexID = 0;
 		glm::vec2 m_ViewportSize{};

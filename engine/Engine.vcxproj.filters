@@ -66,7 +66,13 @@
     <ClInclude Include="src\Engine.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\component\MeshRenderer.h">
+      <Filter>src\component</Filter>
+    </ClInclude>
     <ClInclude Include="src\component\Object.h">
+      <Filter>src\component</Filter>
+    </ClInclude>
+    <ClInclude Include="src\component\Scene.h">
       <Filter>src\component</Filter>
     </ClInclude>
     <ClInclude Include="src\component\Transform.h">
@@ -1452,10 +1458,16 @@
     <ClInclude Include="third-party\glm\glm\vector_relational.hpp">
       <Filter>third-party\glm\glm</Filter>
     </ClInclude>
-    <ClInclude Include="src\component\Scene.h" />
+    <ClInclude Include="src\component\TagComponent.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\component\MeshRenderer.cpp">
+      <Filter>src\component</Filter>
+    </ClCompile>
     <ClCompile Include="src\component\Object.cpp">
+      <Filter>src\component</Filter>
+    </ClCompile>
+    <ClCompile Include="src\component\Scene.cpp">
       <Filter>src\component</Filter>
     </ClCompile>
     <ClCompile Include="src\component\Transform.cpp">
@@ -1554,6 +1566,7 @@
     <ClCompile Include="src\third_party\stb_image\stb_image.cpp">
       <Filter>src\third_party\stb_image</Filter>
     </ClCompile>
-    <ClCompile Include="src\component\Scene.cpp" />
+    <ClCompile Include="src\component\TagComponent.cpp" />
+    <ClCompile Include="src\render\Renderer.cpp" />
   </ItemGroup>
 </Project>

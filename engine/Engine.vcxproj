@@ -156,9 +156,11 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="src\component\Scene.h" />
+    <ClInclude Include="src\component\TagComponent.h" />
     <ClInclude Include="src\Engine.h" />
+    <ClInclude Include="src\component\MeshRenderer.h" />
     <ClInclude Include="src\component\Object.h" />
+    <ClInclude Include="src\component\Scene.h" />
     <ClInclude Include="src\component\Transform.h" />
     <ClInclude Include="src\core\Application.h" />
     <ClInclude Include="src\core\Core.h" />
@@ -622,8 +624,10 @@
     <ClInclude Include="third-party\glm\glm\vector_relational.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\component\Scene.cpp" />
+    <ClCompile Include="src\component\MeshRenderer.cpp" />
     <ClCompile Include="src\component\Object.cpp" />
+    <ClCompile Include="src\component\Scene.cpp" />
+    <ClCompile Include="src\component\TagComponent.cpp" />
     <ClCompile Include="src\component\Transform.cpp" />
     <ClCompile Include="src\core\Application.cpp" />
     <ClCompile Include="src\core\Layer.cpp" />
@@ -646,6 +650,7 @@
     <ClCompile Include="src\render\FrameBuffer.cpp" />
     <ClCompile Include="src\render\Light.cpp" />
     <ClCompile Include="src\render\RenderCommand.cpp" />
+    <ClCompile Include="src\render\Renderer.cpp" />
     <ClCompile Include="src\render\RendererAPI.cpp" />
     <ClCompile Include="src\render\Shader.cpp" />
     <ClCompile Include="src\render\ShaderLibrary.cpp" />

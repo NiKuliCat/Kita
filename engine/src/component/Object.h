@@ -1,31 +1,61 @@
 #pragma once
-
+#include "Scene.h"
 #include "core/Core.h"
-#include "render/mesh/Mesh.h"
-#include <assimp/scene.h>
+#include "core/Log.h"
 #include "entt.hpp"
-
+#include "TagComponent.h"
 namespace Kita {
 
 
 	class Object {
 	public:
-		Object(const std::string& name)
-			:m_Name(name) {}
-		~Object(){}
+		Object() = default;
+		Object(entt::entity entityHandle, Scene* scene, const std::string& name);
+
+		Object(const Object& other) = default;
+
+		~Object() = default;
+
+	public:
+		template<typename T>
+		bool HasComponent()
+		{
+			return m_Scene->GetRegistry().all_of<T>(m_EntityHandle);
+		}
+
+		template<typename T, typename... Args>
+		T& AddComponent(Args&&... args)
+		{
+			KITA_CORE_ASSERT(!HasComponent<T>(), "the object already has this component !");
+			return m_Scene->GetRegistry().emplace<T>(m_EntityHandle, std::forward<Args>(args)...);
+		}
+
+		template<typename T>
+		T& GetComponent()
+		{
+			KITA_CORE_ASSERT(HasComponent<T>(), "the object not have this component !");
+			return m_Scene->GetRegistry().get<T>(m_EntityHandle);
+		}
+
+		template<typename T>
+		void RemoveComponent()
+		{
+			KITA_CORE_ASSERT(HasComponent<T>(), "the object not have this component !");
+			m_Scene->GetRegistry().remove<T>(m_EntityHandle);
+		}
+
+		operator bool() const { return m_EntityHandle != entt::null; }
+		operator uint32_t() const { return (uint32_t)m_EntityHandle; }
+		operator entt::entity() const { return m_EntityHandle; }
+		bool operator ==(const Object& other) { return m_EntityHandle == other.m_EntityHandle && m_Scene == other.m_Scene; }
+		bool operator !=(const Object& other) { return m_EntityHandle != other.m_EntityHandle || m_Scene != other.m_Scene; }
 
 
-		void LoadMeshs(const std::string& filepath);
+		std::string& GetName() { return GetComponent<Name>().Get(); }
 
-		const std::vector<Ref<Mesh>>& GetMeshs() const  { return m_Meshs; }
-	private:
-		void ProcessNode(aiNode* node, const aiScene* scene);
-		void ProcessMesh(aiMesh* mesh, const aiScene* scene);
-		
 	private:
 
 		entt::entity m_EntityHandle{ entt::null };
-		std::string m_Name;
-		std::vector<Ref<Mesh>> m_Meshs;
+		Scene* m_Scene = nullptr;
 	};
 }

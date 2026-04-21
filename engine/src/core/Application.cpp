@@ -29,13 +29,12 @@ namespace Kita {
 		m_Active = true;
 		InitWindow();
 		InitImGuiLayer();
+		InitRenderer();
 	}
 
 	void Application::Run()
 	{
 	
-	
-
 		MainLoop();
 		ShutDown();
 	}
@@ -56,6 +55,11 @@ namespace Kita {
 		m_ImGuiLayer = new ImGuiLayer();
 		KITA_CORE_TRACE("init imgui layer");
 		PushOverlay(m_ImGuiLayer);
+	}
+
+	void Application::InitRenderer()
+	{
+		Renderer::Init();
 	}
 
 	void Application::MainLoop()
@@ -90,6 +94,7 @@ namespace Kita {
 
 	void Application::ShutDown()
 	{
+		Renderer::ShutDown();
 	}
 
 	void Application::OnEvent(Event& event)

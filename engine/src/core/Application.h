@@ -30,6 +30,7 @@ namespace Kita {
 		void Run();
 		void InitWindow();
 		void InitImGuiLayer();
+		void InitRenderer();
 		void MainLoop();
 		void ShutDown();
 
