@@ -70,7 +70,7 @@ namespace Kita {
 
 
 		float m_Distance = 10.0f;
-		float m_Pitch = 0.0f, m_Yaw = 0.0f;
+		float m_Pitch = glm::radians(35.0f), m_Yaw = glm::radians(-35.0f);
 
 		float  m_ViewportWidth = 1280.0f, m_ViewportHeight = 720.0f;
 		glm::mat4 m_ViewMatrix, m_ProjectionMatrix;

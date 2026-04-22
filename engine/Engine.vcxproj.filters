@@ -61,6 +61,9 @@
     <Filter Include="third-party\glm\glm\gtx">
       <UniqueIdentifier>{9D23CCD7-095B-146F-1265-78927E1B3B68}</UniqueIdentifier>
     </Filter>
+    <Filter Include="third-party\imguizmo">
+      <UniqueIdentifier>{DD0459B0-C993-E279-72B2-F6745E20F31F}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Engine.h">
@@ -73,6 +76,9 @@
       <Filter>src\component</Filter>
     </ClInclude>
     <ClInclude Include="src\component\Scene.h">
+      <Filter>src\component</Filter>
+    </ClInclude>
+    <ClInclude Include="src\component\TagComponent.h">
       <Filter>src\component</Filter>
     </ClInclude>
     <ClInclude Include="src\component\Transform.h">
@@ -157,6 +163,9 @@
       <Filter>src\render</Filter>
     </ClInclude>
     <ClInclude Include="src\render\Light.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\Material.h">
       <Filter>src\render</Filter>
     </ClInclude>
     <ClInclude Include="src\render\RenderCommand.h">
@@ -1458,8 +1467,9 @@
     <ClInclude Include="third-party\glm\glm\vector_relational.hpp">
       <Filter>third-party\glm\glm</Filter>
     </ClInclude>
-    <ClInclude Include="src\component\TagComponent.h" />
-    <ClInclude Include="src\render\Material.h" />
+    <ClInclude Include="third-party\imguizmo\ImGuizmo.h">
+      <Filter>third-party\imguizmo</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\component\MeshRenderer.cpp">
@@ -1469,6 +1479,9 @@
       <Filter>src\component</Filter>
     </ClCompile>
     <ClCompile Include="src\component\Scene.cpp">
+      <Filter>src\component</Filter>
+    </ClCompile>
+    <ClCompile Include="src\component\TagComponent.cpp">
       <Filter>src\component</Filter>
     </ClCompile>
     <ClCompile Include="src\component\Transform.cpp">
@@ -1528,7 +1541,13 @@
     <ClCompile Include="src\render\Light.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
+    <ClCompile Include="src\render\Material.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
     <ClCompile Include="src\render\RenderCommand.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\Renderer.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
     <ClCompile Include="src\render\RendererAPI.cpp">
@@ -1567,8 +1586,8 @@
     <ClCompile Include="src\third_party\stb_image\stb_image.cpp">
       <Filter>src\third_party\stb_image</Filter>
     </ClCompile>
-    <ClCompile Include="src\component\TagComponent.cpp" />
-    <ClCompile Include="src\render\Renderer.cpp" />
-    <ClCompile Include="src\render\Material.cpp" />
+    <ClCompile Include="third-party\imguizmo\ImGuizmo.cpp">
+      <Filter>third-party\imguizmo</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

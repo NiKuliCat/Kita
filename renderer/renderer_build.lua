@@ -28,7 +28,9 @@ project "Renderer"
         "%{IncludeDir.spdlog}",
         "%{IncludeDir.glm}",
         "%{IncludeDir.assimp}",
-        "%{IncludeDir.entt}"
+        "%{IncludeDir.entt}",
+        "%{IncludeDir.ImGuizmo}"
+        
     }
     
     buildoptions
@@ -40,6 +42,8 @@ project "Renderer"
     {
         "Engine"
     }
+
+
 
 
     filter "system:windows"

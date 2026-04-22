@@ -91,8 +91,7 @@ workspace "Kita"
     IncludeDir["glm"] = "%{wks.location}/engine/third-party/glm"
     IncludeDir["assimp"] = "%{wks.location}/engine/third-party/assimp/include"
     IncludeDir["entt"] = "%{wks.location}/engine/third-party/entt"
-
-
+    IncludeDir["ImGuizmo"] = "%{wks.location}/engine/third-party/imguizmo"
 
     group "Dependencies"
         include "engine/third-party/glfw"

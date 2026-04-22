@@ -27,6 +27,7 @@ namespace Kita {
 		if (obj)
 		{
 			m_SelectedObject = obj;
+			KITA_CLENT_INFO("{0},this object is selected", m_SelectedObject.GetComponent<Name>().Get().c_str());
 		}
 		else
 		{
@@ -102,7 +103,7 @@ namespace Kita {
 
 		if (ImGui::IsItemClicked())
 		{
-			m_SelectedObject = obj;
+			SetSelectedObject(obj);
 		}
 
 		bool deleted = false;

@@ -42,6 +42,10 @@ namespace Kita {
 				Renderer::Submit(mesh->GetVAO(), shader);
 			}
 		}
+
+		
+
+
 	}
 }
 

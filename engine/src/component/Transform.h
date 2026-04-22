@@ -28,6 +28,10 @@ namespace Kita {
 		glm::mat4 GetViewMatrix() const;
 		glm::vec3 GetFrontDir() const;
 
+
+	public:
+		static bool DecomposeTransformMatrix(const glm::mat4& transform, glm::vec3& out_Translation, glm::vec3& out_Rotation, glm::vec3& out_Scale);
+
 	private:
 		glm::vec3 m_Position = {0.0,0.0,0.0 };
 		glm::vec3 m_Rotation = { 0.0,0.0,0.0 };

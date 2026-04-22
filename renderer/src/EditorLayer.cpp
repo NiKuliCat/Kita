@@ -1,6 +1,7 @@
 ﻿#include "renderer_pch.h"
 #include "EditorLayer.h"
 #include "imgui.h"
+#include "ImGuizmo.h"
 
 #include <glm/glm.hpp>
 #include <imgui_internal.h>
@@ -33,7 +34,8 @@ namespace Kita {
 		}
 
 		m_SceneHierarchyPanel = SceneHierarchyPanel(m_Scene);
-		
+		m_GizmoControlType = ImGuizmo::OPERATION::TRANSLATE;
+
 		FrameBufferDescriptor disc;
 		disc.AttachmentsDescription = { FrameBufferTexFormat::RGBA16F,FrameBufferTexFormat::DEPTH };
 		disc.Width = 1280;
@@ -66,12 +68,16 @@ namespace Kita {
 
 
 		m_FrameBuffer->Bind();
-		Renderer::BeginScene(vp, light_data);
+		Renderer::BeginScene(m_ViewportCamera->GetViewMatrix(),m_ViewportCamera->GetProjectionMatrix(),m_ViewportCamera->GetPosition(), light_data);
 
 		RenderCommand::SetClearColor(glm::vec4(0.12, 0.12, 0.13, 1));
 		RenderCommand::Clear();
 
 		m_Scene->OnUpdate(daltaTime);
+
+		auto settings = EditorGridSettings{};
+		settings.CellSize = 1.0f;
+		Renderer::DrawEditorGrids(settings);
 
 		Renderer::EndScene();
 		m_FrameBuffer->UnBind();
@@ -192,6 +198,51 @@ namespace Kita {
 		}
 		ImGui::Image(ScreenRT_ID, ImVec2{ m_ViewportSize.x,m_ViewportSize.y }, ImVec2(0, 1), ImVec2(1, 0));
 
+		auto& selectedObj = m_SceneHierarchyPanel.GetSelectedObject();
+		if (selectedObj)
+		{
+			ImGuizmo::SetDrawlist();
+			float windowWidth = (float)ImGui::GetWindowWidth();
+			float windowHeight = (float)ImGui::GetWindowHeight();
+			ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, windowWidth, windowHeight);
+
+			glm::mat4 viewMatrix = m_ViewportCamera->GetViewMatrix();
+			glm::mat4 projectionMatrix = m_ViewportCamera->GetProjectionMatrix();
+
+			auto& selectedObjTransform = selectedObj.GetComponent<Transform>();
+			glm::mat4 modelMatrix = selectedObjTransform.GetTransformMatrix();
+
+			bool enableSnapping = Input::IsKeyPressed(Key::LeftControl);
+			float snappingValue = 0.1f;
+			float snappingValues[3] = { snappingValue,snappingValue,snappingValue };
+
+
+			ImGuizmo::SetGizmoSizeClipSpace(0.22f);
+			auto& gizmoStyle = ImGuizmo::GetStyle();
+			gizmoStyle.TranslationLineThickness = 2.0f; // 轴线粗细
+			gizmoStyle.TranslationLineArrowSize = 5.0f; // 箭头大小
+			gizmoStyle.CenterCircleSize = 4.5f;
+
+			ImGuizmo::Manipulate(glm::value_ptr(viewMatrix), glm::value_ptr(projectionMatrix),
+				ImGuizmo::OPERATION(m_GizmoControlType), ImGuizmo::LOCAL, glm::value_ptr(modelMatrix), nullptr, enableSnapping ? snappingValues : nullptr);
+
+			if (ImGuizmo::IsUsing())
+			{
+				glm::vec3 translate, rotate, scale;
+				Transform::DecomposeTransformMatrix(modelMatrix, translate, rotate, scale);
+				//先统一转成弧度计算 
+				glm::vec3 currentRotate = glm::radians(selectedObjTransform.GetRotation());
+				glm::vec3 deltaRotate = rotate - currentRotate;
+				currentRotate += deltaRotate;
+
+				selectedObjTransform.SetPosition(translate);
+				//最后转回角度
+				selectedObjTransform.SetRotation(glm::degrees(currentRotate));
+				selectedObjTransform.SetScale(scale);
+			}
+
+		}
+
 		ImGui::End();
 		ImGui::PopStyleVar();
 
@@ -207,7 +258,29 @@ namespace Kita {
 
 	void EditorLayer::OnEvent(Event& event)
 	{
+		EventDisPatcher dispatcher(event);
+		dispatcher.Dispatcher<KeyPressedEvent>(BIND_EVENT_FUNC(EditorLayer::OnKeyPressed));
 		m_ViewportCamera->OnEvent(event);
+	}
+
+	bool EditorLayer::OnKeyPressed(KeyPressedEvent& event)
+	{
+		if (event.IsRepeat())
+			return false;
+
+		switch (event.GetKeyCode())
+		{
+		case Key::W:
+			m_GizmoControlType = ImGuizmo::OPERATION::TRANSLATE;
+			break;
+		case Key::E:
+			m_GizmoControlType = ImGuizmo::OPERATION::ROTATE;
+			break;
+		case Key::R:
+			m_GizmoControlType = ImGuizmo::OPERATION::SCALE;
+			break;
+		}
+		return false;
 	}
 
 	

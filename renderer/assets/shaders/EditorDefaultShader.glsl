@@ -7,9 +7,15 @@ layout(location = 3) in vec3 Normal;
 
 uniform mat4 Model;
 
-layout(std140, binding = 0) uniform Camera
+layout(std140, binding = 0) uniform CameraData
 {
-	mat4 ViewProjection;
+	mat4 Matrix_V;
+	mat4 Matrix_P;
+	mat4 Matrix_VP;
+	mat4 Matrix_I_V;
+	mat4 Matrix_I_P;
+	mat4 Matrix_I_VP;
+	vec4 CameraPosWS;
 };
 
 struct Attributes
@@ -26,7 +32,7 @@ void main()
 	Attri_Output.color = VertexColor;
 	Attri_Output.uv =  Texcoord;
 	Attri_Output.normal =  (Model * vec4(Normal, 0.0f)).xyz;
-	gl_Position = ViewProjection * Model *  vec4(PositionOS, 1.0);
+	gl_Position = Matrix_VP * Model *  vec4(PositionOS, 1.0);
 }
 
 

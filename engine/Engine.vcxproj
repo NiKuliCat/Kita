@@ -77,7 +77,7 @@
       <PrecompiledHeaderFile>kita_pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;GLFW_INCLUDE_NONE;PLATFORM_WINDOWS;KITA_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;third-party\glfw\include;third-party\glad\include;third-party\imgui;third-party\spdlog\include;third-party\glm;third-party\assimp\include;third-party\entt;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;third-party\glfw\include;third-party\glad\include;third-party\imgui;third-party\spdlog\include;third-party\glm;third-party\assimp\include;third-party\entt;third-party\imguizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -103,7 +103,7 @@
       <PrecompiledHeaderFile>kita_pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;GLFW_INCLUDE_NONE;PLATFORM_WINDOWS;KITA_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;third-party\glfw\include;third-party\glad\include;third-party\imgui;third-party\spdlog\include;third-party\glm;third-party\assimp\include;third-party\entt;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;third-party\glfw\include;third-party\glad\include;third-party\imgui;third-party\spdlog\include;third-party\glm;third-party\assimp\include;third-party\entt;third-party\imguizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -132,7 +132,7 @@
       <PrecompiledHeaderFile>kita_pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;GLFW_INCLUDE_NONE;PLATFORM_WINDOWS;KITA_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;third-party\glfw\include;third-party\glad\include;third-party\imgui;third-party\spdlog\include;third-party\glm;third-party\assimp\include;third-party\entt;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;third-party\glfw\include;third-party\glad\include;third-party\imgui;third-party\spdlog\include;third-party\glm;third-party\assimp\include;third-party\entt;third-party\imguizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -156,11 +156,11 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="src\component\TagComponent.h" />
     <ClInclude Include="src\Engine.h" />
     <ClInclude Include="src\component\MeshRenderer.h" />
     <ClInclude Include="src\component\Object.h" />
     <ClInclude Include="src\component\Scene.h" />
+    <ClInclude Include="src\component\TagComponent.h" />
     <ClInclude Include="src\component\Transform.h" />
     <ClInclude Include="src\core\Application.h" />
     <ClInclude Include="src\core\Core.h" />
@@ -623,6 +623,7 @@
     <ClInclude Include="third-party\glm\glm\vec3.hpp" />
     <ClInclude Include="third-party\glm\glm\vec4.hpp" />
     <ClInclude Include="third-party\glm\glm\vector_relational.hpp" />
+    <ClInclude Include="third-party\imguizmo\ImGuizmo.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\component\MeshRenderer.cpp" />
@@ -665,6 +666,10 @@
     <ClCompile Include="src\third_party\imgui\imgui_build.cpp" />
     <ClCompile Include="src\third_party\imgui\imgui_layer.cpp" />
     <ClCompile Include="src\third_party\stb_image\stb_image.cpp" />
+    <ClCompile Include="third-party\imguizmo\ImGuizmo.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <AdditionalOptions>/Y- %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="third-party\glfw\GLFW.vcxproj">

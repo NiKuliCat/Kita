@@ -5,9 +5,15 @@ layout(location = 0) in vec3 PositionOS;
 uniform mat4 Model;
 uniform vec4 Color;
 
-layout(std140, binding = 0) uniform Camera
+layout(std140, binding = 0) uniform CameraData
 {
-	mat4 ViewProjection;
+	mat4 Matrix_V;
+	mat4 Matrix_P;
+	mat4 Matrix_VP;
+	mat4 Matrix_I_V;
+	mat4 Matrix_I_P;
+	mat4 Matrix_I_VP;
+	vec4 CameraPosWS;
 };
 
 struct Attributes
@@ -20,7 +26,7 @@ layout(location = 0) out Attributes Attri_Output;
 void main()
 {
 	Attri_Output.color = Color;
-	gl_Position = ViewProjection * Model *  vec4(PositionOS, 1.0);
+	gl_Position = Matrix_VP * Model *  vec4(PositionOS, 1.0);
 }
 
 

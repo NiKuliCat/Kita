@@ -20,6 +20,9 @@ namespace Kita {
 		virtual void OnImGuiRender()  override;
 		virtual void OnEvent(Event& event)  override;
 
+	private:
+		bool OnKeyPressed(KeyPressedEvent& event);
+
 
 	
 	private:
@@ -39,7 +42,7 @@ namespace Kita {
 
 		//ui
 		SceneHierarchyPanel m_SceneHierarchyPanel;
-
+		int32_t m_GizmoControlType = -1;
 
 	};
 }

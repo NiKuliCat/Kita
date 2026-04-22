@@ -13,7 +13,10 @@ namespace Kita {
 
 		void SetContext(const Ref<Scene>& scene) { m_SceneContext = scene;  	m_SelectedObject = {}; }
 		void SetSelectedObject(Object obj);
-		Object GetSelectedObject() { return m_SelectedObject; }
+
+		Object& GetSelectedObject() { return m_SelectedObject; }
+		const Object& GetSelectedObject() const { return m_SelectedObject; }
+
 		void OnImGuiRender();
 		operator bool() const { return !(m_SceneContext == nullptr); }
 	private:

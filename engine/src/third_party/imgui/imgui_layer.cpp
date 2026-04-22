@@ -2,13 +2,13 @@
 #include "imgui_layer.h"
 
 #include "imgui.h"
+#include "ImGuizmo.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_opengl3.h>
 #include "core/Application.h"
 #include "core/Log.h"
-
 namespace Kita {
 	ImGuiLayer::ImGuiLayer()
 		:Layer("ImGui Layer")
@@ -109,6 +109,8 @@ namespace Kita {
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
+		ImGuizmo::BeginFrame();
+
 	}
 
 	void ImGuiLayer::End()

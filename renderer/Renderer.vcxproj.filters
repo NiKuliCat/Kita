@@ -4,6 +4,9 @@
     <Filter Include="scene">
       <UniqueIdentifier>{D3075810-3F1C-80C1-089E-232174717CF2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ui">
+      <UniqueIdentifier>{C3795900-AF05-880B-18B4-880B045F880B}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\EditorLayer.h" />
@@ -11,7 +14,9 @@
     <ClInclude Include="src\scene\ViewportCamera.h">
       <Filter>scene</Filter>
     </ClInclude>
-    <ClInclude Include="src\ui\SceneHierarchyPanel.h" />
+    <ClInclude Include="src\ui\SceneHierarchyPanel.h">
+      <Filter>ui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\EditorApp.cpp" />
@@ -20,6 +25,8 @@
     <ClCompile Include="src\scene\ViewportCamera.cpp">
       <Filter>scene</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\SceneHierarchyPanel.cpp" />
+    <ClCompile Include="src\ui\SceneHierarchyPanel.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

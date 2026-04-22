@@ -16,7 +16,10 @@ project "Engine"
         "src/**.h",
         "src/**.cpp",
         "third-party/glm/glm/**.hpp",
-         "third-party/glm/glm/**.inl"
+        "third-party/glm/glm/**.inl",
+
+        "third-party/imguizmo/ImGuizmo.h",
+        "third-party/imguizmo/ImGuizmo.cpp"
     }
 
     defines
@@ -34,7 +37,8 @@ project "Engine"
         "%{IncludeDir.spdlog}",
         "%{IncludeDir.glm}",
         "%{IncludeDir.assimp}",
-        "%{IncludeDir.entt}"
+        "%{IncludeDir.entt}",
+        "%{IncludeDir.ImGuizmo}"
     }
     buildoptions
     {
@@ -49,6 +53,10 @@ project "Engine"
         "opengl32.lib"
     }
 
+    filter "files:third-party/imguizmo/ImGuizmo.cpp"
+    enablepch "Off"
+    buildoptions { "/Y-" }
+    filter {}
 
     filter "system:windows"
         systemversion "latest"
