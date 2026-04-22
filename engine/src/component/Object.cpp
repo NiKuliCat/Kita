@@ -9,6 +9,11 @@ namespace Kita {
         if(!HasComponent<Name>()) {
             AddComponent<Name>(name);
         }
+
+        if (!HasComponent<ObjectType>())
+        {
+            AddComponent<ObjectType>(Type::StaticMesh);
+        }
         if(!HasComponent<Transform>()) {
             AddComponent<Transform>();
         }

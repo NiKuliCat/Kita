@@ -36,7 +36,7 @@ namespace Kita {
 		style.FramePadding.y = 2.0f; //title栏高度
 		style.WindowBorderSize = 3.0f;
 		style.TabBarBorderSize = 0.0f;
-		ImFont* mainFont = io.Fonts->AddFontFromFileTTF("assets/fonts/DroidSans.ttf", 16.0f, nullptr );
+		ImFont* mainFont = io.Fonts->AddFontFromFileTTF("assets/fonts/Poppins/Poppins-Regular.ttf", 18.0f, nullptr );
 		KITA_CORE_ASSERT(mainFont, "Failed to load ImGui font!");
 		io.FontDefault = mainFont;
 
@@ -70,7 +70,7 @@ namespace Kita {
 	{
 		auto& colors = ImGui::GetStyle().Colors;
 
-		colors[ImGuiCol_WindowBg] = ImVec4{ 0.11f,0.111f,0.115f,1.0f };
+		colors[ImGuiCol_WindowBg] = ImVec4{ 0.11f, 0.122f, 0.148f, 1.0f };
 
 		//header
 		colors[ImGuiCol_Header] = ImVec4{ 0.25f,0.255f,0.26f,1.0f };
