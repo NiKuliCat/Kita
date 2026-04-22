@@ -11,3 +11,6 @@
 [submodule "engine/third-party/glm"]
 	path = engine/third-party/glm
 	url = https://github.com/NiKuliCat/glm
+[submodule "engine/third-party/imguizmo"]
+	path = engine/third-party/imguizmo
+	url = https://github.com/CedricGuillemet/ImGuizmo.git
