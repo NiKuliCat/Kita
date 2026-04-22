@@ -34,6 +34,7 @@ namespace Kita {
 
 		uint32_t m_SceneTexID = 0;
 		glm::vec2 m_ViewportSize{};
+		bool m_ViewportOpen = true;
 
 
 		//ui

@@ -22,6 +22,9 @@ namespace Kita {
 
 	void SceneHierarchyPanel::OnImGuiRender()
 	{
+		ImGuiWindowClass viewportWindowClass{};
+		viewportWindowClass.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoWindowMenuButton;
+		ImGui::SetNextWindowClass(&viewportWindowClass);
 		ImGui::Begin("Hierarchy");
 
 		if (m_SceneContext)
@@ -241,6 +244,11 @@ namespace Kita {
 
 	void SceneHierarchyPanel::DrawInspectorPanel()
 	{
+
+		ImGuiWindowClass viewportWindowClass{};
+		viewportWindowClass.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoWindowMenuButton;
+		ImGui::SetNextWindowClass(&viewportWindowClass);
+
 		ImGui::Begin("Inspector");
 		if (m_SelectedObject)
 		{

@@ -33,9 +33,10 @@ namespace Kita {
 
 		SetDarkThemeSpace();
 		ImGuiStyle& style = ImGui::GetStyle();
-
-
-		ImFont* mainFont = io.Fonts->AddFontFromFileTTF("assets/fonts/DroidSans.ttf", 21.0f, nullptr );
+		style.FramePadding.y = 2.0f; //title栏高度
+		style.WindowBorderSize = 3.0f;
+		style.TabBarBorderSize = 0.0f;
+		ImFont* mainFont = io.Fonts->AddFontFromFileTTF("assets/fonts/DroidSans.ttf", 16.0f, nullptr );
 		KITA_CORE_ASSERT(mainFont, "Failed to load ImGui font!");
 		io.FontDefault = mainFont;
 
@@ -69,7 +70,7 @@ namespace Kita {
 	{
 		auto& colors = ImGui::GetStyle().Colors;
 
-		colors[ImGuiCol_WindowBg] = ImVec4{ 0.1f,0.105f,0.11f,1.0f };
+		colors[ImGuiCol_WindowBg] = ImVec4{ 0.11f,0.111f,0.115f,1.0f };
 
 		//header
 		colors[ImGuiCol_Header] = ImVec4{ 0.25f,0.255f,0.26f,1.0f };
@@ -87,16 +88,20 @@ namespace Kita {
 		colors[ImGuiCol_FrameBgActive] = ImVec4{ 0.15f,0.155f,0.16f,1.0f };
 
 		//tab
-		colors[ImGuiCol_Tab] = ImVec4{ 0.25f,0.255f,0.26f,1.0f };
-		colors[ImGuiCol_TabHovered] = ImVec4{ 0.35f,0.355f,0.36f,1.0f };
-		colors[ImGuiCol_TabActive] = ImVec4{ 0.25f,0.255f,0.26f,1.0f };
-		colors[ImGuiCol_TabUnfocused] = ImVec4{ 0.15f,0.155f,0.16f,1.0f };
-		colors[ImGuiCol_TabUnfocusedActive] = ImVec4{ 0.25f,0.255f,0.26f,1.0f };
+		colors[ImGuiCol_Tab] = ImVec4{ 0.11f,0.111f,0.115f,1.0f };
+		colors[ImGuiCol_TabHovered] = ImVec4{ 0.11f,0.111f,0.115f,1.0f };
+		colors[ImGuiCol_TabActive] = ImVec4{ 0.11f,0.111f,0.115f,1.0f };
+		colors[ImGuiCol_TabUnfocused] = ImVec4{ 0.11f,0.111f,0.115f,1.0f };
+		colors[ImGuiCol_TabUnfocusedActive] = ImVec4{ 0.11f,0.111f,0.115f,1.0f };
 
 		//title
-		colors[ImGuiCol_TitleBg] = ImVec4{ 0.18f,0.185f,0.19f,1.0f };
-		colors[ImGuiCol_TitleBgActive] = ImVec4{ 0.35f,0.355f,0.36f,1.0f };
-		colors[ImGuiCol_TitleBgCollapsed] = ImVec4{ 0.25f,0.255f,0.26f,1.0f };
+		colors[ImGuiCol_TitleBg] = ImVec4{ 0.055f,0.056f,0.060f,1.0f };
+		colors[ImGuiCol_TitleBgActive] = ImVec4{ 0.055f,0.056f,0.060f,1.0f };
+		colors[ImGuiCol_TitleBgCollapsed] = ImVec4{ 0.055f,0.056f,0.060f,1.0f };
+
+
+		//docking
+		colors[ImGuiCol_Border] = ImVec4{ 0.055f,0.056f,0.060f,1.0f };
 	}
 
 	void ImGuiLayer::Begin()

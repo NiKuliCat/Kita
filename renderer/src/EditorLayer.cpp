@@ -179,28 +179,11 @@ namespace Kita {
 		}
 
 
-
-
-		ImGui::Begin("Test Window");
-		ImGui::Text("Hello from another window!");
-		const glm::vec3& viewportCameraPos = m_ViewportCamera->GetPosition();
-		ImGui::Text("Viewport Camera");
-		ImGui::Text("Pos: %.2f, %.2f, %.2f", viewportCameraPos.x, viewportCameraPos.y, viewportCameraPos.z);
-		ImGui::Text("Pitch/Yaw: %.2f, %.2f", m_ViewportCamera->GetPitch(), m_ViewportCamera->GetYaw());
-		ImGui::Text("Distance: %.2f", m_ViewportCamera->GetDistance());
-		ImGui::Separator();
-		ImGui::Text("Imported Mesh");
-		ImGui::Separator();
-		ImGui::Text("Object");
-		ImGui::PushID(1);
-		ImGui::PopID();
-		ImGui::PushID(2);
-
-		ImGui::DragFloat3("##rotate", glm::value_ptr(m_LightTransform.GetRotation()), 0.04f, 0.0f, 0.0f, "%.2f");
-		ImGui::PopID();
-		ImGui::End();
-
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+
+		ImGuiWindowClass viewportWindowClass{};
+		viewportWindowClass.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoWindowMenuButton ;
+		ImGui::SetNextWindowClass(&viewportWindowClass);
 		ImGui::Begin("Viewport");
 		uint32_t ScreenRT_ID = m_FrameBuffer->GetColorAttachment(0);
 		{

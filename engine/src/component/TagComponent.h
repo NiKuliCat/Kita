@@ -10,6 +10,30 @@ namespace Kita {
 		Player
 	};
 
+	enum class Type
+	{
+		StaticMesh,
+		Curve
+	};
+
+	class ObjectType
+	{
+	public:
+		ObjectType() = default;
+		ObjectType(const Type& type)
+			:m_Type(type) {
+		};
+
+		const Type& Get() const { return m_Type; }
+		Type& Get() { return m_Type; }
+
+
+		void Set(const Type& type) { m_Type = type; }
+
+	private:
+		Type m_Type = Type::StaticMesh;
+	};
+
 
 	class Name
 	{
@@ -28,6 +52,10 @@ namespace Kita {
 
 		std::string m_Name = "new object";
 	};
+
+
+
+
 
 
 }
