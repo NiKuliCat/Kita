@@ -47,7 +47,7 @@ namespace Kita {
 		m_SceneTexID = m_FrameBuffer->GetColorAttachment(0);
 		RenderCommand::SetDepthTest(true);
 		RenderCommand::SetBlend(true);
-		RenderCommand::SetCullMode(RendererAPI::CullMode::None);
+		RenderCommand::SetCullMode(CullMode::None);
 
 		TextureDescriptor desc{};
 		desc.EnableMipMaps = true;
@@ -61,7 +61,8 @@ namespace Kita {
 			"assets/textures/skybox/back.jpg"    // -Z
 		};
 
-		auto cubemap = Texture::CreateCubeMap(desc, faces);
+		m_Cubemap = Texture::CreateCubeMap(desc, faces);
+
 	}
 
 	void EditorLayer::OnUpdate(float daltaTime)
@@ -89,9 +90,17 @@ namespace Kita {
 
 		m_Scene->OnUpdate(daltaTime);
 
+
+		Renderer::DrawSkyBox(m_Cubemap, 9);
+
+
 		auto settings = EditorGridSettings{};
 		settings.CellSize = 1.0f;
 		Renderer::DrawEditorGrids(settings);
+
+
+
+
 
 		Renderer::EndScene();
 		m_FrameBuffer->UnBind();

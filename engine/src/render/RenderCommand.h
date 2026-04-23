@@ -20,13 +20,21 @@ namespace Kita {
 		{
 			s_RendererAPI->SetBlend(enable);
 		}
-		inline static void SetCullMode(RendererAPI::CullMode cullmode)
+		inline static void SetCullMode(CullMode cullmode)
 		{
 			s_RendererAPI->SetCullMode(cullmode);
 		}
 		inline static void SetDepthTest(bool enable)
 		{
 			s_RendererAPI->SetDepthTest(enable);
+		}
+		inline static void SetDepthWrite(bool enable)
+		{
+			s_RendererAPI->SetDepthWrite(enable);
+		}
+		inline static void SetDepthTestMode(DepthTestMode testmode)
+		{
+			s_RendererAPI->SetDepthTestMode(testmode);
 		}
 		inline static void DrawIndexed(const Ref<VertexArray>& vertexArray)
 		{

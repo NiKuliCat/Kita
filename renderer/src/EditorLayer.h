@@ -39,6 +39,10 @@ namespace Kita {
 		glm::vec2 m_ViewportSize{};
 		bool m_ViewportOpen = true;
 
+		//skybox
+		Ref<Texture> m_Cubemap = nullptr;
+
+
 
 		//ui
 		SceneHierarchyPanel m_SceneHierarchyPanel;

@@ -20,6 +20,7 @@ namespace Kita {
 		shaderLibrary.Load("assets/shaders/EditorDefaultShader.glsl");
 		shaderLibrary.Load("assets/shaders/EditorLineShader.glsl");
 		shaderLibrary.Load("assets/shaders/EditorGridShader.glsl");
+		shaderLibrary.Load("assets/shaders/DefaultSkyBox.glsl");
 	}
 
 	void Renderer::ShutDown()
@@ -66,11 +67,28 @@ namespace Kita {
 		auto gridShader = shaderlib.Get("EditorGridShader");
 	
 
-		RenderCommand::SetCullMode(RendererAPI::CullMode::None);
+		RenderCommand::SetCullMode(CullMode::None);
 		RenderCommand::SetDepthTest(true);
 		RenderCommand::SetBlend(true);
 
 		Submit(m_RenderData->editorGridData.FullScreenTriangle_VAO, gridShader);
+	}
+
+	void Renderer::DrawSkyBox(const Ref<Texture>& cubemap, const uint32_t slot)
+	{
+
+		RenderCommand::SetDepthWrite(false);
+		RenderCommand::SetDepthTestMode(DepthTestMode::Lequal);
+
+		cubemap->Bind(slot);
+		auto& shaderlib = ShaderLibrary::GetInstance();
+		auto skyboxShader = shaderlib.Get("DefaultSkyBox");
+		skyboxShader->SetInt("SkyboxTex", slot);
+
+		Submit(m_RenderData->editorGridData.FullScreenTriangle_VAO, skyboxShader);
+
+		RenderCommand::SetDepthTestMode(DepthTestMode::Less);
+		RenderCommand::SetDepthWrite(true);
 	}
 
 	void Renderer::InitEditorGridData()

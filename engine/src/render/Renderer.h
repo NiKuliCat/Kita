@@ -3,22 +3,23 @@
 #include "RenderCommand.h"
 #include "render/UniformBuffer.h"
 #include "Light.h"
+#include "Texture.h"
 namespace  Kita{
 
 	struct EditorGridSettings
 	{
-		float CellSize = 0.5f;
-		float MajorStep = 10.0f;
+		float CellSize = 0.25f;
+		float MajorStep = 5.0f;
 
 		float MinorWidthPx = 0.35f;
 		float MajorWidthPx = 0.50f;
 		float AxisWidthPx = 0.65f;
 
-		float FadeStart = 5.0f;
-		float FadeEnd = 35.0f;
+		float FadeStart = 20.0f;
+		float FadeEnd = 75.0f;
 
-		glm::vec4 MinorColor = glm::vec4(0.53f, 0.55f, 0.58f, 0.35f);
-		glm::vec4 MajorColor = glm::vec4(0.76f, 0.78f, 0.79f, 0.55f);
+		glm::vec4 MinorColor = glm::vec4(0.73f, 0.75f, 0.78f, 0.55f);
+		glm::vec4 MajorColor = glm::vec4(0.86f, 0.88f, 0.89f, 0.85f);
 		glm::vec4 AxisXColor = glm::vec4(0.93f, 0.35f, 0.33f, 0.60f);
 		glm::vec4 AxisZColor = glm::vec4(0.33f, 0.60f, 0.96f, 0.60f); 
 	};
@@ -95,6 +96,8 @@ namespace  Kita{
 
 
 		static void DrawEditorGrids(const EditorGridSettings& settings);
+
+		static void DrawSkyBox(const Ref<Texture>& cubemap, const uint32_t slot);
 
 	private:
 		static void InitEditorGridData();

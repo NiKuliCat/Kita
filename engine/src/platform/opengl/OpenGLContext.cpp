@@ -22,6 +22,8 @@ namespace Kita {
 		KITA_CORE_ASSERT(status, "Failed to init Glad !");
 		KITA_CORE_INFO("OpenGL-Version: {0}", reinterpret_cast<const char*>(glGetString(GL_VERSION)));
 		KITA_CORE_INFO("OpenGLRenderer: {0}", reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
+
+		glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 	}
 
 	void OpenGLContext::SwapBuffers()

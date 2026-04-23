@@ -13,6 +13,8 @@ namespace Kita {
 		virtual void SetBlend(bool value) override;
 		virtual	void SetDepthTest(bool value) override;
 		virtual void SetCullMode(CullMode cullmode) override;
+		virtual void SetDepthWrite(bool value) override;
+		virtual void SetDepthTestMode(const DepthTestMode testMode) override;
 		virtual void SetViewport(const uint32_t x, const uint32_t y, const uint32_t width, const uint32_t height) override;
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray) override;
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray,const Ref<Shader>& shader) override;

@@ -3,6 +3,26 @@
 #include "VertexArray.h"
 #include "Shader.h"
 namespace Kita {
+
+	enum class CullMode
+	{
+		Back,
+		Front,
+		None
+	};
+
+	enum class DepthTestMode
+	{
+		Never = 0,
+		Less,
+		Equal,
+		Lequal,
+		Greater,
+		NotEqual,
+		Gequal,
+		Always
+	};
+
 	class RendererAPI
 	{
 	public:
@@ -12,12 +32,6 @@ namespace Kita {
 			OpenGL = 1
 		};
 
-		enum class CullMode
-		{
-			Back,
-			Front,
-			None
-		};
 
 	public:
 		inline static  API GetAPI() { return s_API; }
@@ -27,6 +41,8 @@ namespace Kita {
 		virtual void SetBlend(bool value) = 0;
 		virtual void SetCullMode(CullMode cullmode) = 0;
 		virtual	void SetDepthTest(bool value) = 0;
+		virtual void SetDepthWrite(bool value) = 0;
+		virtual void SetDepthTestMode(const DepthTestMode testMode) = 0;
 		virtual void SetViewport(const uint32_t x, const uint32_t y, const uint32_t width, const uint32_t height) = 0;
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray) = 0;
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray,const Ref<Shader>& shader) = 0;

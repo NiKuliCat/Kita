@@ -3,7 +3,21 @@
 #include <glad/glad.h>
 namespace Kita {
 
-
+	static const  GLenum ConvertToGLDepthFunc(const DepthTestMode testMode)
+	{
+		switch (testMode)
+		{
+			case DepthTestMode::Never:		return GL_NEVER;
+			case  DepthTestMode::Less:		return GL_LESS;
+			case  DepthTestMode::Equal:		return GL_EQUAL;
+			case  DepthTestMode::Lequal:	return GL_LEQUAL;
+			case  DepthTestMode::Greater:	return GL_GREATER;
+			case  DepthTestMode::NotEqual:	return GL_NOTEQUAL;
+			case  DepthTestMode::Gequal:	return GL_GEQUAL;
+			case  DepthTestMode::Always:	return GL_ALWAYS;
+			default:						return GL_LESS; 
+		}
+	}
 
 	void OpenGLRendererAPI::Clear()
 	{
@@ -64,6 +78,23 @@ namespace Kita {
 				break;
 			}
 		}
+	}
+
+	void OpenGLRendererAPI::SetDepthWrite(bool value)
+	{
+		if (value)
+		{
+			glDepthMask(GL_TRUE);
+		}
+		else
+		{
+			glDepthMask(GL_FALSE);
+		}
+	}
+
+	void OpenGLRendererAPI::SetDepthTestMode(const DepthTestMode testMode)
+	{
+		glDepthFunc(ConvertToGLDepthFunc(testMode));
 	}
 
 	void OpenGLRendererAPI::SetViewport(const uint32_t x, const uint32_t y, const uint32_t width, const uint32_t height)
