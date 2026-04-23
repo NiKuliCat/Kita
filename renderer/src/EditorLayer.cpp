@@ -48,6 +48,20 @@ namespace Kita {
 		RenderCommand::SetDepthTest(true);
 		RenderCommand::SetBlend(true);
 		RenderCommand::SetCullMode(RendererAPI::CullMode::None);
+
+		TextureDescriptor desc{};
+		desc.EnableMipMaps = true;
+
+		CubemapFacePaths faces = {
+			"assets/textures/skybox/right.jpg",  // +X
+			"assets/textures/skybox/left.jpg",   // -X
+			"assets/textures/skybox/top.jpg",    // +Y
+			"assets/textures/skybox/bottom.jpg", // -Y
+			"assets/textures/skybox/front.jpg",  // +Z
+			"assets/textures/skybox/back.jpg"    // -Z
+		};
+
+		auto cubemap = Texture::CreateCubeMap(desc, faces);
 	}
 
 	void EditorLayer::OnUpdate(float daltaTime)

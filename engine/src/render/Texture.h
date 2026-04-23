@@ -3,6 +3,14 @@
 
 namespace Kita {
 
+
+	using CubemapFacePaths = std::array<std::string, 6>;
+	enum class TextureType
+	{
+		Texture2D = 0,
+		CubeMap
+	};
+
 	struct TextureDescriptor
 	{
 		bool EnableMipMaps = true;
@@ -17,8 +25,12 @@ namespace Kita {
 		virtual uint32_t GetHeight() const = 0;
 		virtual uint32_t GetID() const = 0;
 
+		virtual TextureType GetType() const = 0;
+
+
 		virtual void Bind(uint32_t slot = 0) const = 0;
 
 		static Ref<Texture> Create(const TextureDescriptor& descriptor,const std::string& path);
+		static Ref<Texture> CreateCubeMap(const TextureDescriptor& descriptor, const CubemapFacePaths& faces);
 	};
 }

@@ -23,4 +23,23 @@ namespace Kita {
 		KITA_CORE_ERROR("UnKown RendererAPI !");
 		return nullptr;
 	}
+	Ref<Texture> Texture::CreateCubeMap(const TextureDescriptor& descriptor, const CubemapFacePaths& faces)
+	{
+		switch (RendererAPI::GetAPI())
+		{
+		case RendererAPI::API::OpenGL:
+		{
+			return CreateRef<OpenGLTexture>(descriptor, faces);
+			break;
+		}
+		case RendererAPI::API::None:
+		{
+			return nullptr;
+			break;
+		}
+		}
+
+		KITA_CORE_ERROR("UnKown RendererAPI !");
+		return nullptr;
+	}
 }
