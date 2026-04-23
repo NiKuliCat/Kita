@@ -56,6 +56,9 @@ namespace Kita {
 		virtual uint32_t GetColorAttachment(uint32_t index = 0) const = 0;
 		virtual uint32_t GetDepthAttachment() const = 0;
 
+		virtual int GetIDBufferValue(int x, int y)const  = 0;
+		virtual void ClearIDBuffer(int value)const  = 0;
+
 		virtual void ReSize(uint32_t width, uint32_t height) = 0;
 
 		virtual void Bind() = 0;

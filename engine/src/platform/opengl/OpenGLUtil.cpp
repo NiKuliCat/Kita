@@ -1,7 +1,7 @@
 #include "kita_pch.h"
 
 #include "OpenGLUtil.h"
-
+#include "core/Log.h"
 namespace Kita {
 
 	std::unordered_map<GLenum, std::string> OpenGLUtil::GLSLReader(const std::string& filepath)
@@ -116,6 +116,16 @@ namespace Kita {
 	void OpenGLUtil::BindAttachment(bool multisample, uint32_t id)
 	{
 		glBindTexture(TextureTarget(multisample), id);
+	}
+	GLenum OpenGLUtil::FrameBufferFormatToOpenGLFormat(FrameBufferTexFormat format)
+	{
+		switch (format)
+		{
+		case  FrameBufferTexFormat::RGBA8: return GL_RGBA;
+		case  FrameBufferTexFormat::RED_INTEGER: return GL_RED_INTEGER;
+		}
+		KITA_CORE_ERROR("Unkown frame buffer format");
+		return 0;
 	}
 	void OpenGLUtil::AttachColorTexture(uint32_t id, int sample, GLenum internalFormat, GLenum format, uint32_t width, uint32_t height, GLenum type, int index)
 	{

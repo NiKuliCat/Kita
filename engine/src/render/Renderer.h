@@ -67,10 +67,6 @@ namespace  Kita{
 			Ref<VertexArray> FullScreenTriangle_VAO;
 		};
 
-
-
-
-
 		struct RenderData
 		{
 			SceneRenderCameraData	cameraData;

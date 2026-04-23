@@ -19,4 +19,7 @@ namespace Kita {
         }
     }
 
+    Object::Object(entt::entity entityHandle, Scene* scene)
+        :Object(entityHandle,scene,"new object"){
+    }
 }

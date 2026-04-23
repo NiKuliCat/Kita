@@ -41,6 +41,23 @@ namespace Kita {
 		return m_DepthAttachment;
 	}
 
+	int OpenGLFrameBuffer::GetIDBufferValue(int x, int y) const
+	{
+		KITA_CORE_ASSERT(m_ColorAttachments.size() > 1, "Not Created ID Buffer");
+		glReadBuffer(GL_COLOR_ATTACHMENT0 + 1);
+		int pixel;
+		glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixel);
+		return pixel;
+	}
+
+	void OpenGLFrameBuffer::ClearIDBuffer(int value) const
+	{
+		KITA_CORE_ASSERT(m_ColorAttachments.size() > 1, "Not Created ID Buffer");
+		auto& description = m_ColorAttachmentsDesc[1];
+
+		glClearTexImage(m_ColorAttachments[1], 0, OpenGLUtil::FrameBufferFormatToOpenGLFormat(description.Format), GL_INT, &value);
+	}
+
 	void OpenGLFrameBuffer::ReSize(uint32_t width, uint32_t height)
 	{
 		m_Descriptor.Width = width;
@@ -96,9 +113,13 @@ namespace Kita {
 
 		if (m_ColorAttachments.size() > 1)
 		{
-			KITA_CORE_ASSERT(m_ColorAttachments.size() >= 4, "OpenGL frame buffer size is more than 4 ");
-			GLenum buffers[2] = { GL_COLOR_ATTACHMENT0,GL_COLOR_ATTACHMENT1 };
-			glDrawBuffers(m_ColorAttachments.size(), buffers);
+			std::vector<GLenum> buffers;
+			buffers.reserve(m_ColorAttachments.size());
+			for (uint32_t i = 0; i < static_cast<uint32_t>(m_ColorAttachments.size()); ++i)
+			{
+				buffers.push_back(GL_COLOR_ATTACHMENT0 + i);
+			}
+			glDrawBuffers(static_cast<GLsizei>(buffers.size()), buffers.data());
 		}
 		else if (m_ColorAttachments.empty())
 		{

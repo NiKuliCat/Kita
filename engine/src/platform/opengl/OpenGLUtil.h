@@ -19,6 +19,8 @@ namespace Kita {
 		static bool IsDepthFormat(const FrameBufferTexFormat format);
 		static void CreateAttachment(bool multisample, uint32_t count, uint32_t* out_id);
 		static void BindAttachment(bool multisample, uint32_t id);
+
+		static GLenum FrameBufferFormatToOpenGLFormat(FrameBufferTexFormat format);
 		
 		static void AttachColorTexture(uint32_t id, int sample, GLenum internalFormat, GLenum format, uint32_t width, uint32_t height, GLenum type, int index);
 		static void AttachColorTexture(FrameBufferTexFormat& format, uint32_t id, int sample, uint32_t width, uint32_t height, int index);

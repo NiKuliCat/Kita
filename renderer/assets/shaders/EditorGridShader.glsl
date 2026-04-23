@@ -36,6 +36,7 @@ layout(std140, binding = 10) uniform EditorGrid
 
 layout(location = 0) in vec2 vNdc;
 layout(location = 0) out vec4 FragColor;
+layout(location = 1) out int IDColor;
 
 float GridLineAA(vec2 coord, float widthPx)
 {
@@ -112,4 +113,5 @@ void main()
     gl_FragDepth = depth;
 
     FragColor = vec4(color.rgb, alpha);
+    IDColor = -1;
 }

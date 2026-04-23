@@ -5,7 +5,8 @@ layout(location = 1) in vec4 VertexColor;
 layout(location = 2) in vec2 Texcoord;
 layout(location = 3) in vec3 Normal;
 
-uniform mat4 Model;
+uniform mat4 Model; 
+
 
 layout(std140, binding = 0) uniform CameraData
 {
@@ -54,9 +55,11 @@ struct Attributes
 layout(location = 0) in Attributes Attri_Input;
 
 layout(location = 0) out vec4 FragColor;
+layout(location = 1) out int IDColor;
 
 
 uniform sampler2D MainTex;
+uniform int id;
 void main()
 {
 	vec3 normalWS = normalize(Attri_Input.normal);
@@ -64,4 +67,5 @@ void main()
 	float NdotL = max(dot(normalWS, lightDir), 0.0);
 	float diffuse = max(NdotL, 0.15);
 	FragColor = vec4(texture(MainTex, Attri_Input.uv).rgb * diffuse, 1.0);
+	IDColor = id;
 }

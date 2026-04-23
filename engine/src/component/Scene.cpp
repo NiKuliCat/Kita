@@ -34,7 +34,9 @@ namespace Kita {
 			glm::mat4 model = transform.GetTransformMatrix();
 
 			auto shader = meshRenderer.GetMaterial()->GetShader();
+			uint32_t id = (uint32_t)entity;
 			shader->SetMat4("Model", model);
+			shader->SetInt("id", id);
 
 			const auto& meshs = meshRenderer.GetMeshs();
 			for (const auto& mesh : meshs)

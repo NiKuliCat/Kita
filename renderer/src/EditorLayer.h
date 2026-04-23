@@ -22,7 +22,9 @@ namespace Kita {
 
 	private:
 		bool OnKeyPressed(KeyPressedEvent& event);
+		bool OnMouseButtonPressed(MouseButtonPressedEvent& event);
 
+		void TryPickObject();
 
 	
 	private:
@@ -37,6 +39,7 @@ namespace Kita {
 
 		uint32_t m_SceneTexID = 0;
 		glm::vec2 m_ViewportSize{};
+		glm::vec2 m_ViewportBounds[2];
 		bool m_ViewportOpen = true;
 
 		//skybox

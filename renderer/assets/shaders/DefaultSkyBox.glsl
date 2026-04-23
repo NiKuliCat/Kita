@@ -43,6 +43,7 @@ layout(std140, binding = 0) uniform CameraData
 layout(location = 0) in Attributes Attri_Input;
 
 layout(location = 0) out vec4 FragColor;
+layout(location = 1) out int IDColor;
 
 
 uniform samplerCube SkyboxTex;
@@ -58,4 +59,5 @@ void main()
     vec3 dirWS = normalize((mat3(Matrix_I_V) * dirVS)); // 只要旋转
 
 	FragColor = vec4(texture(SkyboxTex, dirWS).rgb,1.0);
+	IDColor = -1;
 }

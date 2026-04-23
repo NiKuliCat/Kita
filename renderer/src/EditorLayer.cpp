@@ -6,6 +6,7 @@
 #include <glm/glm.hpp>
 #include <imgui_internal.h>
 #include <glm/gtc/type_ptr.hpp>
+#include <algorithm>
 #include <limits>
 namespace Kita {
 
@@ -37,7 +38,7 @@ namespace Kita {
 		m_GizmoControlType = ImGuizmo::OPERATION::TRANSLATE;
 
 		FrameBufferDescriptor disc;
-		disc.AttachmentsDescription = { FrameBufferTexFormat::RGBA16F,FrameBufferTexFormat::DEPTH };
+		disc.AttachmentsDescription = { FrameBufferTexFormat::RGBA16F, FrameBufferTexFormat::RED_INTEGER,FrameBufferTexFormat::DEPTH };
 		disc.Width = 1280;
 		disc.Height = 720;
 
@@ -87,6 +88,7 @@ namespace Kita {
 
 		RenderCommand::SetClearColor(glm::vec4(0.12, 0.12, 0.13, 1));
 		RenderCommand::Clear();
+		m_FrameBuffer->ClearIDBuffer(-1);
 
 		m_Scene->OnUpdate(daltaTime);
 
@@ -219,6 +221,13 @@ namespace Kita {
 			ImVec2 ViewportSize = ImGui::GetContentRegionAvail();
 			m_ViewportSize = { ViewportSize.x,ViewportSize.y };
 		}
+
+		auto viewportReginMin = ImGui::GetWindowContentRegionMin();
+		auto viewportReginMax = ImGui::GetWindowContentRegionMax();
+		auto viewportOffset = ImGui::GetWindowPos();
+		m_ViewportBounds[0] = { viewportReginMin.x + viewportOffset.x,viewportReginMin.y + viewportOffset.y };
+		m_ViewportBounds[1] = { viewportReginMax.x + viewportOffset.x,viewportReginMax.y + viewportOffset.y };
+
 		ImGui::Image(ScreenRT_ID, ImVec2{ m_ViewportSize.x,m_ViewportSize.y }, ImVec2(0, 1), ImVec2(1, 0));
 
 		auto& selectedObj = m_SceneHierarchyPanel.GetSelectedObject();
@@ -283,6 +292,7 @@ namespace Kita {
 	{
 		EventDisPatcher dispatcher(event);
 		dispatcher.Dispatcher<KeyPressedEvent>(BIND_EVENT_FUNC(EditorLayer::OnKeyPressed));
+		dispatcher.Dispatcher<MouseButtonPressedEvent>(BIND_EVENT_FUNC(EditorLayer::OnMouseButtonPressed));
 		m_ViewportCamera->OnEvent(event);
 	}
 
@@ -304,6 +314,57 @@ namespace Kita {
 			break;
 		}
 		return false;
+	}
+
+	bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& event)
+	{
+		if (event.GetMouseButton() == Mouse::Button0)
+		{
+			TryPickObject();
+		}
+		return false;
+	}
+
+	void EditorLayer::TryPickObject()
+	{
+		if (Input::IsKeyPressed(Key::LeftAlt))
+			return;
+
+		// Only block pick while gizmo is actively manipulating.
+		// IsOver() is too aggressive and can suppress valid clicks around object center.
+		if (ImGuizmo::IsUsing())
+			return;
+
+		auto [mx, my] = ImGui::GetMousePos();
+		mx -= m_ViewportBounds[0].x;
+		my -= m_ViewportBounds[0].y;
+		glm::vec2 size = m_ViewportBounds[1] - m_ViewportBounds[0];
+
+		if (mx < 0.0f || my < 0.0f || mx >= size.x || my >= size.y)
+			return;
+
+		m_FrameBuffer->Bind();
+		// Convert to framebuffer coordinates (origin at bottom-left).
+		int mouseX = (int)mx;
+		int mouseY = (int)(size.y - my);
+
+		// Clamp to valid pixel range in case of edge-case float rounding.
+		mouseX = std::clamp(mouseX, 0, (int)size.x - 1);
+		mouseY = std::clamp(mouseY, 0, (int)size.y - 1);
+
+		int pixel = m_FrameBuffer->GetIDBufferValue(mouseX, mouseY);
+		if (pixel != -1)
+		{
+			Object selectedObject = Object{ (entt::entity)pixel,m_Scene.get() };
+			m_SceneHierarchyPanel.SetSelectedObject(selectedObject);
+		}
+		else
+		{
+			m_SceneHierarchyPanel.SetSelectedObject({});
+		}
+		KITA_CLENT_INFO("pixel in viewport : {0}", pixel);
+
+		m_FrameBuffer->UnBind();
 	}
 
 	

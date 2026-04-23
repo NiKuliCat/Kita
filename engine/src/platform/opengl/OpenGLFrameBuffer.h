@@ -19,6 +19,9 @@ namespace Kita {
 		virtual uint32_t GetColorAttachment(uint32_t index = 0) const override;
 		virtual uint32_t GetDepthAttachment() const override;
 
+		virtual int GetIDBufferValue(int x, int y) const override;
+		virtual void ClearIDBuffer(int value) const override;
+
 		virtual void ReSize(uint32_t width, uint32_t height) override;
 
 		virtual void Bind() override;

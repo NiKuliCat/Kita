@@ -42,8 +42,10 @@ struct Attributes
 layout(location = 0) in Attributes Attri_Input;
 
 layout(location = 0) out vec4 FragColor;
+layout(location = 1) out int IDColor;
 
 void main()
 {
 	FragColor = vec4(Attri_Input.color.rgb,1.0);
+	IDColor = -1;
 }
