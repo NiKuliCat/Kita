@@ -10,6 +10,7 @@ namespace Kita {
 		glm::vec3 position;
 		glm::vec4 color;
 		float radius;
+		int index;
 	};
 
 
@@ -24,7 +25,8 @@ namespace Kita {
 			BufferLayout m_PointLayout = {
 				{ShaderDataType::Float3,"position"},
 				{ShaderDataType::Float4,"color"},
-				{ShaderDataType::Float,"radius"}
+				{ShaderDataType::Float,"radius"},
+				{ShaderDataType::Int,"index"}
 			};
 
 			std::vector<GizmoPointUBOData> m_PointsData;

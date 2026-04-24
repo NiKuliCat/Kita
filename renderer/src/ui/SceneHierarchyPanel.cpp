@@ -35,6 +35,36 @@ namespace Kita {
 		}
 	}
 
+	void SceneHierarchyPanel::SetSelectedPoint(PointData point)
+	{
+
+		if (point.id != -1)
+		{
+			m_SelectedPoint = point;
+			KITA_CLENT_INFO("{0},this object is selected", m_SelectedObject.GetComponent<Name>().Get().c_str());
+		}
+		else
+		{
+			m_SelectedPoint = {};
+		}
+	}
+
+	void SceneHierarchyPanel::ClearSelectedPoint()
+	{
+		if (m_SelectedObject && m_SelectedPoint.id != -1 && m_SelectedObject.HasComponent<LineRenderer>())
+		{
+			m_SelectedObject.GetComponent<LineRenderer>().SetControlPointColorByIndex({ 1,1,1,1 }, m_SelectedPoint.id);
+		}
+
+		m_SelectedPoint = {};
+	}
+
+	void SceneHierarchyPanel::ClearSelection()
+	{
+		ClearSelectedPoint();
+		m_SelectedObject = {};
+	}
+
 	void SceneHierarchyPanel::OnImGuiRender()
 	{
 		ImGuiWindowClass viewportWindowClass{};
@@ -64,7 +94,7 @@ namespace Kita {
 
 			if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
 			{
-				m_SelectedObject = {};
+				ClearSelection();
 			}
 
 			if (!ImGui::IsAnyItemHovered() && ImGui::IsWindowHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
@@ -93,6 +123,7 @@ namespace Kita {
 
 		if (ImGui::IsItemClicked())
 		{
+			ClearSelectedPoint();
 			SetSelectedObject(obj);
 		}
 

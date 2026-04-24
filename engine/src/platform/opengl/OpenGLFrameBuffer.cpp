@@ -41,21 +41,21 @@ namespace Kita {
 		return m_DepthAttachment;
 	}
 
-	int OpenGLFrameBuffer::GetIDBufferValue(int x, int y) const
+	int OpenGLFrameBuffer::GetIDBufferValue(int x, int y, uint32_t index) const
 	{
 		KITA_CORE_ASSERT(m_ColorAttachments.size() > 1, "Not Created ID Buffer");
-		glReadBuffer(GL_COLOR_ATTACHMENT0 + 1);
+		glReadBuffer(GL_COLOR_ATTACHMENT0 + index);
 		int pixel;
 		glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &pixel);
 		return pixel;
 	}
 
-	void OpenGLFrameBuffer::ClearIDBuffer(int value) const
+	void OpenGLFrameBuffer::ClearIDBuffer(int value, uint32_t index) const
 	{
 		KITA_CORE_ASSERT(m_ColorAttachments.size() > 1, "Not Created ID Buffer");
-		auto& description = m_ColorAttachmentsDesc[1];
+		auto& description = m_ColorAttachmentsDesc[index];
 
-		glClearTexImage(m_ColorAttachments[1], 0, OpenGLUtil::FrameBufferFormatToOpenGLFormat(description.Format), GL_INT, &value);
+		glClearTexImage(m_ColorAttachments[index], 0, OpenGLUtil::FrameBufferFormatToOpenGLFormat(description.Format), GL_INT, &value);
 	}
 
 	void OpenGLFrameBuffer::ReSize(uint32_t width, uint32_t height)

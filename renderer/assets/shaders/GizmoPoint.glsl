@@ -4,6 +4,7 @@
 layout(location = 0) in vec3 PositionOS;
 layout(location = 1) in vec4 aColor;
 layout(location = 2) in float aRadius;
+layout(location = 3) in int Index;
 
 uniform mat4 Matrix_M;
 
@@ -19,8 +20,9 @@ layout(std140, binding = 0) uniform CameraData
 };
 
 layout(location = 0) out vec4 vColor;
-layout(location = 2) out vec2 vCenterSS;
-layout(location = 3) out float vRadiusPx;
+layout(location = 1) out vec2 vCenterSS;
+layout(location = 2) out float vRadiusPx;
+layout(location = 3) out flat int  vIndex;
 
 void main()
 {
@@ -35,25 +37,28 @@ void main()
     vRadiusPx = radiusPx;
 
     vColor = aColor;
+    vIndex = Index;
 }
 
 #program fragment
 #version 450 core
 
 layout(location = 0) in vec4 vColor;
-layout(location = 1) flat in int vID;
-layout(location = 2) in vec2 vCenterSS;
-layout(location = 3) in float vRadiusPx;
+layout(location = 1) in vec2 vCenterSS;
+layout(location = 2) in float vRadiusPx;
+layout(location = 3) flat in int vIndex;
 
 layout(location = 0) out vec4 FragColor;
 layout(location = 1) out int IDColor;
+layout(location = 2) out int IndexColor;
 
 layout(std140, binding = 2) uniform ScreenData
 {
-
     vec4 ScreenSize;
 };
+
 uniform int id;
+
 void main()
 {
     vec2 centerPx = vCenterSS * ScreenSize.xy;
@@ -69,4 +74,5 @@ void main()
     FragColor = vec4(vColor.rgb, vColor.a * alpha);
 
     IDColor = (dist <= vRadiusPx - 1.0) ? id : -1;
+    IndexColor = (dist <= vRadiusPx - 1.0) ? vIndex : -1;
 }

@@ -9,6 +9,20 @@ namespace Kita {
 		BezierCubic
 	};
 
+	struct PointData
+	{
+		glm::vec3 position;
+		glm::vec4 color;
+		int id = -1;
+
+		PointData() = default;
+		PointData(const glm::vec3& pos, const int index)
+			:position(pos),id(index),color(glm::vec4(1,1,1,1))
+		{
+
+		}
+	};
+
 
 	class LineRenderer
 	{
@@ -16,9 +30,14 @@ namespace Kita {
 		LineRenderer();
 		~LineRenderer();
 
-		void SetControlPoints(const std::vector<glm::vec3>& points) { m_ControlPoints = points; }
-		std::vector<glm::vec3>& GetControlPoints() { return m_ControlPoints; }
-		const std::vector<glm::vec3>& GetControlPoints() const { return m_ControlPoints; }
+		void SetControlPoints(const std::vector<glm::vec3>& points);
+		std::vector<PointData>& GetControlPoints() { return m_ControlPoints; }
+		const std::vector<PointData>& GetControlPoints() const { return m_ControlPoints; }
+
+		const PointData& GetControlPointByIndex(const int index) const;
+		PointData& GetControlPointByIndex(const int index);
+
+		void SetControlPointColorByIndex(const glm::vec4& color, const int index);
 
 		void SetCurveType(CurveType type) { m_CurveType = type; }
 		CurveType GetCurveType() const { return m_CurveType; }
@@ -33,7 +52,7 @@ namespace Kita {
 
 	private:
 
-		std::vector<glm::vec3> m_ControlPoints;
+		std::vector<PointData> m_ControlPoints;
 
 		CurveType m_CurveType = CurveType::BezierCubic;
 	};
