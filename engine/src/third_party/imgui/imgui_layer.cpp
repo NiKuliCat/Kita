@@ -36,7 +36,7 @@ namespace Kita {
 		style.FramePadding.y = 2.0f; //title栏高度
 		style.WindowBorderSize = 3.0f;
 		style.TabBarBorderSize = 0.0f;
-		ImFont* mainFont = io.Fonts->AddFontFromFileTTF("assets/fonts/Poppins/Poppins-Regular.ttf", 18.0f, nullptr );
+		ImFont* mainFont = io.Fonts->AddFontFromFileTTF("assets/fonts/Poppins/Poppins-Regular.ttf", 20.0f, nullptr );
 		KITA_CORE_ASSERT(mainFont, "Failed to load ImGui font!");
 		io.FontDefault = mainFont;
 

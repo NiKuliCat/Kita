@@ -7,17 +7,11 @@ namespace Kita {
 
 	struct GizmoPointUBOData
 	{
-		glm::vec3 positionWS;
+		glm::vec3 position;
 		glm::vec4 color;
 		float radius;
-		int id = -1;
 	};
 
-	static_assert(sizeof(GizmoPointUBOData) == 36, "GizmoPointUBOData layout must match BufferLayout stride (36 bytes).");
-	static_assert(offsetof(GizmoPointUBOData, positionWS) == 0, "positionWS offset mismatch.");
-	static_assert(offsetof(GizmoPointUBOData, color) == 12, "color offset mismatch.");
-	static_assert(offsetof(GizmoPointUBOData, radius) == 28, "radius offset mismatch.");
-	static_assert(offsetof(GizmoPointUBOData, id) == 32, "id offset mismatch.");
 
 	
 
@@ -28,10 +22,9 @@ namespace Kita {
 		{
 
 			BufferLayout m_PointLayout = {
-				{ShaderDataType::Float3,"positionWS"},
+				{ShaderDataType::Float3,"position"},
 				{ShaderDataType::Float4,"color"},
-				{ShaderDataType::Float,"radius"},
-				{ShaderDataType::Int,"id"}
+				{ShaderDataType::Float,"radius"}
 			};
 
 			std::vector<GizmoPointUBOData> m_PointsData;
@@ -43,7 +36,7 @@ namespace Kita {
 
 		static void Init();
 		static void DrawPoints(const std::vector<GizmoPointUBOData>& points);
-		static void FlushAllPoints();
+		static void FlushAllPoints(const glm::mat4& model,const uint32_t id);
 
 
 	private:

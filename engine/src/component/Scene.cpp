@@ -3,8 +3,10 @@
 #include "Object.h"
 #include "Transform.h"
 #include "MeshRenderer.h"
+#include "LineRenderer.h"
 #include "render/Renderer.h"
 #include "render/ShaderLibrary.h"
+#include <render/scene/Gizmo.h>
 namespace Kita {
 
 	Scene::~Scene()
@@ -24,13 +26,24 @@ namespace Kita {
 	{
 		RenderSceneEditor();
 	}
+
+	void Scene::LoadSkyCubemap(const CubemapFacePaths& faces)
+	{
+		TextureDescriptor desc{};
+		desc.EnableMipMaps = true;
+
+
+		m_SkyCubemap = Texture::CreateCubeMap(desc, faces);
+	}
+
 	void Scene::RenderSceneEditor()  
 	{
-		auto view = m_Registry.group<Transform, MeshRenderer>();
+		// 渲染实体
+		auto mesh = m_Registry.group<Transform, MeshRenderer>();
 
-		for (auto entity : view)
+		for (auto entity : mesh)
 		{
-			auto [transform, meshRenderer] = view.get<Transform, MeshRenderer>(entity);
+			auto [transform, meshRenderer] = mesh.get<Transform, MeshRenderer>(entity);
 
 			glm::mat4 model = transform.GetTransformMatrix();
 
@@ -51,8 +64,42 @@ namespace Kita {
 			}
 		}
 
-		
 
+		//天空盒
+		Renderer::DrawSkyBox(m_SkyCubemap, 9);
+
+
+		//gizmo
+		auto lineView = m_Registry.view<Transform, LineRenderer>();
+
+		std::vector<GizmoPointUBOData> gizmoPoints = {};
+		for (auto entity : lineView)
+		{
+			auto& transform = lineView.get<Transform>(entity);
+			auto& lineRenderer = lineView.get<LineRenderer>(entity);
+			glm::mat4 model = transform.GetTransformMatrix();
+			auto points = lineRenderer.GetControlPoints();
+			uint32_t id = (uint32_t)entity;
+
+
+			for (auto point : points)
+			{
+				auto gizmoPoint = GizmoPointUBOData{};
+				gizmoPoint.position = point;
+				gizmoPoint.color = { 1,1,1,1 };
+				gizmoPoint.radius = 8.0f;
+				gizmoPoints.push_back(gizmoPoint);
+			}
+
+			Gizmo::DrawPoints(gizmoPoints);
+			Gizmo::FlushAllPoints(model,id);
+
+			gizmoPoints.clear();
+		}
+
+		auto settings = EditorGridSettings{};
+		settings.CellSize = 1.0f;
+		Renderer::DrawEditorGrids(settings);
 
 	}
 }

@@ -45,31 +45,21 @@ namespace Kita {
 		if (m_SceneContext)
 		{
 			ImGuiIO& io = ImGui::GetIO();
-			ImFont* boldfont = io.FontDefault;
-			if (boldfont == nullptr && io.Fonts->Fonts.Size > 0)
-				boldfont = io.Fonts->Fonts[0];
 			ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_DefaultOpen;
 
-			if (boldfont)
-				ImGui::PushFont(boldfont);
-			bool open = ImGui::TreeNodeEx(m_SceneContext->GetName().c_str(), flags);
-			if (boldfont)
-				ImGui::PopFont();
+
 			if (ImGui::IsItemClicked())
 			{
 				m_SelectedObject = {};
 			}
-			if (open)
-			{
-				auto view = m_SceneContext->GetRegistry().view<entt::entity>();
-				for (auto entityID : view)
-				{
-					Object obj{ entityID, m_SceneContext.get(), "" };
-					DrawObjectNode(obj);
-				}
 
-				ImGui::TreePop();
+			auto view = m_SceneContext->GetRegistry().view<entt::entity>();
+			for (auto entityID : view)
+			{
+				Object obj{ entityID, m_SceneContext.get(), "" };
+				DrawObjectNode(obj);
 			}
+
 
 
 			if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())

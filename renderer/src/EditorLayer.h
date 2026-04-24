@@ -42,8 +42,6 @@ namespace Kita {
 		glm::vec2 m_ViewportBounds[2];
 		bool m_ViewportOpen = true;
 
-		//skybox
-		Ref<Texture> m_Cubemap = nullptr;
 
 
 

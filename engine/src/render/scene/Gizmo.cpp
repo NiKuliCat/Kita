@@ -28,7 +28,7 @@ namespace Kita {
 		m_SceneGizmoData->m_PointsData.insert(m_SceneGizmoData->m_PointsData.end(),points.begin(), points.end());
 	}
 
-	void Gizmo::FlushAllPoints()
+	void Gizmo::FlushAllPoints(const glm::mat4& model,const uint32_t id)
 	{
 		KITA_CORE_ASSERT(m_SceneGizmoData, "Gizmo::Init must be called before FlushAllPoints.");
 
@@ -53,6 +53,8 @@ namespace Kita {
 		m_SceneGizmoData->m_Points_VBO->SetData(data.data(), bytes);
 
 		auto shader = ShaderLibrary::GetInstance().Get("GizmoPoint");
+		shader->SetMat4("Matrix_M", model);
+		shader->SetInt("id", id);
 		Renderer::DrawGizmoPoints(m_SceneGizmoData->m_Points_VAO, shader, static_cast<uint32_t>(data.size()));
 
 		data.clear();

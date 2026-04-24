@@ -1,10 +1,11 @@
 #program vertex
 #version 450 core
 
-layout(location = 0) in vec3 aPositionWS;
+layout(location = 0) in vec3 PositionOS;
 layout(location = 1) in vec4 aColor;
 layout(location = 2) in float aRadius;
-layout(location = 3) in int aID;
+
+uniform mat4 Matrix_M;
 
 layout(std140, binding = 0) uniform CameraData
 {
@@ -18,13 +19,12 @@ layout(std140, binding = 0) uniform CameraData
 };
 
 layout(location = 0) out vec4 vColor;
-layout(location = 1) flat out int vID;
 layout(location = 2) out vec2 vCenterSS;
 layout(location = 3) out float vRadiusPx;
 
 void main()
 {
-    vec4 clip = Matrix_VP * vec4(aPositionWS, 1.0);
+    vec4 clip = Matrix_VP * Matrix_M *  vec4(PositionOS, 1.0);
     gl_Position = clip;
 
     float radiusPx = max(aRadius, 0.5);
@@ -35,7 +35,6 @@ void main()
     vRadiusPx = radiusPx;
 
     vColor = aColor;
-    vID = aID;
 }
 
 #program fragment
@@ -54,7 +53,7 @@ layout(std140, binding = 2) uniform ScreenData
 
     vec4 ScreenSize;
 };
-
+uniform int id;
 void main()
 {
     vec2 centerPx = vCenterSS * ScreenSize.xy;
@@ -69,5 +68,5 @@ void main()
 
     FragColor = vec4(vColor.rgb, vColor.a * alpha);
 
-    IDColor = (dist <= vRadiusPx - 1.0) ? vID : -1;
+    IDColor = (dist <= vRadiusPx - 1.0) ? id : -1;
 }

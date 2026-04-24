@@ -1471,6 +1471,7 @@
       <Filter>third-party\imguizmo</Filter>
     </ClInclude>
     <ClInclude Include="src\render\scene\Gizmo.h" />
+    <ClInclude Include="src\component\LineRenderer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\component\MeshRenderer.cpp">
@@ -1591,5 +1592,6 @@
       <Filter>third-party\imguizmo</Filter>
     </ClCompile>
     <ClCompile Include="src\render\scene\Gizmo.cpp" />
+    <ClCompile Include="src\component\LineRenderer.cpp" />
   </ItemGroup>
 </Project>

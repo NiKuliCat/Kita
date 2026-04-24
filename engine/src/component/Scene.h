@@ -1,6 +1,7 @@
 #pragma once
 
 #include "entt.hpp"
+#include "render/Texture.h"
 namespace Kita {
 
 	class Object;
@@ -23,6 +24,7 @@ namespace Kita {
 		void OnUpdate(float deltaTime);
 
 		std::string& GetName() { return m_Name; }
+		void LoadSkyCubemap(const CubemapFacePaths& faces);
 
 	private:
 		void RenderSceneEditor();
@@ -30,8 +32,8 @@ namespace Kita {
 		std::string m_Name = "New Scene";
 		entt::registry m_Registry;
 
-
-
+		
+		Ref<Texture> m_SkyCubemap = nullptr;
 	};
 }
 

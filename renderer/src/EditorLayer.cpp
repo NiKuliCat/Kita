@@ -8,7 +8,6 @@
 #include <glm/gtc/type_ptr.hpp>
 #include "render/scene/Gizmo.h"
 
-
 namespace Kita {
 
 	EditorLayer::EditorLayer()
@@ -27,13 +26,34 @@ namespace Kita {
 	{
 
 
-		m_Scene = CreateRef<Scene>();
+		m_Scene = CreateRef<Scene>( "example scene");
 
 		{
-			auto& obj = m_Scene->CreateObject("sphere");
+			auto obj = m_Scene->CreateObject("sphere");
 			auto& meshrenderer = obj.AddComponent<MeshRenderer>();
 			meshrenderer.LoadMeshs("assets/models/Sphere.fbx");
+
+			auto curveObj1 = m_Scene->CreateObject("curve 1");
+			auto& lineRenderer1 = curveObj1.AddComponent<LineRenderer>();
+
+			auto curveObj2 = m_Scene->CreateObject("curve 2");
+			auto& transform2 = curveObj2.GetComponent<Transform>();
+			transform2.SetPosition({2,2,2});
+			auto& lineRenderer2 = curveObj2.AddComponent<LineRenderer>();
 		}
+
+		CubemapFacePaths faces = {
+			"assets/textures/skybox/right.jpg",  // +X
+			"assets/textures/skybox/left.jpg",   // -X
+			"assets/textures/skybox/top.jpg",    // +Y
+			"assets/textures/skybox/bottom.jpg", // -Y
+			"assets/textures/skybox/front.jpg",  // +Z
+			"assets/textures/skybox/back.jpg"    // -Z
+		};
+
+		m_Scene->LoadSkyCubemap(faces);
+
+
 
 		m_SceneHierarchyPanel = SceneHierarchyPanel(m_Scene);
 		m_GizmoControlType = ImGuizmo::OPERATION::TRANSLATE;
@@ -51,19 +71,9 @@ namespace Kita {
 		RenderCommand::SetBlend(true);
 		RenderCommand::SetCullMode(CullMode::None);
 
-		TextureDescriptor desc{};
-		desc.EnableMipMaps = true;
 
-		CubemapFacePaths faces = {
-			"assets/textures/skybox/right.jpg",  // +X
-			"assets/textures/skybox/left.jpg",   // -X
-			"assets/textures/skybox/top.jpg",    // +Y
-			"assets/textures/skybox/bottom.jpg", // -Y
-			"assets/textures/skybox/front.jpg",  // +Z
-			"assets/textures/skybox/back.jpg"    // -Z
-		};
 
-		m_Cubemap = Texture::CreateCubeMap(desc, faces);
+
 
 	}
 
@@ -92,24 +102,6 @@ namespace Kita {
 		m_FrameBuffer->ClearIDBuffer(-1);
 
 		m_Scene->OnUpdate(daltaTime);
-
-
-		Renderer::DrawSkyBox(m_Cubemap, 9);
-
-
-		auto settings = EditorGridSettings{};
-		settings.CellSize = 1.0f;
-
-		auto gizmoPoint = GizmoPointUBOData{};
-		gizmoPoint.positionWS = { 1.0,1.0,1.0 };
-		gizmoPoint.color = { 1,0,1,1 };
-		gizmoPoint.radius = 10.0f;
-		gizmoPoint.id = 5;
-		Gizmo::DrawPoints({ gizmoPoint });
-		Renderer::DrawEditorGrids(settings);
-		Gizmo::FlushAllPoints();
-
-
 
 
 
@@ -213,6 +205,20 @@ namespace Kita {
 
 				ImGui::EndMenu();
 			}
+
+			const std::string sceneName = m_Scene->GetName().c_str();
+
+			ImVec2 textSize = ImGui::CalcTextSize(sceneName.c_str());
+
+			float leftBound = ImGui::GetCursorPosX();
+			float centerPosX = (ImGui::GetWindowWidth() - textSize.x) * 0.5f;
+			float finalPosX = (centerPosX > leftBound) ? centerPosX : leftBound + 10.0f;
+
+			float cursorY = ImGui::GetCursorPosY();
+			ImGui::SetCursorPosX(finalPosX);
+			ImGui::SetCursorPosY(cursorY);
+
+			ImGui::TextColored(ImVec4(0.75f, 0.85f, 0.30f, 1.0f), sceneName.c_str());
 
 
 			ImGui::EndMenuBar();
@@ -341,7 +347,7 @@ namespace Kita {
 
 		// Only block pick while gizmo is actively manipulating.
 		// IsOver() is too aggressive and can suppress valid clicks around object center.
-		if (ImGuizmo::IsUsing())
+		if (ImGuizmo::IsOver() || ImGuizmo::IsUsing())
 			return;
 
 		auto [mx, my] = ImGui::GetMousePos();

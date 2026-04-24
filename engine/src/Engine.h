@@ -33,6 +33,7 @@
 #include "component/TagComponent.h"
 #include "component/Transform.h"
 #include "component/MeshRenderer.h"
+#include "component/LineRenderer.h"
 
 
 #include "third_party/imgui/imgui_layer.h"

@@ -133,8 +133,6 @@ namespace Kita {
 
 	void OpenGLRendererAPI::DrawGizmoPoints(const Ref<VertexArray>& vertexArray, const Ref<Shader>& shader, const uint32_t count)
 	{
-
-
 		vertexArray->Bind();
 		shader->Bind();
 		glEnable(GL_PROGRAM_POINT_SIZE);

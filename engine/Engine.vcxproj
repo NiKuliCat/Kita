@@ -156,6 +156,7 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\component\LineRenderer.h" />
     <ClInclude Include="src\Engine.h" />
     <ClInclude Include="src\component\MeshRenderer.h" />
     <ClInclude Include="src\component\Object.h" />
@@ -627,6 +628,7 @@
     <ClInclude Include="third-party\imguizmo\ImGuizmo.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\component\LineRenderer.cpp" />
     <ClCompile Include="src\component\MeshRenderer.cpp" />
     <ClCompile Include="src\component\Object.cpp" />
     <ClCompile Include="src\component\Scene.cpp" />
