@@ -10,6 +10,7 @@
 #include <utility>
 #include <functional>
 #include <algorithm>
+#include <limits>
 #include <cstdint>
 #include <filesystem>
 

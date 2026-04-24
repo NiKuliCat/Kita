@@ -1,6 +1,8 @@
 #include "kita_pch.h"
 #include "OpenGLRendererAPI.h"
+#include "core/Log.h"
 #include <glad/glad.h>
+
 namespace Kita {
 
 	static const  GLenum ConvertToGLDepthFunc(const DepthTestMode testMode)
@@ -126,7 +128,18 @@ namespace Kita {
 	{
 		vertexArray->Bind();
 		shader->Bind();
-		glDrawElements(GL_LINES, vertexArray->GetIndexCount(), GL_UNSIGNED_INT, nullptr);
+		glDrawArrays(GL_LINES, 0,vertexArray->GetIndexCount());
+	}
+
+	void OpenGLRendererAPI::DrawGizmoPoints(const Ref<VertexArray>& vertexArray, const Ref<Shader>& shader, const uint32_t count)
+	{
+
+
+		vertexArray->Bind();
+		shader->Bind();
+		glEnable(GL_PROGRAM_POINT_SIZE);
+		glDrawArrays(GL_POINTS, 0, count);
+
 	}
 
 

@@ -24,6 +24,7 @@ namespace Kita {
 		virtual const std::string& GetName() const override { return m_Name; }
 
 		virtual void SetInt(const std::string& name, const uint32_t value) override;
+		virtual void SetVector(const std::string& name, const glm::vec4& value)  override;
 		virtual void SetMat4(const std::string& name, const glm::mat4& matrix) override;
 		virtual void SetColor(const std::string& name, const glm::vec4& color) override;
 	private:

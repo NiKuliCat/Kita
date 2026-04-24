@@ -47,6 +47,12 @@ namespace  Kita{
 		glm::vec4 CameraPosWS;
 	};
 
+
+	struct RenderViewportUBOData
+	{
+		glm::vec4 ScreenSize;
+	};
+
 	class Renderer {
 
 
@@ -54,6 +60,11 @@ namespace  Kita{
 		struct SceneRenderCameraData
 		{
 			Ref<UniformBuffer> ViewProj_UBO;
+		};
+
+		struct ViewportRenderData
+		{
+			Ref<UniformBuffer> Viewport_UBO;
 		};
 
 		struct SceneRenderLightsData
@@ -71,6 +82,7 @@ namespace  Kita{
 		{
 			SceneRenderCameraData	cameraData;
 			SceneRenderLightsData	lightData;
+			ViewportRenderData		screenData;
 			EditorGridData			editorGridData;
 		};
 
@@ -79,7 +91,7 @@ namespace  Kita{
 
 		static void ShutDown();
 
-		static void BeginScene(const glm::mat4& v, const glm::mat4& p, const glm::vec3& pos, const DirectLightData& mainLightData);
+		static void BeginScene(const glm::mat4& v, const glm::mat4& p, const glm::vec3& pos, const DirectLightData& mainLightData, const glm::vec2& screenSize);
 		static void EndScene();
 
 
@@ -90,7 +102,7 @@ namespace  Kita{
 		static void SubmitAsLine(const Ref<VertexArray>& vertexArray, const Ref<Shader>& shader) { RenderCommand::DrawLine(vertexArray,shader);}
 
 
-
+		static void DrawGizmoPoints(const Ref<VertexArray>& vertexArray, const Ref<Shader>& shader, const uint32_t count) { RenderCommand::DrawGizmoPoints(vertexArray, shader, count); }
 		static void DrawEditorGrids(const EditorGridSettings& settings);
 
 		static void DrawSkyBox(const Ref<Texture>& cubemap, const uint32_t slot);

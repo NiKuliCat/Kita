@@ -23,6 +23,7 @@ namespace Kita {
 		virtual void ClearIDBuffer(int value) const override;
 
 		virtual void ReSize(uint32_t width, uint32_t height) override;
+		virtual glm::ivec2 GetSize()  override { return glm::ivec2(m_Descriptor.Width, m_Descriptor.Height); }
 
 		virtual void Bind() override;
 		virtual void UnBind() override;

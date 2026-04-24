@@ -19,7 +19,8 @@ namespace Kita {
 
 	void OpenGLUniformBuffer::SetData(const void* data, uint32_t size, uint32_t offset)
 	{
-		glNamedBufferSubData(m_UniformBufferID, offset, size, data);
+		glBindBuffer(GL_UNIFORM_BUFFER, m_UniformBufferID);
+		glBufferSubData(GL_UNIFORM_BUFFER, offset, size, data);
 	}
 
 }

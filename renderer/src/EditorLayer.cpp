@@ -6,8 +6,9 @@
 #include <glm/glm.hpp>
 #include <imgui_internal.h>
 #include <glm/gtc/type_ptr.hpp>
-#include <algorithm>
-#include <limits>
+#include "render/scene/Gizmo.h"
+
+
 namespace Kita {
 
 	EditorLayer::EditorLayer()
@@ -84,7 +85,7 @@ namespace Kita {
 
 
 		m_FrameBuffer->Bind();
-		Renderer::BeginScene(m_ViewportCamera->GetViewMatrix(),m_ViewportCamera->GetProjectionMatrix(),m_ViewportCamera->GetPosition(), light_data);
+		Renderer::BeginScene(m_ViewportCamera->GetViewMatrix(),m_ViewportCamera->GetProjectionMatrix(),m_ViewportCamera->GetPosition(), light_data, {m_FrameBuffer->GetSize()});
 
 		RenderCommand::SetClearColor(glm::vec4(0.12, 0.12, 0.13, 1));
 		RenderCommand::Clear();
@@ -98,7 +99,15 @@ namespace Kita {
 
 		auto settings = EditorGridSettings{};
 		settings.CellSize = 1.0f;
+
+		auto gizmoPoint = GizmoPointUBOData{};
+		gizmoPoint.positionWS = { 1.0,1.0,1.0 };
+		gizmoPoint.color = { 1,0,1,1 };
+		gizmoPoint.radius = 10.0f;
+		gizmoPoint.id = 5;
+		Gizmo::DrawPoints({ gizmoPoint });
 		Renderer::DrawEditorGrids(settings);
+		Gizmo::FlushAllPoints();
 
 
 

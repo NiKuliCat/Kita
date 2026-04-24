@@ -4,6 +4,7 @@
 #include "Transform.h"
 #include "MeshRenderer.h"
 #include "render/Renderer.h"
+#include "render/ShaderLibrary.h"
 namespace Kita {
 
 	Scene::~Scene()
@@ -23,7 +24,7 @@ namespace Kita {
 	{
 		RenderSceneEditor();
 	}
-	void Scene::RenderSceneEditor()
+	void Scene::RenderSceneEditor()  
 	{
 		auto view = m_Registry.group<Transform, MeshRenderer>();
 
@@ -38,7 +39,12 @@ namespace Kita {
 			shader->SetMat4("Model", model);
 			shader->SetInt("id", id);
 
+			auto& shaderLib = ShaderLibrary::GetInstance();
+			auto lineShader = shaderLib.Get("EditorLineShader");
 			const auto& meshs = meshRenderer.GetMeshs();
+			lineShader->SetMat4("Model", model);
+			lineShader->SetInt("id", id);
+
 			for (const auto& mesh : meshs)
 			{
 				Renderer::Submit(mesh->GetVAO(), shader);

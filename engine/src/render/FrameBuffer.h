@@ -2,7 +2,7 @@
 
 #include "core/Core.h"
 
-
+#include <glm/glm.hpp>
 
 namespace Kita {
 
@@ -60,6 +60,7 @@ namespace Kita {
 		virtual void ClearIDBuffer(int value)const  = 0;
 
 		virtual void ReSize(uint32_t width, uint32_t height) = 0;
+		virtual glm::ivec2 GetSize() = 0;
 
 		virtual void Bind() = 0;
 		virtual void UnBind() = 0;

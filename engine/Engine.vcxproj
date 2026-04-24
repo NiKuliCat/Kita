@@ -193,6 +193,7 @@
     <ClInclude Include="src\render\RenderCommand.h" />
     <ClInclude Include="src\render\Renderer.h" />
     <ClInclude Include="src\render\RendererAPI.h" />
+    <ClInclude Include="src\render\scene\Gizmo.h" />
     <ClInclude Include="src\render\Shader.h" />
     <ClInclude Include="src\render\ShaderLibrary.h" />
     <ClInclude Include="src\render\Texture.h" />
@@ -655,6 +656,7 @@
     <ClCompile Include="src\render\RenderCommand.cpp" />
     <ClCompile Include="src\render\Renderer.cpp" />
     <ClCompile Include="src\render\RendererAPI.cpp" />
+    <ClCompile Include="src\render\scene\Gizmo.cpp" />
     <ClCompile Include="src\render\Shader.cpp" />
     <ClCompile Include="src\render\ShaderLibrary.cpp" />
     <ClCompile Include="src\render\Texture.cpp" />

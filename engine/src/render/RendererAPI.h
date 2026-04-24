@@ -44,11 +44,13 @@ namespace Kita {
 		virtual void SetDepthWrite(bool value) = 0;
 		virtual void SetDepthTestMode(const DepthTestMode testMode) = 0;
 		virtual void SetViewport(const uint32_t x, const uint32_t y, const uint32_t width, const uint32_t height) = 0;
+
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray) = 0;
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray,const Ref<Shader>& shader) = 0;
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, const uint32_t count) = 0;
 
 		virtual void DrawLine(const Ref<VertexArray>& vertexArray, const Ref<Shader>& shader) = 0;
+		virtual void DrawGizmoPoints(const Ref<VertexArray>& vertexArray, const Ref<Shader>& shader, const uint32_t count) = 0;
 
 	private:
 		static API s_API;

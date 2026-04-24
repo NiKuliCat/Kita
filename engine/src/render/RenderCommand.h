@@ -54,6 +54,11 @@ namespace Kita {
 			s_RendererAPI->DrawLine(vertexArray, shader);
 		}
 
+		inline static void DrawGizmoPoints(const Ref<VertexArray>& vertexArray, const Ref<Shader>& shader , const uint32_t count)
+		{
+			s_RendererAPI->DrawGizmoPoints(vertexArray, shader, count);
+		}
+
 
 
 		inline static void  SetViewport(const uint32_t x, const  uint32_t y, const uint32_t width, const uint32_t height)

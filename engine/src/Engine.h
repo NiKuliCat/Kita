@@ -26,7 +26,7 @@
 
 #include "render/RenderCommand.h"
 #include "render/Renderer.h"
-
+#include "render/scene/Gizmo.h"
 
 #include "component/Scene.h"
 #include "component/Object.h"
