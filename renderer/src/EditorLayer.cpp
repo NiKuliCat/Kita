@@ -35,11 +35,17 @@ namespace Kita {
 
 			auto curveObj1 = m_Scene->CreateObject("curve 1");
 			auto& lineRenderer1 = curveObj1.AddComponent<LineRenderer>();
+			lineRenderer1.SetLineWidth(4.0f);
+			lineRenderer1.SetLineColor({ 1,1,0,1 });
 
 			auto curveObj2 = m_Scene->CreateObject("curve 2");
 			auto& transform2 = curveObj2.GetComponent<Transform>();
 			transform2.SetPosition({2,2,2});
 			auto& lineRenderer2 = curveObj2.AddComponent<LineRenderer>();
+			lineRenderer2.SetLineWidth(4.0f);
+			lineRenderer2.SetLineColor({ 1,0,1,1 });
+
+
 		}
 
 		CubemapFacePaths faces = {
@@ -310,6 +316,8 @@ namespace Kita {
 						if (point.id == selectedPoint.id)
 						{
 							point.position = newLocalPos;
+
+							lineRenderer.MarkDirty();
 							break;
 						}
 					}

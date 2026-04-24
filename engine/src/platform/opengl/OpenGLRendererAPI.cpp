@@ -124,11 +124,12 @@ namespace Kita {
 		glDrawElements(GL_TRIANGLES, count, GL_UNSIGNED_INT, nullptr);
 	}
 
-	void OpenGLRendererAPI::DrawLine(const Ref<VertexArray>& vertexArray,const Ref<Shader>& shader)
+	void OpenGLRendererAPI::DrawLine(const Ref<VertexArray>& vertexArray,const Ref<Shader>& shader, const uint32_t vertexCount, const float lineWidth)
 	{
 		vertexArray->Bind();
 		shader->Bind();
-		glDrawArrays(GL_LINES, 0,vertexArray->GetIndexCount());
+		glLineWidth(std::max(1.0f, lineWidth));
+		glDrawArrays(GL_LINE_STRIP, 0, vertexCount);
 	}
 
 	void OpenGLRendererAPI::DrawGizmoPoints(const Ref<VertexArray>& vertexArray, const Ref<Shader>& shader, const uint32_t count)

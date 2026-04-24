@@ -27,6 +27,7 @@ namespace Kita {
 		void LoadSkyCubemap(const CubemapFacePaths& faces);
 
 	private:
+		void SimulateSceneEditor();
 		void RenderSceneEditor();
 	private:
 		std::string m_Name = "New Scene";

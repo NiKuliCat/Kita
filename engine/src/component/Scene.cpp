@@ -24,6 +24,7 @@ namespace Kita {
 	}
 	void Scene::OnUpdate(float deltaTime)
 	{
+		SimulateSceneEditor();
 		RenderSceneEditor();
 	}
 
@@ -36,7 +37,20 @@ namespace Kita {
 		m_SkyCubemap = Texture::CreateCubeMap(desc, faces);
 	}
 
-	void Scene::RenderSceneEditor()  
+	void Scene::SimulateSceneEditor()
+	{
+
+		auto lineView = m_Registry.view<LineRenderer>();
+
+		std::vector<GizmoPointUBOData> gizmoPoints = {};
+		for (auto entity : lineView)
+		{
+			auto& lineRenderer = lineView.get<LineRenderer>(entity);
+			lineRenderer.RebuildIfNeeded();
+		}
+	}
+
+	void Scene::RenderSceneEditor()
 	{
 		// 渲染实体
 		auto mesh = m_Registry.group<Transform, MeshRenderer>();
@@ -81,6 +95,15 @@ namespace Kita {
 			auto points = lineRenderer.GetControlPoints();
 			uint32_t id = (uint32_t)entity;
 
+			auto lineShader = ShaderLibrary::GetInstance().Get("EditorLineShader");
+			lineShader->SetMat4("Model", model);
+			lineShader->SetInt("id", id);
+			lineShader->SetColor("Color", lineRenderer.GetLineColor());
+			Renderer::SubmitAsLine(
+				lineRenderer.GetCurveVAO(),
+				lineShader,
+				lineRenderer.GetCurveVertexCount(),
+				lineRenderer.GetLineWidth());
 
 			for (auto point : points)
 			{
@@ -91,6 +114,7 @@ namespace Kita {
 				gizmoPoint.index = point.id;
 				gizmoPoints.push_back(gizmoPoint);
 			}
+
 
 			Gizmo::DrawPoints(gizmoPoints);
 			Gizmo::FlushAllPoints(model,id);

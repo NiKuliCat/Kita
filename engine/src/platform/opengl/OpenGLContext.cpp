@@ -24,6 +24,8 @@ namespace Kita {
 		KITA_CORE_INFO("OpenGLRenderer: {0}", reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
 
 		glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+		glEnable(GL_LINE_SMOOTH);
+		glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
 	}
 
 	void OpenGLContext::SwapBuffers()

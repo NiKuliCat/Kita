@@ -49,9 +49,9 @@ namespace Kita {
 			s_RendererAPI->DrawIndexed(vertexArray, count);
 		}
 
-		inline static void DrawLine(const Ref<VertexArray>& vertexArray,const Ref<Shader>& shader)
+		inline static void DrawLine(const Ref<VertexArray>& vertexArray,const Ref<Shader>& shader, const uint32_t vertexCount, const float lineWidth)
 		{
-			s_RendererAPI->DrawLine(vertexArray, shader);
+			s_RendererAPI->DrawLine(vertexArray, shader, vertexCount, lineWidth);
 		}
 
 		inline static void DrawGizmoPoints(const Ref<VertexArray>& vertexArray, const Ref<Shader>& shader , const uint32_t count)

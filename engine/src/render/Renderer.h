@@ -99,7 +99,7 @@ namespace  Kita{
 		static void Submit(const Ref<VertexArray>& vertexArray,const Ref<Shader>& shader) { RenderCommand::DrawIndexed(vertexArray,shader);}
 
 
-		static void SubmitAsLine(const Ref<VertexArray>& vertexArray, const Ref<Shader>& shader) { RenderCommand::DrawLine(vertexArray,shader);}
+		static void SubmitAsLine(const Ref<VertexArray>& vertexArray, const Ref<Shader>& shader, const uint32_t vertexCount, const float lineWidth) { RenderCommand::DrawLine(vertexArray,shader, vertexCount, lineWidth);}
 
 
 		static void DrawGizmoPoints(const Ref<VertexArray>& vertexArray, const Ref<Shader>& shader, const uint32_t count) { RenderCommand::DrawGizmoPoints(vertexArray, shader, count); }

@@ -49,7 +49,7 @@ namespace Kita {
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray,const Ref<Shader>& shader) = 0;
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray, const uint32_t count) = 0;
 
-		virtual void DrawLine(const Ref<VertexArray>& vertexArray, const Ref<Shader>& shader) = 0;
+		virtual void DrawLine(const Ref<VertexArray>& vertexArray, const Ref<Shader>& shader, const uint32_t vertexCount, const float lineWidth) = 0;
 		virtual void DrawGizmoPoints(const Ref<VertexArray>& vertexArray, const Ref<Shader>& shader, const uint32_t count) = 0;
 
 	private:
