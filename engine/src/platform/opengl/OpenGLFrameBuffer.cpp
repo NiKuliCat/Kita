@@ -134,6 +134,25 @@ namespace Kita {
 
 	}
 
+	void OpenGLFrameBuffer::BlitColorTo(const Ref<FrameBuffer>& target, uint32_t srcAttachment, uint32_t dstAttachment) const
+	{
+		KITA_CORE_ASSERT(target, "BlitColorTo requires OpenGLFrameBuffer target.");
+
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, m_FrameBufferID);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, target->GetID());
+
+		glReadBuffer(GL_COLOR_ATTACHMENT0 + srcAttachment);
+		glDrawBuffer(GL_COLOR_ATTACHMENT0 + dstAttachment);
+
+		glBlitFramebuffer(
+			0, 0, m_Descriptor.Width, m_Descriptor.Height,
+			0, 0, target->GetDescriptor().Width, target->GetDescriptor().Height,
+			GL_COLOR_BUFFER_BIT,
+			GL_NEAREST);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	}
+
 	
 
 }

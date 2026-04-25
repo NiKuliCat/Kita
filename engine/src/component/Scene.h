@@ -21,12 +21,11 @@ namespace Kita {
 
 		void DestroyObject(Object object);
 
-		void OnUpdate(float deltaTime);
 
 		std::string& GetName() { return m_Name; }
 		void LoadSkyCubemap(const CubemapFacePaths& faces);
 
-	private:
+
 		void SimulateSceneEditor();
 		void RenderSceneEditor();
 	private:

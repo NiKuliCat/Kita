@@ -15,7 +15,7 @@ namespace Kita {
 		virtual FrameBufferDescriptor& GetDescriptor() override { return m_Descriptor; }
 		virtual const FrameBufferDescriptor& GetDescriptor() const override { return m_Descriptor; }
 
-
+		virtual const uint32_t GetID() const override { return m_FrameBufferID; }
 		virtual uint32_t GetColorAttachment(uint32_t index = 0) const override;
 		virtual uint32_t GetDepthAttachment() const override;
 
@@ -30,6 +30,8 @@ namespace Kita {
 
 		void Invalidate();
 
+		virtual bool IsMultisampled() const override { return m_Descriptor.Samples > 1; }
+		virtual void BlitColorTo(const Ref<FrameBuffer>& target, uint32_t srcAttachment = 0, uint32_t dstAttachment = 0) const override;
 
 	private:
 	

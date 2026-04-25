@@ -63,20 +63,40 @@ namespace Kita {
 		m_SceneHierarchyPanel = SceneHierarchyPanel(m_Scene);
 		m_GizmoControlType = ImGuizmo::OPERATION::TRANSLATE;
 
-		FrameBufferDescriptor disc;
-		disc.AttachmentsDescription = { FrameBufferTexFormat::RGBA16F, FrameBufferTexFormat::RED_INTEGER, FrameBufferTexFormat::RED_INTEGER,FrameBufferTexFormat::DEPTH };
-		disc.Width = 1280;
-		disc.Height = 720;
+		m_ViewportSize = { 1280, 720 };
+		FrameBufferDescriptor sceneMSAADesc;
+		sceneMSAADesc.AttachmentsDescription = {
+			FrameBufferTexFormat::RGBA16F,
+			FrameBufferTexFormat::DEPTH
+		};
+		sceneMSAADesc.Width = 1280;
+		sceneMSAADesc.Height = 720;
+		sceneMSAADesc.Samples = 4;
+		m_SceneMSAAFrameBuffer = FrameBuffer::Create(sceneMSAADesc);
 
-		m_ViewportSize = { 1280,720 };
+		FrameBufferDescriptor sceneResolveDesc;
+		sceneResolveDesc.AttachmentsDescription = {
+			FrameBufferTexFormat::RGBA16F,
+			FrameBufferTexFormat::DEPTH
+		};
+		sceneResolveDesc.Width = 1280;
+		sceneResolveDesc.Height = 720;
+		sceneResolveDesc.Samples = 1;
+		m_SceneResolveFrameBuffer = FrameBuffer::Create(sceneResolveDesc);
 
-		m_FrameBuffer = FrameBuffer::Create(disc);
-		m_SceneTexID = m_FrameBuffer->GetColorAttachment(0);
-		RenderCommand::SetDepthTest(true);
-		RenderCommand::SetBlend(true);
-		RenderCommand::SetCullMode(CullMode::None);
+		FrameBufferDescriptor pickingDesc;
+		pickingDesc.AttachmentsDescription = {
+			FrameBufferTexFormat::RGBA16F,
+			FrameBufferTexFormat::RED_INTEGER,
+			FrameBufferTexFormat::RED_INTEGER,
+			FrameBufferTexFormat::DEPTH
+		};
+		pickingDesc.Width = 1280;
+		pickingDesc.Height = 720;
+		pickingDesc.Samples = 1;
+		m_PickingFrameBuffer = FrameBuffer::Create(pickingDesc);
 
-
+		m_SceneTexID = m_SceneResolveFrameBuffer->GetColorAttachment(0);
 
 
 
@@ -84,35 +104,66 @@ namespace Kita {
 
 	void EditorLayer::OnUpdate(float daltaTime)
 	{
+		m_Scene->SimulateSceneEditor();
 		m_ViewportCamera->OnUpdate(daltaTime);
 		DirectLightData light_data = DirectLightData();
 		light_data.Color = glm::vec4(1.0, 1.0, 1.0, 1.0);
 		light_data.Direction = glm::vec4(m_LightTransform.GetFrontDir(),1.0);
 
-		auto desc = m_FrameBuffer->GetDescriptor();
-		if (m_ViewportSize.x != desc.Width || m_ViewportSize.y != desc.Height)
+		auto resolveDesc = m_SceneResolveFrameBuffer->GetDescriptor();
+		if (m_ViewportSize.x != resolveDesc.Width || m_ViewportSize.y != resolveDesc.Height)
 		{
-			m_FrameBuffer->ReSize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+			const uint32_t width = (uint32_t)m_ViewportSize.x;
+			const uint32_t height = (uint32_t)m_ViewportSize.y;
+
+			m_SceneMSAAFrameBuffer->ReSize(width, height);
+			m_SceneResolveFrameBuffer->ReSize(width, height);
+			m_PickingFrameBuffer->ReSize(width, height);
+
 			m_ViewportCamera->SetViewport(m_ViewportSize.x, m_ViewportSize.y);
-		
+			m_SceneTexID = m_SceneResolveFrameBuffer->GetColorAttachment(0);
 		}
-		auto vp = m_ViewportCamera->GetViewProjectionMatrix();
 
 
-		m_FrameBuffer->Bind();
-		Renderer::BeginScene(m_ViewportCamera->GetViewMatrix(),m_ViewportCamera->GetProjectionMatrix(),m_ViewportCamera->GetPosition(), light_data, {m_FrameBuffer->GetSize()});
+		m_PickingFrameBuffer->Bind();
+		Renderer::BeginScene(
+			m_ViewportCamera->GetViewMatrix(),
+			m_ViewportCamera->GetProjectionMatrix(),
+			m_ViewportCamera->GetPosition(),
+			light_data,
+			{ m_PickingFrameBuffer->GetSize() });
 
-		RenderCommand::SetClearColor(glm::vec4(0.12, 0.12, 0.13, 1));
+		RenderCommand::SetClearColor(glm::vec4(0.12f, 0.12f, 0.13f, 1.0f));
 		RenderCommand::Clear();
-		m_FrameBuffer->ClearIDBuffer(-1,1);
-		m_FrameBuffer->ClearIDBuffer(-1,2);
+		m_PickingFrameBuffer->ClearIDBuffer(-1, 1);
+		m_PickingFrameBuffer->ClearIDBuffer(-1, 2);
 
-		m_Scene->OnUpdate(daltaTime);
-
-
+		m_Scene->RenderSceneEditor();
 
 		Renderer::EndScene();
-		m_FrameBuffer->UnBind();
+		m_PickingFrameBuffer->UnBind();
+
+
+
+		m_SceneMSAAFrameBuffer->Bind();
+		Renderer::BeginScene(
+			m_ViewportCamera->GetViewMatrix(),
+			m_ViewportCamera->GetProjectionMatrix(),
+			m_ViewportCamera->GetPosition(),
+			light_data,
+			{ m_SceneMSAAFrameBuffer->GetSize() });
+
+		RenderCommand::SetClearColor(glm::vec4(0.12f, 0.12f, 0.13f, 1.0f));
+		RenderCommand::Clear();
+
+		m_Scene->RenderSceneEditor();
+
+		Renderer::EndScene();
+		m_SceneMSAAFrameBuffer->UnBind();
+
+
+		// resolve
+		m_SceneMSAAFrameBuffer->BlitColorTo(m_SceneResolveFrameBuffer, 0, 0);
 
 	}
 
@@ -236,20 +287,17 @@ namespace Kita {
 		ImGuiWindowClass viewportWindowClass{};
 		viewportWindowClass.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoWindowMenuButton ;
 		ImGui::SetNextWindowClass(&viewportWindowClass);
-		ImGui::Begin("Viewport");
-		uint32_t ScreenRT_ID = m_FrameBuffer->GetColorAttachment(0);
-		{
-			ImVec2 ViewportSize = ImGui::GetContentRegionAvail();
-			m_ViewportSize = { ViewportSize.x,ViewportSize.y };
-		}
 
+		ImGui::Begin("Viewport");
+		ImVec2 ViewportSize = ImGui::GetContentRegionAvail();
+		m_ViewportSize = { ViewportSize.x,ViewportSize.y };
 		auto viewportReginMin = ImGui::GetWindowContentRegionMin();
 		auto viewportReginMax = ImGui::GetWindowContentRegionMax();
 		auto viewportOffset = ImGui::GetWindowPos();
 		m_ViewportBounds[0] = { viewportReginMin.x + viewportOffset.x,viewportReginMin.y + viewportOffset.y };
 		m_ViewportBounds[1] = { viewportReginMax.x + viewportOffset.x,viewportReginMax.y + viewportOffset.y };
 
-		ImGui::Image(ScreenRT_ID, ImVec2{ m_ViewportSize.x,m_ViewportSize.y }, ImVec2(0, 1), ImVec2(1, 0));
+		ImGui::Image(m_SceneTexID, ImVec2{ m_ViewportSize.x,m_ViewportSize.y }, ImVec2(0, 1), ImVec2(1, 0));
 
 		auto& selectedObj = m_SceneHierarchyPanel.GetSelectedObject();
 		auto& selectedPoint = m_SceneHierarchyPanel.GetSelectedPoint();
@@ -427,15 +475,15 @@ namespace Kita {
 		if (mx < 0.0f || my < 0.0f || mx >= size.x || my >= size.y)
 			return;
 
-		m_FrameBuffer->Bind();
+		m_PickingFrameBuffer->Bind();
 
 		int mouseX = (int)mx;
 		int mouseY = (int)(size.y - my);
 		mouseX = std::clamp(mouseX, 0, (int)size.x - 1);
 		mouseY = std::clamp(mouseY, 0, (int)size.y - 1);
 
-		int pixel_id = m_FrameBuffer->GetIDBufferValue(mouseX, mouseY, 1);
-		int pixel_index = m_FrameBuffer->GetIDBufferValue(mouseX, mouseY, 2);
+		int pixel_id = m_PickingFrameBuffer->GetIDBufferValue(mouseX, mouseY, 1);
+		int pixel_index = m_PickingFrameBuffer->GetIDBufferValue(mouseX, mouseY, 2);
 
 		if (pixel_id == -1)
 		{
@@ -446,7 +494,7 @@ namespace Kita {
 		// 但如果当前像素明确是控制点，则仍然允许控制点拾取。
 		if (ImGuizmo::IsOver() && pixel_index == -1)
 		{
-			m_FrameBuffer->UnBind();
+			m_PickingFrameBuffer->UnBind();
 			return;
 		}
 
@@ -484,7 +532,7 @@ namespace Kita {
 		}
 		KITA_CLENT_INFO("pixel in viewport,id :{0},index :{1}", pixel_id, pixel_index);
 
-		m_FrameBuffer->UnBind();
+		m_PickingFrameBuffer->UnBind();
 	}
 
 	

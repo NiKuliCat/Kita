@@ -22,11 +22,6 @@ namespace Kita {
 	{
 		m_Registry.destroy(object);
 	}
-	void Scene::OnUpdate(float deltaTime)
-	{
-		SimulateSceneEditor();
-		RenderSceneEditor();
-	}
 
 	void Scene::LoadSkyCubemap(const CubemapFacePaths& faces)
 	{

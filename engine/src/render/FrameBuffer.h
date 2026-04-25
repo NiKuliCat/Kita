@@ -53,6 +53,8 @@ namespace Kita {
 		virtual  FrameBufferDescriptor& GetDescriptor() = 0;
 		virtual const FrameBufferDescriptor& GetDescriptor() const = 0;
 
+		virtual const uint32_t GetID() const = 0;
+
 		virtual uint32_t GetColorAttachment(uint32_t index = 0) const = 0;
 		virtual uint32_t GetDepthAttachment() const = 0;
 
@@ -64,6 +66,9 @@ namespace Kita {
 
 		virtual void Bind() = 0;
 		virtual void UnBind() = 0;
+
+		virtual bool IsMultisampled() const = 0;
+		virtual void BlitColorTo(const Ref<FrameBuffer>& target, uint32_t srcAttachment = 0, uint32_t dstAttachment = 0) const = 0;
 
 		static Ref<FrameBuffer> Create(const FrameBufferDescriptor& descriptor);
 	 };

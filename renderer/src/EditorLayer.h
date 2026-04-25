@@ -28,7 +28,13 @@ namespace Kita {
 
 	
 	private:
-		Ref<FrameBuffer> m_FrameBuffer = nullptr;
+
+
+		Ref<FrameBuffer> m_SceneMSAAFrameBuffer = nullptr;
+		Ref<FrameBuffer> m_SceneResolveFrameBuffer = nullptr;
+		Ref<FrameBuffer> m_PickingFrameBuffer = nullptr;
+
+
 		Transform m_CameraTransform;
 		ViewportCamera* m_ViewportCamera = nullptr;
 
