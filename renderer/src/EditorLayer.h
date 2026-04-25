@@ -32,6 +32,7 @@ namespace Kita {
 		//ui
 		SceneHierarchyPanel m_SceneHierarchyPanel;
 		std::vector<Unique<SceneViewportPanel>> m_SceneViewportPanels{};
+		int32_t m_ActiveViewportIndex = -1;
 
 		Ref<SceneSelectionContext> m_SceneSelectionContext = nullptr;
 	};

@@ -55,6 +55,9 @@ namespace Kita {
 		m_SceneViewportPanels.clear();
 		m_SceneViewportPanels.emplace_back(CreateUnique<SceneViewportPanel>(m_Scene,m_SceneSelectionContext,"Viewport"));
 		m_SceneViewportPanels.emplace_back(CreateUnique<SceneViewportPanel>(m_Scene, m_SceneSelectionContext, "Viewport 1"));
+		m_SceneViewportPanels.emplace_back(CreateUnique<SceneViewportPanel>(m_Scene, m_SceneSelectionContext, "Viewport 2"));
+		m_SceneViewportPanels.emplace_back(CreateUnique<SceneViewportPanel>(m_Scene, m_SceneSelectionContext, "Viewport 3"));
+		m_ActiveViewportIndex = m_SceneViewportPanels.empty() ? -1 : 0;
 	}
 
 	void EditorLayer::OnUpdate(float daltaTime)
@@ -183,9 +186,14 @@ namespace Kita {
 
 		m_SceneHierarchyPanel.OnImGuiRender();
 
-		for (auto& viewport : m_SceneViewportPanels)
+		for (size_t i = 0; i < m_SceneViewportPanels.size(); ++i)
 		{
+			auto& viewport = m_SceneViewportPanels[i];
+			viewport->SetActive(static_cast<int32_t>(i) == m_ActiveViewportIndex);
 			viewport->OnImGuiRender();
+
+			if (viewport->IsImageHovered())
+				m_ActiveViewportIndex = static_cast<int32_t>(i);
 		}
 
 
@@ -201,8 +209,22 @@ namespace Kita {
 		dispatcher.Dispatcher<KeyPressedEvent>(BIND_EVENT_FUNC(EditorLayer::OnKeyPressed));
 		dispatcher.Dispatcher<MouseButtonPressedEvent>(BIND_EVENT_FUNC(EditorLayer::OnMouseButtonPressed));
 
-		for (auto& viewport : m_SceneViewportPanels)
+		if (event.IsInCategory(EventCategory::EventMouse))
 		{
+			for (size_t i = 0; i < m_SceneViewportPanels.size(); ++i)
+			{
+				if (m_SceneViewportPanels[i]->IsImageHovered())
+				{
+					m_ActiveViewportIndex = static_cast<int32_t>(i);
+					break;
+				}
+			}
+		}
+
+		for (size_t i = 0; i < m_SceneViewportPanels.size(); ++i)
+		{
+			auto& viewport = m_SceneViewportPanels[i];
+			viewport->SetActive(static_cast<int32_t>(i) == m_ActiveViewportIndex);
 			viewport->OnEvent(event);
 		}
 

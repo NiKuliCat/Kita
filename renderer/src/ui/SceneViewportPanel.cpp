@@ -27,7 +27,7 @@ namespace Kita {
 		if (!m_ViewportCamera)
 			return;
 
-		if (!m_IsImageHovered)
+		if (!m_IsActive)
 			return;
 
 		m_ViewportCamera->OnUpdate(daltaTime);
@@ -61,7 +61,7 @@ namespace Kita {
 		auto& selectedObj = m_SelectionContext->GetSelectedObject();
 		auto& selectedPoint = m_SelectionContext->GetSelectedPoint();
 
-		if (selectedObj && selectedPoint.id != -1 && m_IsImageHovered)
+		if (selectedObj && selectedPoint.id != -1 && m_IsActive)
 		{
 			ImGuizmo::SetDrawlist();
 
@@ -117,7 +117,7 @@ namespace Kita {
 				}
 			}
 		}
-		else if (selectedObj && m_IsImageHovered)
+		else if (selectedObj && m_IsActive)
 		{
 			ImGuizmo::SetDrawlist();
 			ImVec2 imageMin = ImGui::GetItemRectMin();
@@ -176,11 +176,11 @@ namespace Kita {
 
 		bool allowInput = false;
 		if (event.IsInCategory(EventCategory::EventMouse))
-			allowInput = m_IsImageHovered;
+			allowInput = m_IsActive && m_IsImageHovered;
 		else if (event.IsInCategory(EventCategory::EventKeyboard))
-			allowInput = m_IsFocused || m_IsImageHovered;
+			allowInput = m_IsActive && (m_IsFocused || m_IsImageHovered);
 		else
-			allowInput = m_IsImageHovered || m_IsFocused;
+			allowInput = m_IsActive && (m_IsImageHovered || m_IsFocused);
 
 		if (!allowInput)
 			return;
@@ -321,7 +321,7 @@ namespace Kita {
 
 	bool SceneViewportPanel::OnMouseButtonPressed(MouseButtonPressedEvent& event)
 	{
-		if (event.GetMouseButton() == Mouse::Button0 && IsMouseInsideImageBounds())
+		if (m_IsActive && event.GetMouseButton() == Mouse::Button0 && IsMouseInsideImageBounds())
 		{
 			TryPickObject();
 		}

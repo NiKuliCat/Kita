@@ -21,6 +21,9 @@ namespace Kita {
 		void OnImGuiRender();
 		void OnEvent(Event& event);
 		void Render();
+		void SetActive(bool isActive) { m_IsActive = isActive; }
+		bool IsImageHovered() const { return m_IsImageHovered; }
+		bool IsWindowFocused() const { return m_IsFocused; }
 
 	private:
 		void InitFrameBuffer();
@@ -47,6 +50,7 @@ namespace Kita {
 		bool m_IsHovered = false;
 		bool m_IsFocused = false;
 		bool m_IsImageHovered = false;
+		bool m_IsActive = false;
 
 		Transform m_LightTransform;
 	};
