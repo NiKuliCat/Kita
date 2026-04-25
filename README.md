@@ -1,6 +1,6 @@
 # Kita
 
-![Editor Preview](docs/images/kita_0_1.png)
+![Editor Preview](docs/images/multiViewport.png)
 
 
 ## 快速开始
