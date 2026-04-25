@@ -56,6 +56,7 @@ layout(location = 0) in Attributes Attri_Input;
 
 layout(location = 0) out vec4 FragColor;
 layout(location = 1) out int IDColor;
+layout(location = 2) out int IndexColor;
 
 
 uniform sampler2D MainTex;
@@ -68,4 +69,5 @@ void main()
 	float diffuse = max(NdotL, 0.15);
 	FragColor = vec4(texture(MainTex, Attri_Input.uv).rgb * diffuse, 1.0);
 	IDColor = id;
+	IndexColor = -1;
 }

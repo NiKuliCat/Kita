@@ -110,7 +110,7 @@ namespace Kita {
 				auto gizmoPoint = GizmoPointUBOData{};
 				gizmoPoint.position = point.position;
 				gizmoPoint.color = point.color;
-				gizmoPoint.radius = 8.0f;
+				gizmoPoint.radius = 6.0f;
 				gizmoPoint.index = point.id;
 				gizmoPoints.push_back(gizmoPoint);
 			}

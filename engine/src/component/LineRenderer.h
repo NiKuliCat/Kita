@@ -40,7 +40,7 @@ namespace Kita {
 
 		void SetControlPointColorByIndex(const glm::vec4& color, const int index);
 
-		void SetCurveType(CurveType type) { m_CurveType = type; }
+		void SetCurveType(CurveType type) { m_CurveType = type; m_Dirty = true; }
 		CurveType GetCurveType() const { return m_CurveType; }
 
 		void SetLineWidth(float width) { m_LineWidth = std::max(1.0f, width); }
@@ -48,6 +48,7 @@ namespace Kita {
 
 		void SetLineColor(const glm::vec4& color) { m_LineColor = color; }
 		const glm::vec4& GetLineColor() const { return m_LineColor; }
+		uint32_t GetControlPointCount() const { return static_cast<uint32_t>(m_ControlPoints.size()); }
 
 		const Ref<VertexArray>& GetCurveVAO() const { return m_Curve_VAO; }
 		uint32_t GetCurveVertexCount() const { return m_CurveVertexCount; }
@@ -55,13 +56,17 @@ namespace Kita {
 		void RebuildIfNeeded();
 		void MarkDirty() { m_Dirty = true; }
 
+		void MoveControlPoint(int index, const glm::vec3& newPosition);
+
 	private:
 		glm::vec3 EvaluateBezierCubic(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, float t);
 		void BuildBezierCubic();
 		void InitBuffer();
 		void ReCreateBuffer(const uint32_t size);
 
-
+		bool IsAnchorPoint(int index) const;
+		void MoveAnchorWithHandles(int anchorIndex, const glm::vec3& delta);
+		void MirrorOppositeHandle(int movedHandleIndex);
 
 
 	private:

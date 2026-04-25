@@ -304,23 +304,14 @@ namespace Kita {
 				Transform::DecomposeTransformMatrix(pointMatrix, newWorldPos, rotate, scale);
 
 				glm::vec3 newLocalPos = glm::vec3(glm::inverse(ownerModel) * glm::vec4(newWorldPos, 1.0f));
-				selectedPoint.position = newLocalPos;
 
 				if (selectedObj.HasComponent<LineRenderer>())
 				{
 					auto& lineRenderer = selectedObj.GetComponent<LineRenderer>();
-					auto& points = lineRenderer.GetControlPoints();
 
-					for (auto& point : points)
-					{
-						if (point.id == selectedPoint.id)
-						{
-							point.position = newLocalPos;
+					lineRenderer.MoveControlPoint(selectedPoint.id, newLocalPos);
 
-							lineRenderer.MarkDirty();
-							break;
-						}
-					}
+					selectedPoint = lineRenderer.GetControlPointByIndex(selectedPoint.id);
 				}
 			}
 		}
@@ -426,7 +417,7 @@ namespace Kita {
 		if (Input::IsKeyPressed(Key::LeftAlt))
 			return;
 
-		if (ImGuizmo::IsOver() || ImGuizmo::IsUsing())
+		if (ImGuizmo::IsUsing())
 			return;
 
 		auto [mx, my] = ImGui::GetMousePos();
@@ -447,15 +438,30 @@ namespace Kita {
 		int pixel_id = m_FrameBuffer->GetIDBufferValue(mouseX, mouseY, 1);
 		int pixel_index = m_FrameBuffer->GetIDBufferValue(mouseX, mouseY, 2);
 
+		if (pixel_id == -1)
+		{
+			pixel_index = -1;
+		}
+
+		// 点击到 ImGuizmo 本体时，不要触发对象重新拾取或清空选择。
+		// 但如果当前像素明确是控制点，则仍然允许控制点拾取。
+		if (ImGuizmo::IsOver() && pixel_index == -1)
+		{
+			m_FrameBuffer->UnBind();
+			return;
+		}
 
 		//目前如果index不等于-1 则说明该对象有lineRenderer组件,硬编
 		if (pixel_index != -1 && pixel_id != -1)
 		{
 			Object selectedObject = Object{ (entt::entity)pixel_id,m_Scene.get() };
-			m_SceneHierarchyPanel.ClearSelectedPoint();
-			m_SceneHierarchyPanel.SetSelectedObject(selectedObject);
-			m_SceneHierarchyPanel.SetSelectedPoint(selectedObject.GetComponent<LineRenderer>().GetControlPointByIndex(pixel_index));
-			selectedObject.GetComponent<LineRenderer>().SetControlPointColorByIndex({ 0.8,0.85,0.2,1.0 }, pixel_index);
+			if (selectedObject.HasComponent<LineRenderer>())
+			{
+				m_SceneHierarchyPanel.ClearSelectedPoint();
+				m_SceneHierarchyPanel.SetSelectedObject(selectedObject);
+				m_SceneHierarchyPanel.SetSelectedPoint(selectedObject.GetComponent<LineRenderer>().GetControlPointByIndex(pixel_index));
+				selectedObject.GetComponent<LineRenderer>().SetControlPointColorByIndex({ 0.8,0.85,0.2,1.0 }, pixel_index);
+			}
 			
 		}
 

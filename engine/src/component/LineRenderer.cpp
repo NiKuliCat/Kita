@@ -10,10 +10,13 @@ namespace Kita {
 	LineRenderer::LineRenderer()
 	{
 		m_ControlPoints.clear();
-		m_ControlPoints.push_back({ glm::vec3(1, 1, 1),0 });
-		m_ControlPoints.push_back({ glm::vec3(5, 1, 1),1 });
-		m_ControlPoints.push_back({ glm::vec3(9, 1, 1),2 });
-		m_ControlPoints.push_back({ glm::vec3(13, 1, 1),3 });
+		m_ControlPoints.push_back({ glm::vec3(0, 0, 0),0 });
+		m_ControlPoints.push_back({ glm::vec3(5, 0, 0),1 });
+		m_ControlPoints.push_back({ glm::vec3(10, 0, 0),2 });
+		m_ControlPoints.push_back({ glm::vec3(15, 0, 0),3 });
+		m_ControlPoints.push_back({ glm::vec3(20, 0, 0),4 });
+		m_ControlPoints.push_back({ glm::vec3(25, 0, 0),5 });
+		m_ControlPoints.push_back({ glm::vec3(30, 0, 0),6 });
 
 
 		InitBuffer();
@@ -57,6 +60,10 @@ namespace Kita {
 
 		if (m_CurveType == CurveType::BezierCubic)
 		{
+			if ((m_ControlPoints.size() - 1) % 3 != 0)
+			{
+				return;
+			}
 			BuildBezierCubic();
 		}
 
@@ -72,6 +79,27 @@ namespace Kita {
 		}
 
 		m_Dirty = false;
+	}
+
+	void LineRenderer::MoveControlPoint(int index, const glm::vec3& newPosition)
+	{
+		if (index < 0 || index >= (int)m_ControlPoints.size())
+			return;
+
+		const glm::vec3 oldPosition = m_ControlPoints[index].position;
+		const glm::vec3 delta = newPosition - oldPosition;
+
+		if (IsAnchorPoint(index))
+		{
+			MoveAnchorWithHandles(index, delta);
+		}
+		else
+		{
+			m_ControlPoints[index].position = newPosition;
+			MirrorOppositeHandle(index);
+		}
+
+		m_Dirty = true;
 	}
 
 	glm::vec3 LineRenderer::EvaluateBezierCubic(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, float t)
@@ -90,15 +118,20 @@ namespace Kita {
 		if (m_ControlPoints.size() < 4)
 			return;
 
-		const glm::vec3& p0 = m_ControlPoints[0].position;
-		const glm::vec3& p1 = m_ControlPoints[1].position;
-		const glm::vec3& p2 = m_ControlPoints[2].position;
-		const glm::vec3& p3 = m_ControlPoints[3].position;
-
-		for (int i = 0; i <= m_SegmentCountPerBezier; ++i)
+		for (size_t start = 0; start + 3 < m_ControlPoints.size(); start += 3)
 		{
-			const float t = (float)i / (float)m_SegmentCountPerBezier;
-			m_CurveVertices.push_back(EvaluateBezierCubic(p0, p1, p2, p3, t));
+			const glm::vec3& p0 = m_ControlPoints[start + 0].position;
+			const glm::vec3& p1 = m_ControlPoints[start + 1].position;
+			const glm::vec3& p2 = m_ControlPoints[start + 2].position;
+			const glm::vec3& p3 = m_ControlPoints[start + 3].position;
+
+			for (int i = 0; i <= m_SegmentCountPerBezier; ++i)
+			{
+				if (start > 0 && i == 0)
+					continue;
+				const float t = (float)i / (float)m_SegmentCountPerBezier;
+				m_CurveVertices.push_back(EvaluateBezierCubic(p0, p1, p2, p3, t));
+			}
 		}
 	}
 
@@ -131,6 +164,58 @@ namespace Kita {
 
 		m_Curve_VBO->SetLayout(m_CurveVertexLayout);
 		m_Curve_VAO->AddVertexBuffer(m_Curve_VBO);
+	}
+
+	bool LineRenderer::IsAnchorPoint(int index) const
+	{
+		return index >= 0 && index < (int)m_ControlPoints.size() && (index % 3 == 0);
+	}
+
+	void LineRenderer::MoveAnchorWithHandles(int anchorIndex, const glm::vec3& delta)
+	{
+		m_ControlPoints[anchorIndex].position += delta;
+
+		const int leftHandle = anchorIndex - 1;
+		const int rightHandle = anchorIndex + 1;
+
+		if (leftHandle >= 0)
+			m_ControlPoints[leftHandle].position += delta;
+
+		if (rightHandle < (int)m_ControlPoints.size())
+			m_ControlPoints[rightHandle].position += delta;
+	}
+
+	void LineRenderer::MirrorOppositeHandle(int movedHandleIndex)
+	{
+		if (movedHandleIndex < 0 || movedHandleIndex >= (int)m_ControlPoints.size())
+			return;
+
+		// handle 在 anchor 左边: index % 3 == 2
+		if (movedHandleIndex % 3 == 2)
+		{
+			const int anchorIndex = movedHandleIndex + 1;
+			const int oppositeHandle = anchorIndex + 1;
+
+			if (anchorIndex < (int)m_ControlPoints.size() && oppositeHandle < (int)m_ControlPoints.size())
+			{
+				const glm::vec3 anchor = m_ControlPoints[anchorIndex].position;
+				const glm::vec3 moved = m_ControlPoints[movedHandleIndex].position;
+				m_ControlPoints[oppositeHandle].position = anchor + (anchor - moved);
+			}
+		}
+		// handle 在 anchor 右边: index % 3 == 1
+		else if (movedHandleIndex % 3 == 1)
+		{
+			const int anchorIndex = movedHandleIndex - 1;
+			const int oppositeHandle = anchorIndex - 1;
+
+			if (anchorIndex >= 0 && oppositeHandle >= 0)
+			{
+				const glm::vec3 anchor = m_ControlPoints[anchorIndex].position;
+				const glm::vec3 moved = m_ControlPoints[movedHandleIndex].position;
+				m_ControlPoints[oppositeHandle].position = anchor + (anchor - moved);
+			}
+		}
 	}
 
 }
