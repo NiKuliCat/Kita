@@ -83,8 +83,10 @@ namespace Kita {
 		RenderCommand::SetDepthTest(true);
 		RenderCommand::SetDepthWrite(false);
 		RenderCommand::SetBlend(true);
+		RenderCommand::SetColorAttachmentWriteMask({ true, false, false });
 
 		Submit(m_RenderData->editorGridData.FullScreenTriangle_VAO, gridShader);
+		RenderCommand::SetColorAttachmentWriteMask({ true, true, true });
 		RenderCommand::SetDepthWrite(true);
 	}
 

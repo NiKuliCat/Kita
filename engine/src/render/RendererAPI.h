@@ -43,6 +43,7 @@ namespace Kita {
 		virtual	void SetDepthTest(bool value) = 0;
 		virtual void SetDepthWrite(bool value) = 0;
 		virtual void SetDepthTestMode(const DepthTestMode testMode) = 0;
+		virtual void SetColorAttachmentWriteMask(const std::vector<bool>& enabledAttachments) = 0;
 		virtual void SetViewport(const uint32_t x, const uint32_t y, const uint32_t width, const uint32_t height) = 0;
 
 		virtual void DrawIndexed(const Ref<VertexArray>& vertexArray) = 0;

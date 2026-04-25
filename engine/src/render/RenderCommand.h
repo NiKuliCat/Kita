@@ -36,6 +36,10 @@ namespace Kita {
 		{
 			s_RendererAPI->SetDepthTestMode(testmode);
 		}
+		inline static void SetColorAttachmentWriteMask(const std::vector<bool>& enabledAttachments)
+		{
+			s_RendererAPI->SetColorAttachmentWriteMask(enabledAttachments);
+		}
 		inline static void DrawIndexed(const Ref<VertexArray>& vertexArray)
 		{
 			s_RendererAPI->DrawIndexed(vertexArray);

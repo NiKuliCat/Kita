@@ -99,6 +99,25 @@ namespace Kita {
 		glDepthFunc(ConvertToGLDepthFunc(testMode));
 	}
 
+	void OpenGLRendererAPI::SetColorAttachmentWriteMask(const std::vector<bool>& enabledAttachments)
+	{
+		if (enabledAttachments.empty())
+			return;
+
+		for (size_t i = 0; i < enabledAttachments.size(); ++i)
+		{
+			const GLenum buffer = GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(i);
+			if (enabledAttachments[i])
+			{
+				glColorMaski(buffer - GL_COLOR_ATTACHMENT0, GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+			}
+			else
+			{
+				glColorMaski(buffer - GL_COLOR_ATTACHMENT0, GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+			}
+		}
+	}
+
 	void OpenGLRendererAPI::SetViewport(const uint32_t x, const uint32_t y, const uint32_t width, const uint32_t height)
 	{
 		glViewport(x, y, width, height);
