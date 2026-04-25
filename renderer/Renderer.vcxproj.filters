@@ -17,6 +17,9 @@
     <ClInclude Include="src\ui\SceneHierarchyPanel.h">
       <Filter>ui</Filter>
     </ClInclude>
+    <ClInclude Include="src\ui\SceneViewportPanel.h">
+      <Filter>ui</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\EditorApp.cpp" />
@@ -26,6 +29,9 @@
       <Filter>scene</Filter>
     </ClCompile>
     <ClCompile Include="src\ui\SceneHierarchyPanel.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\SceneViewportPanel.cpp">
       <Filter>ui</Filter>
     </ClCompile>
   </ItemGroup>

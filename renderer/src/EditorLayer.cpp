@@ -12,19 +12,10 @@ namespace Kita {
 	EditorLayer::EditorLayer()
 		:Layer("EditorLayer")
 	{
-		m_ViewportCamera = new ViewportCamera();
-		m_CameraTransform = Transform();
-		m_LightTransform = Transform();
-
-		m_CameraTransform.SetPosition({ 0.0f,0.0f,5.0f });
-		m_LightTransform.SetRotation({ 135.0,60.0f,0.0f });
-
-		m_DirectLight = new Light();
+		
 	}
 	void EditorLayer::OnCreate()
 	{
-
-
 		m_Scene = CreateRef<Scene>( "example scene");
 
 		{
@@ -58,113 +49,22 @@ namespace Kita {
 
 		m_Scene->LoadSkyCubemap(faces);
 
+		m_SceneSelectionContext = CreateRef<SceneSelectionContext>();
+		m_SceneHierarchyPanel = SceneHierarchyPanel(m_Scene, m_SceneSelectionContext);
 
-
-		m_SceneHierarchyPanel = SceneHierarchyPanel(m_Scene);
-		m_GizmoControlType = ImGuizmo::OPERATION::TRANSLATE;
-
-		m_ViewportSize = { 1280, 720 };
-		FrameBufferDescriptor sceneMSAADesc;
-		sceneMSAADesc.AttachmentsDescription = {
-			FrameBufferTexFormat::RGBA16F,
-			FrameBufferTexFormat::DEPTH
-		};
-		sceneMSAADesc.Width = 1280;
-		sceneMSAADesc.Height = 720;
-		sceneMSAADesc.Samples = 4;
-		m_SceneMSAAFrameBuffer = FrameBuffer::Create(sceneMSAADesc);
-
-		FrameBufferDescriptor sceneResolveDesc;
-		sceneResolveDesc.AttachmentsDescription = {
-			FrameBufferTexFormat::RGBA16F,
-			FrameBufferTexFormat::DEPTH
-		};
-		sceneResolveDesc.Width = 1280;
-		sceneResolveDesc.Height = 720;
-		sceneResolveDesc.Samples = 1;
-		m_SceneResolveFrameBuffer = FrameBuffer::Create(sceneResolveDesc);
-
-		FrameBufferDescriptor pickingDesc;
-		pickingDesc.AttachmentsDescription = {
-			FrameBufferTexFormat::RGBA16F,
-			FrameBufferTexFormat::RED_INTEGER,
-			FrameBufferTexFormat::RED_INTEGER,
-			FrameBufferTexFormat::DEPTH
-		};
-		pickingDesc.Width = 1280;
-		pickingDesc.Height = 720;
-		pickingDesc.Samples = 1;
-		m_PickingFrameBuffer = FrameBuffer::Create(pickingDesc);
-
-		m_SceneTexID = m_SceneResolveFrameBuffer->GetColorAttachment(0);
-
-
-
+		m_SceneViewportPanels.clear();
+		m_SceneViewportPanels.emplace_back(CreateUnique<SceneViewportPanel>(m_Scene,m_SceneSelectionContext,"Viewport"));
+		m_SceneViewportPanels.emplace_back(CreateUnique<SceneViewportPanel>(m_Scene, m_SceneSelectionContext, "Viewport 1"));
 	}
 
 	void EditorLayer::OnUpdate(float daltaTime)
 	{
 		m_Scene->SimulateSceneEditor();
-		m_ViewportCamera->OnUpdate(daltaTime);
-		DirectLightData light_data = DirectLightData();
-		light_data.Color = glm::vec4(1.0, 1.0, 1.0, 1.0);
-		light_data.Direction = glm::vec4(m_LightTransform.GetFrontDir(),1.0);
-
-		auto resolveDesc = m_SceneResolveFrameBuffer->GetDescriptor();
-		if (m_ViewportSize.x != resolveDesc.Width || m_ViewportSize.y != resolveDesc.Height)
+		for (auto& viewport : m_SceneViewportPanels)
 		{
-			const uint32_t width = (uint32_t)m_ViewportSize.x;
-			const uint32_t height = (uint32_t)m_ViewportSize.y;
-
-			m_SceneMSAAFrameBuffer->ReSize(width, height);
-			m_SceneResolveFrameBuffer->ReSize(width, height);
-			m_PickingFrameBuffer->ReSize(width, height);
-
-			m_ViewportCamera->SetViewport(m_ViewportSize.x, m_ViewportSize.y);
-			m_SceneTexID = m_SceneResolveFrameBuffer->GetColorAttachment(0);
+			viewport->Simulate(daltaTime);
+			viewport->Render();
 		}
-
-
-		m_PickingFrameBuffer->Bind();
-		Renderer::BeginScene(
-			m_ViewportCamera->GetViewMatrix(),
-			m_ViewportCamera->GetProjectionMatrix(),
-			m_ViewportCamera->GetPosition(),
-			light_data,
-			{ m_PickingFrameBuffer->GetSize() });
-
-		RenderCommand::SetClearColor(glm::vec4(0.12f, 0.12f, 0.13f, 1.0f));
-		RenderCommand::Clear();
-		m_PickingFrameBuffer->ClearIDBuffer(-1, 1);
-		m_PickingFrameBuffer->ClearIDBuffer(-1, 2);
-
-		m_Scene->RenderSceneEditor();
-
-		Renderer::EndScene();
-		m_PickingFrameBuffer->UnBind();
-
-
-
-		m_SceneMSAAFrameBuffer->Bind();
-		Renderer::BeginScene(
-			m_ViewportCamera->GetViewMatrix(),
-			m_ViewportCamera->GetProjectionMatrix(),
-			m_ViewportCamera->GetPosition(),
-			light_data,
-			{ m_SceneMSAAFrameBuffer->GetSize() });
-
-		RenderCommand::SetClearColor(glm::vec4(0.12f, 0.12f, 0.13f, 1.0f));
-		RenderCommand::Clear();
-
-		m_Scene->RenderSceneEditor();
-
-		Renderer::EndScene();
-		m_SceneMSAAFrameBuffer->UnBind();
-
-
-		// resolve
-		m_SceneMSAAFrameBuffer->BlitColorTo(m_SceneResolveFrameBuffer, 0, 0);
-
 	}
 
 	void EditorLayer::OnDestroy()
@@ -281,139 +181,12 @@ namespace Kita {
 			ImGui::EndMenuBar();
 		}
 
-
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
-
-		ImGuiWindowClass viewportWindowClass{};
-		viewportWindowClass.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoWindowMenuButton ;
-		ImGui::SetNextWindowClass(&viewportWindowClass);
-
-		ImGui::Begin("Viewport");
-		ImVec2 ViewportSize = ImGui::GetContentRegionAvail();
-		m_ViewportSize = { ViewportSize.x,ViewportSize.y };
-		auto viewportReginMin = ImGui::GetWindowContentRegionMin();
-		auto viewportReginMax = ImGui::GetWindowContentRegionMax();
-		auto viewportOffset = ImGui::GetWindowPos();
-		m_ViewportBounds[0] = { viewportReginMin.x + viewportOffset.x,viewportReginMin.y + viewportOffset.y };
-		m_ViewportBounds[1] = { viewportReginMax.x + viewportOffset.x,viewportReginMax.y + viewportOffset.y };
-
-		ImGui::Image(m_SceneTexID, ImVec2{ m_ViewportSize.x,m_ViewportSize.y }, ImVec2(0, 1), ImVec2(1, 0));
-
-		auto& selectedObj = m_SceneHierarchyPanel.GetSelectedObject();
-		auto& selectedPoint = m_SceneHierarchyPanel.GetSelectedPoint();
-		
-		if (selectedObj && selectedPoint.id != -1)
-		{
-			ImGuizmo::SetDrawlist();
-
-			ImGuizmo::SetGizmoSizeClipSpace(0.22f);
-			auto& gizmoStyle = ImGuizmo::GetStyle();
-			gizmoStyle.TranslationLineThickness = 2.0f; // 轴线粗细
-			gizmoStyle.TranslationLineArrowSize = 5.0f; // 箭头大小
-			gizmoStyle.CenterCircleSize = 0.0f;
-
-			ImVec2 imageMin = ImGui::GetItemRectMin();
-			ImVec2 imageMax = ImGui::GetItemRectMax();
-
-			ImGuizmo::SetDrawlist();
-			ImGuizmo::SetRect(imageMin.x,imageMin.y,imageMax.x - imageMin.x,imageMax.y - imageMin.y);
-
-
-
-
-			glm::mat4 viewMatrix = m_ViewportCamera->GetViewMatrix();
-			glm::mat4 projectionMatrix = m_ViewportCamera->GetProjectionMatrix();
-
-			auto& transform = selectedObj.GetComponent<Transform>();
-			glm::mat4 ownerModel = transform.GetTransformMatrix();
-
-			glm::vec3 worldPointPos = glm::vec3(ownerModel * glm::vec4(selectedPoint.position, 1.0f));
-			glm::mat4 pointMatrix = glm::translate(glm::mat4(1.0f), worldPointPos);
-			bool enableSnapping = Input::IsKeyPressed(Key::LeftControl);
-			float snappingValue = 0.1f;
-			float snappingValues[3] = { snappingValue, snappingValue, snappingValue };
-
-			ImGuizmo::SetGizmoSizeClipSpace(0.18f);
-
-			ImGuizmo::Manipulate(
-				glm::value_ptr(viewMatrix),
-				glm::value_ptr(projectionMatrix),
-				ImGuizmo::TRANSLATE,
-				ImGuizmo::WORLD,
-				glm::value_ptr(pointMatrix),
-				nullptr,
-				enableSnapping ? snappingValues : nullptr
-			);
-
-			if (ImGuizmo::IsUsing())
-			{
-				glm::vec3 newWorldPos, rotate, scale;
-				Transform::DecomposeTransformMatrix(pointMatrix, newWorldPos, rotate, scale);
-
-				glm::vec3 newLocalPos = glm::vec3(glm::inverse(ownerModel) * glm::vec4(newWorldPos, 1.0f));
-
-				if (selectedObj.HasComponent<LineRenderer>())
-				{
-					auto& lineRenderer = selectedObj.GetComponent<LineRenderer>();
-
-					lineRenderer.MoveControlPoint(selectedPoint.id, newLocalPos);
-
-					selectedPoint = lineRenderer.GetControlPointByIndex(selectedPoint.id);
-				}
-			}
-		}
-		else if (selectedObj)
-		{
-			ImGuizmo::SetDrawlist();
-			ImVec2 imageMin = ImGui::GetItemRectMin();
-			ImVec2 imageMax = ImGui::GetItemRectMax();
-
-			ImGuizmo::SetDrawlist();
-			ImGuizmo::SetRect(imageMin.x, imageMin.y, imageMax.x - imageMin.x, imageMax.y - imageMin.y);
-
-
-			glm::mat4 viewMatrix = m_ViewportCamera->GetViewMatrix();
-			glm::mat4 projectionMatrix = m_ViewportCamera->GetProjectionMatrix();
-
-			auto& selectedObjTransform = selectedObj.GetComponent<Transform>();
-			glm::mat4 modelMatrix = selectedObjTransform.GetTransformMatrix();
-
-			bool enableSnapping = Input::IsKeyPressed(Key::LeftControl);
-			float snappingValue = 0.1f;
-			float snappingValues[3] = { snappingValue,snappingValue,snappingValue };
-
-
-			ImGuizmo::SetGizmoSizeClipSpace(0.22f);
-			auto& gizmoStyle = ImGuizmo::GetStyle();
-			gizmoStyle.TranslationLineThickness = 2.0f; // 轴线粗细
-			gizmoStyle.TranslationLineArrowSize = 5.0f; // 箭头大小
-			gizmoStyle.CenterCircleSize = 3.0f;
-
-			ImGuizmo::Manipulate(glm::value_ptr(viewMatrix), glm::value_ptr(projectionMatrix),
-				ImGuizmo::OPERATION(m_GizmoControlType), ImGuizmo::LOCAL, glm::value_ptr(modelMatrix), nullptr, enableSnapping ? snappingValues : nullptr);
-
-			if (ImGuizmo::IsUsing())
-			{
-				glm::vec3 translate, rotate, scale;
-				Transform::DecomposeTransformMatrix(modelMatrix, translate, rotate, scale);
-				//先统一转成弧度计算 
-				glm::vec3 currentRotate = glm::radians(selectedObjTransform.GetRotation());
-				glm::vec3 deltaRotate = rotate - currentRotate;
-				currentRotate += deltaRotate;
-
-				selectedObjTransform.SetPosition(translate);
-				//最后转回角度
-				selectedObjTransform.SetRotation(glm::degrees(currentRotate));
-				selectedObjTransform.SetScale(scale);
-			}
-
-		}
-
-		ImGui::End();
-		ImGui::PopStyleVar();
-
-
 		m_SceneHierarchyPanel.OnImGuiRender();
+
+		for (auto& viewport : m_SceneViewportPanels)
+		{
+			viewport->OnImGuiRender();
+		}
 
 
 
@@ -427,115 +200,23 @@ namespace Kita {
 		EventDisPatcher dispatcher(event);
 		dispatcher.Dispatcher<KeyPressedEvent>(BIND_EVENT_FUNC(EditorLayer::OnKeyPressed));
 		dispatcher.Dispatcher<MouseButtonPressedEvent>(BIND_EVENT_FUNC(EditorLayer::OnMouseButtonPressed));
-		m_ViewportCamera->OnEvent(event);
+
+		for (auto& viewport : m_SceneViewportPanels)
+		{
+			viewport->OnEvent(event);
+		}
+
 	}
 
 	bool EditorLayer::OnKeyPressed(KeyPressedEvent& event)
 	{
-		if (event.IsRepeat())
-			return false;
-
-		switch (event.GetKeyCode())
-		{
-		case Key::W:
-			m_GizmoControlType = ImGuizmo::OPERATION::TRANSLATE;
-			break;
-		case Key::E:
-			m_GizmoControlType = ImGuizmo::OPERATION::ROTATE;
-			break;
-		case Key::R:
-			m_GizmoControlType = ImGuizmo::OPERATION::SCALE;
-			break;
-		}
 		return false;
 	}
 
 	bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& event)
 	{
-		if (event.GetMouseButton() == Mouse::Button0)
-		{
-			TryPickObject();
-		}
 		return false;
 	}
-
-	void EditorLayer::TryPickObject()
-	{
-		if (Input::IsKeyPressed(Key::LeftAlt))
-			return;
-
-		if (ImGuizmo::IsUsing())
-			return;
-
-		auto [mx, my] = ImGui::GetMousePos();
-		mx -= m_ViewportBounds[0].x;
-		my -= m_ViewportBounds[0].y;
-		glm::vec2 size = m_ViewportBounds[1] - m_ViewportBounds[0];
-
-		if (mx < 0.0f || my < 0.0f || mx >= size.x || my >= size.y)
-			return;
-
-		m_PickingFrameBuffer->Bind();
-
-		int mouseX = (int)mx;
-		int mouseY = (int)(size.y - my);
-		mouseX = std::clamp(mouseX, 0, (int)size.x - 1);
-		mouseY = std::clamp(mouseY, 0, (int)size.y - 1);
-
-		int pixel_id = m_PickingFrameBuffer->GetIDBufferValue(mouseX, mouseY, 1);
-		int pixel_index = m_PickingFrameBuffer->GetIDBufferValue(mouseX, mouseY, 2);
-
-		if (pixel_id == -1)
-		{
-			pixel_index = -1;
-		}
-
-		// 点击到 ImGuizmo 本体时，不要触发对象重新拾取或清空选择。
-		// 但如果当前像素明确是控制点，则仍然允许控制点拾取。
-		if (ImGuizmo::IsOver() && pixel_index == -1)
-		{
-			m_PickingFrameBuffer->UnBind();
-			return;
-		}
-
-		//目前如果index不等于-1 则说明该对象有lineRenderer组件,硬编
-		if (pixel_index != -1 && pixel_id != -1)
-		{
-			Object selectedObject = Object{ (entt::entity)pixel_id,m_Scene.get() };
-			if (selectedObject.HasComponent<LineRenderer>())
-			{
-				auto& lineRenderer = selectedObject.GetComponent<LineRenderer>();
-				m_SceneHierarchyPanel.ClearSelectedPoint();
-				m_SceneHierarchyPanel.SetSelectedObject(selectedObject);
-				m_SceneHierarchyPanel.SetSelectedPoint(lineRenderer.GetControlPointByIndex(pixel_index));
-				lineRenderer.SetSelectedControlPoint(pixel_index);
-
-				const glm::vec4 highlightColor = lineRenderer.IsAnchorControlPoint(pixel_index)
-					? glm::vec4(0.95f, 0.90f, 0.22f, 1.0f)
-					: glm::vec4(0.55f, 0.85f, 1.0f, 1.0f);
-				lineRenderer.SetControlPointColorByIndex(highlightColor, pixel_index);
-			}
-			
-		}
-
-		else if (pixel_id != -1)
-		{
-			Object selectedObject = Object{ (entt::entity)pixel_id, m_Scene.get() };
-
-			m_SceneHierarchyPanel.ClearSelectedPoint();
-			m_SceneHierarchyPanel.SetSelectedObject(selectedObject);
-			m_SceneHierarchyPanel.SetSelectedPoint({});
-		}
-		else
-		{
-			m_SceneHierarchyPanel.ClearSelection();
-		}
-		KITA_CLENT_INFO("pixel in viewport,id :{0},index :{1}", pixel_id, pixel_index);
-
-		m_PickingFrameBuffer->UnBind();
-	}
-
-	
 
 }
 

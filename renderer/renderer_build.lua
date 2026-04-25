@@ -22,6 +22,7 @@ project "Renderer"
     includedirs
     {
         "%{wks.location}/engine/src",
+        "%{wks.location}/renderer/src",
         "%{IncludeDir.GLFW}",
         "%{IncludeDir.glad}",
         "%{IncludeDir.ImGui}",

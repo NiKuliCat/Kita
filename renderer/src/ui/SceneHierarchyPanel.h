@@ -1,5 +1,6 @@
 #pragma once
 #include <Engine.h>
+#include "SceneSelectionContext.h"
 
 namespace Kita {
 
@@ -8,24 +9,39 @@ namespace Kita {
 	{
 	public:
 		SceneHierarchyPanel() = default;
-		SceneHierarchyPanel(const Ref<Scene>& scene)
-			:m_SceneContext(scene) {
-			m_SelectedObject = {}; m_SelectedPoint = {};
+		SceneHierarchyPanel(const Ref<Scene>& scene, const Ref<SceneSelectionContext>& selectionContext)
+			:m_SceneContext(scene), m_SelectionContext(selectionContext) {}
+
+		void SetContext(const Ref<Scene>& scene) { m_SceneContext = scene; }
+		void SetSelectionContext(const Ref<SceneSelectionContext>& selectionContext) { m_SelectionContext = selectionContext; }
+
+		Object& GetSelectedObject()
+		{
+			static Object emptyObject;
+			return m_SelectionContext ? m_SelectionContext->GetSelectedObject() : emptyObject;
+		}
+		const Object& GetSelectedObject() const
+		{
+			static Object emptyObject;
+			return m_SelectionContext ? m_SelectionContext->GetSelectedObject() : emptyObject;
 		}
 
-		void SetContext(const Ref<Scene>& scene) { m_SceneContext = scene;  	m_SelectedObject = {}; }
-		void SetSelectedObject(Object obj);
-		void SetSelectedPoint(PointData point);
+		PointData& GetSelectedPoint()
+		{
+			static PointData emptyPoint{};
+			return m_SelectionContext ? m_SelectionContext->GetSelectedPoint() : emptyPoint;
+		}
+		const PointData& GetSelectedPoint() const
+		{
+			static PointData emptyPoint{};
+			return m_SelectionContext ? m_SelectionContext->GetSelectedPoint() : emptyPoint;
+		}
 
-		Object& GetSelectedObject() { return m_SelectedObject; }
-		const Object& GetSelectedObject() const { return m_SelectedObject; }
+		void SetSelectedObject(Object obj) { if (m_SelectionContext) m_SelectionContext->SetSelection(obj); }
+		void SetSelectedPoint(PointData point) { if (m_SelectionContext) m_SelectionContext->SetSelectedPoint(point); }
 
-		PointData& GetSelectedPoint() { return m_SelectedPoint; }
-		const PointData& GetSelectedPoint() const { return m_SelectedPoint; }
-
-
-		void ClearSelectedPoint();
-		void ClearSelection();
+		void ClearSelectedPoint() { if (m_SelectionContext) m_SelectionContext->ClearSelectedPoint(); }
+		void ClearSelection() { if (m_SelectionContext) m_SelectionContext->ClearSelection(); }
 
 		void OnImGuiRender();
 		operator bool() const { return !(m_SceneContext == nullptr); }
@@ -36,8 +52,7 @@ namespace Kita {
 
 	private:
 		Ref<Scene> m_SceneContext = nullptr;
-		Object  m_SelectedObject;
-		PointData m_SelectedPoint;
+		Ref<SceneSelectionContext> m_SelectionContext = nullptr;
 	};
 
 }

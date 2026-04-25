@@ -101,7 +101,7 @@ namespace Kita {
 				lineRenderer.GetLineWidth());
 			lineRenderer.RenderEditorHelpers(model, id);
 
-			for (auto point : points)
+			for (auto& point : points)
 			{
 				if (!lineRenderer.IsAnchorControlPoint(point.id))
 					continue;

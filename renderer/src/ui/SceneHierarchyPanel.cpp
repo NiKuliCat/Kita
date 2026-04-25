@@ -22,51 +22,6 @@ namespace Kita {
 
 	const float infoRowsGap = 3.0f;
 
-	void SceneHierarchyPanel::SetSelectedObject(Object obj)
-	{
-		if (obj)
-		{
-			m_SelectedObject = obj;
-			KITA_CLENT_INFO("{0},this object is selected", m_SelectedObject.GetComponent<Name>().Get().c_str());
-		}
-		else
-		{
-			m_SelectedObject = {};
-		}
-	}
-
-	void SceneHierarchyPanel::SetSelectedPoint(PointData point)
-	{
-
-		if (point.id != -1)
-		{
-			m_SelectedPoint = point;
-			KITA_CLENT_INFO("{0},this object is selected", m_SelectedObject.GetComponent<Name>().Get().c_str());
-		}
-		else
-		{
-			m_SelectedPoint = {};
-		}
-	}
-
-	void SceneHierarchyPanel::ClearSelectedPoint()
-	{
-		if (m_SelectedObject && m_SelectedPoint.id != -1 && m_SelectedObject.HasComponent<LineRenderer>())
-		{
-			auto& lineRenderer = m_SelectedObject.GetComponent<LineRenderer>();
-			lineRenderer.ResetControlPointVisual(m_SelectedPoint.id);
-			lineRenderer.ClearSelectedControlPoint();
-		}
-
-		m_SelectedPoint = {};
-	}
-
-	void SceneHierarchyPanel::ClearSelection()
-	{
-		ClearSelectedPoint();
-		m_SelectedObject = {};
-	}
-
 	void SceneHierarchyPanel::OnImGuiRender()
 	{
 		ImGuiWindowClass viewportWindowClass{};
@@ -82,7 +37,7 @@ namespace Kita {
 
 			if (ImGui::IsItemClicked())
 			{
-				m_SelectedObject = {};
+				ClearSelection();
 			}
 
 			auto view = m_SceneContext->GetRegistry().view<entt::entity>();
@@ -119,7 +74,7 @@ namespace Kita {
 	void SceneHierarchyPanel::DrawObjectNode(Object obj)
 	{
 		auto& name = obj.GetName();
-		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ((m_SelectedObject == obj) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_SpanAvailWidth;
+		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ((GetSelectedObject() == obj) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_SpanAvailWidth;
 
 		bool open = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)obj, flags, name.c_str());
 
@@ -147,9 +102,9 @@ namespace Kita {
 		if (deleted)
 		{
 			m_SceneContext->DestroyObject(obj);
-			if (m_SelectedObject == obj)
+			if (GetSelectedObject() == obj)
 			{
-				m_SelectedObject = {};
+				ClearSelection();
 			}
 		}
 	}
@@ -550,7 +505,9 @@ namespace Kita {
 		ImGui::SetNextWindowClass(&viewportWindowClass);
 
 		ImGui::Begin("Inspector");
-		if (m_SelectedObject)
+		auto& selectedObject = GetSelectedObject();
+		auto& selectedPoint = GetSelectedPoint();
+		if (selectedObject)
 		{
 
 #pragma region  ------------------------------------------------- Draw Name Component ---------------------------------------------------------
@@ -566,22 +523,22 @@ namespace Kita {
 				ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, inspectorLabelColumn_LeftWidth);
 				ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
 
-				if (m_SelectedObject.HasComponent<Name>())
+				if (selectedObject.HasComponent<Name>())
 				{
-					auto& name = m_SelectedObject.GetComponent<Name>().Get();
+					auto& name = selectedObject.GetComponent<Name>().Get();
 					DrawInspectorInfoRow("Name", name, tableStartPos, inspectorLabelColumn_LeftWidth,isHightLight);
 				}
 				ImGui::TableNextRow(ImGuiTableRowFlags_None, infoRowsGap);
-				if (m_SelectedObject.HasComponent<ObjectType>())
+				if (selectedObject.HasComponent<ObjectType>())
 				{
-					const Type& type = m_SelectedObject.GetComponent<ObjectType>().Get();
+					const Type& type = selectedObject.GetComponent<ObjectType>().Get();
 					const std::string typeText = ObjectTypeToString(type);
 					DrawInspectorInfoRow("Type",typeText,tableStartPos,inspectorLabelColumn_LeftWidth, isHightLight);
 				}
 				ImGui::TableNextRow(ImGuiTableRowFlags_None, infoRowsGap);
-				if (m_SelectedObject.HasComponent<Transform>())
+				if (selectedObject.HasComponent<Transform>())
 				{
-					auto& transform = m_SelectedObject.GetComponent<Transform>();
+					auto& transform = selectedObject.GetComponent<Transform>();
 					DrawInspectorVec3Row("Position", transform.GetPosition(), tableStartPos, inspectorLabelColumn_LeftWidth, isHightLight);
 					DrawInspectorVec3Row("Rotation", transform.GetRotation(), tableStartPos, inspectorLabelColumn_LeftWidth, isHightLight);
 					DrawInspectorVec3Row("Scale", transform.GetScale(), tableStartPos, inspectorLabelColumn_LeftWidth, isHightLight);
@@ -590,7 +547,7 @@ namespace Kita {
 				ImGui::EndTable();
 			}
 
-			DrawComponent<LineRenderer>("LineRenderer", m_SelectedObject, [&](LineRenderer& lineRenderer)
+			DrawComponent<LineRenderer>("LineRenderer", selectedObject, [&](LineRenderer& lineRenderer)
 			{
 				const float treeIndent = ImGui::GetTreeNodeToLabelSpacing();
 				ImGui::Unindent(treeIndent);
@@ -644,13 +601,13 @@ namespace Kita {
 						inspectorLabelColumn_LeftWidth,
 						isHightLight);
 
-					if (m_SelectedPoint.id != -1)
+					if (selectedPoint.id != -1)
 					{
-						BezierHandleMode handleMode = lineRenderer.GetHandleModeForPoint(m_SelectedPoint.id);
+						BezierHandleMode handleMode = lineRenderer.GetHandleModeForPoint(selectedPoint.id);
 						DrawInspectorHandleModeRow("Handle Mode", handleMode, tableStartPos, inspectorLabelColumn_LeftWidth, isHightLight);
-						if (handleMode != lineRenderer.GetHandleModeForPoint(m_SelectedPoint.id))
+						if (handleMode != lineRenderer.GetHandleModeForPoint(selectedPoint.id))
 						{
-							lineRenderer.SetHandleModeForPoint(m_SelectedPoint.id, handleMode);
+							lineRenderer.SetHandleModeForPoint(selectedPoint.id, handleMode);
 						}
 					}
 
@@ -667,9 +624,9 @@ namespace Kita {
 					if (ImGui::Button("Remove Segment"))
 					{
 						lineRenderer.RemoveLastBezierSegment();
-						if (m_SelectedPoint.id >= static_cast<int>(lineRenderer.GetControlPointCount()))
+						if (selectedPoint.id >= static_cast<int>(lineRenderer.GetControlPointCount()))
 						{
-							m_SelectedPoint = {};
+							ClearSelectedPoint();
 						}
 					}
 				}
@@ -728,9 +685,9 @@ namespace Kita {
 								pointPosition.z != currentPoint.position.z)
 							{
 								lineRenderer.MoveControlPoint(static_cast<int>(i), pointPosition);
-								if (m_SelectedPoint.id == static_cast<int>(i))
+								if (selectedPoint.id == static_cast<int>(i))
 								{
-									m_SelectedPoint = lineRenderer.GetControlPointByIndex(static_cast<int>(i));
+									selectedPoint = lineRenderer.GetControlPointByIndex(static_cast<int>(i));
 								}
 							}
 						}
@@ -754,7 +711,7 @@ namespace Kita {
 
 	void SceneHierarchyPanel::OnSlectedObjectChange(Object obj)
 	{
-		m_SelectedObject = obj;
+		SetSelectedObject(obj);
 	}
 
 }
