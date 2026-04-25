@@ -44,7 +44,26 @@ namespace Kita {
 		viewportWindowClass.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoWindowMenuButton;
 		ImGui::SetNextWindowClass(&viewportWindowClass);
 
+		if (m_UseInitialPlacement)
+		{
+			const ImGuiViewport* mainViewport = ImGui::GetMainViewport();
+			const ImGuiID windowId = ImHashStr(m_WindowName.c_str());
+			const float offsetX = 48.0f * static_cast<float>(windowId % 4u);
+			const float offsetY = 40.0f * static_cast<float>((windowId / 4u) % 4u);
+
+			ImGui::SetNextWindowDockID(0, ImGuiCond_Always);
+			ImGui::SetNextWindowPos(
+				ImVec2(mainViewport->WorkPos.x + 72.0f + offsetX, mainViewport->WorkPos.y + 72.0f + offsetY),
+				ImGuiCond_Always);
+			ImGui::SetNextWindowSize(ImVec2(720.0f, 460.0f), ImGuiCond_Always);
+		}
+
+		if (m_RequestWindowFocus)
+			ImGui::SetNextWindowFocus();
+
 		ImGui::Begin(m_WindowName.c_str());
+		m_UseInitialPlacement = false;
+		m_RequestWindowFocus = false;
 		m_IsHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows);
 		m_IsFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
 		ImVec2 viewportSize = ImGui::GetContentRegionAvail();

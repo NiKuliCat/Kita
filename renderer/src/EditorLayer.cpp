@@ -54,9 +54,9 @@ namespace Kita {
 
 		m_SceneViewportPanels.clear();
 		m_SceneViewportPanels.emplace_back(CreateUnique<SceneViewportPanel>(m_Scene,m_SceneSelectionContext,"Viewport"));
-		m_SceneViewportPanels.emplace_back(CreateUnique<SceneViewportPanel>(m_Scene, m_SceneSelectionContext, "Viewport 1"));
-		m_SceneViewportPanels.emplace_back(CreateUnique<SceneViewportPanel>(m_Scene, m_SceneSelectionContext, "Viewport 2"));
-		m_SceneViewportPanels.emplace_back(CreateUnique<SceneViewportPanel>(m_Scene, m_SceneSelectionContext, "Viewport 3"));
+	//	m_SceneViewportPanels.emplace_back(CreateUnique<SceneViewportPanel>(m_Scene, m_SceneSelectionContext, "Viewport 1"));
+	//	m_SceneViewportPanels.emplace_back(CreateUnique<SceneViewportPanel>(m_Scene, m_SceneSelectionContext, "Viewport 2"));
+	//	m_SceneViewportPanels.emplace_back(CreateUnique<SceneViewportPanel>(m_Scene, m_SceneSelectionContext, "Viewport 3"));
 		m_ActiveViewportIndex = m_SceneViewportPanels.empty() ? -1 : 0;
 	}
 
@@ -124,6 +124,7 @@ namespace Kita {
 		}
 		style.WindowMinSize = minWindowSize;
 
+
 		if (ImGui::BeginMenuBar())
 		{
 
@@ -138,9 +139,11 @@ namespace Kita {
 			}
 			if (ImGui::BeginMenu("Window"))
 			{
-				if (ImGui::MenuItem("New"))
+				if (ImGui::MenuItem("Viewport"))
 				{
-
+					const std::string viewportName = "Viewport " + std::to_string(m_SceneViewportPanels.size());
+					m_SceneViewportPanels.emplace_back(CreateUnique<SceneViewportPanel>(m_Scene, m_SceneSelectionContext, viewportName));
+					m_ActiveViewportIndex = static_cast<int32_t>(m_SceneViewportPanels.size()) - 1;
 				}
 
 				ImGui::EndMenu();

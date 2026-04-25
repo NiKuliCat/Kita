@@ -51,6 +51,8 @@ namespace Kita {
 		bool m_IsFocused = false;
 		bool m_IsImageHovered = false;
 		bool m_IsActive = false;
+		bool m_UseInitialPlacement = true;
+		bool m_RequestWindowFocus = true;
 
 		Transform m_LightTransform;
 	};
