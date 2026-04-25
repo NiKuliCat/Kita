@@ -2,6 +2,8 @@
 #include "LineRenderer.h"
 
 #include <core/Core.h>
+#include "render/Renderer.h"
+#include "render/ShaderLibrary.h"
 namespace Kita {
 
 	LineRenderer::LineRenderer()
@@ -18,6 +20,7 @@ namespace Kita {
 		ResizeHandleModesToMatchAnchors();
 		ResetAllControlPointVisuals();
 		InitBuffer();
+		InitEditorHelperBuffers();
 	}
 
 	LineRenderer::~LineRenderer()
@@ -35,6 +38,7 @@ namespace Kita {
 		ResizeHandleModesToMatchAnchors();
 		ResetAllControlPointVisuals();
 		m_Dirty = true;
+		m_HelperDirty = true;
 	}
 
 	const PointData& LineRenderer::GetControlPointByIndex(const int index) const
@@ -50,6 +54,7 @@ namespace Kita {
 	void LineRenderer::SetControlPointColorByIndex(const glm::vec4& color, const int index)
 	{
 		m_ControlPoints[index].color = color;
+		m_HelperDirty = true;
 	}
 
 	uint32_t LineRenderer::GetBezierSegmentCount() const
@@ -166,6 +171,7 @@ namespace Kita {
 
 		ResizeHandleModesToMatchAnchors();
 		m_Dirty = true;
+		m_HelperDirty = true;
 	}
 
 	void LineRenderer::RemoveLastBezierSegment()
@@ -181,7 +187,9 @@ namespace Kita {
 
 		ResizeHandleModesToMatchAnchors();
 		ResetAllControlPointVisuals();
+		ValidateSelectedControlPoint();
 		m_Dirty = true;
+		m_HelperDirty = true;
 	}
 
 	glm::vec4 LineRenderer::GetDefaultControlPointColor(int index) const
@@ -205,6 +213,7 @@ namespace Kita {
 			return;
 
 		m_ControlPoints[index].color = GetDefaultControlPointColor(index);
+		m_HelperDirty = true;
 	}
 
 	void LineRenderer::ResetAllControlPointVisuals()
@@ -227,6 +236,7 @@ namespace Kita {
 		{
 			if ((m_ControlPoints.size() - 1) % 3 != 0)
 			{
+				m_Dirty = false;
 				return;
 			}
 			BuildBezierCubic();
@@ -265,6 +275,54 @@ namespace Kita {
 		}
 
 		m_Dirty = true;
+		m_HelperDirty = true;
+	}
+
+	void LineRenderer::SetSelectedControlPoint(int index)
+	{
+		if (index < 0 || index >= static_cast<int>(m_ControlPoints.size()))
+		{
+			ClearSelectedControlPoint();
+			return;
+		}
+
+		m_SelectedControlPointIndex = index;
+		m_SelectedAnchorIndex = GetAnchorIndexForControlPoint(index);
+		m_HelperDirty = true;
+	}
+
+	void LineRenderer::ClearSelectedControlPoint()
+	{
+		m_SelectedControlPointIndex = -1;
+		m_SelectedAnchorIndex = -1;
+		m_HelperDirty = true;
+	}
+
+	void LineRenderer::RenderEditorHelpers(const glm::mat4& model, uint32_t objectId)
+	{
+		RebuildEditorHelpersIfNeeded();
+
+		auto& shaderLibrary = ShaderLibrary::GetInstance();
+		if (m_HelperLineVertices.size() >= 2)
+		{
+			auto lineShader = shaderLibrary.Get("EditorLineShader");
+			lineShader->SetMat4("Model", model);
+			lineShader->SetInt("id", objectId);
+			lineShader->SetColor("Color", glm::vec4(0.92f, 0.94f, 0.98f, 0.28f));
+			for (uint32_t offset = 0; offset + 1 < static_cast<uint32_t>(m_HelperLineVertices.size()); offset += 2)
+			{
+				m_HelperLineVBO->SetData(&m_HelperLineVertices[offset], static_cast<uint32_t>(sizeof(glm::vec3) * 2), 0);
+				Renderer::SubmitAsLine(m_HelperLineVAO, lineShader, 2, 1.5f);
+			}
+		}
+
+		if (!m_HandlePointVertices.empty())
+		{
+			auto handleShader = shaderLibrary.Get("GizmoDiamond");
+			handleShader->SetMat4("Matrix_M", model);
+			handleShader->SetInt("id", objectId);
+			Renderer::DrawGizmoPoints(m_HandlePointVAO, handleShader, static_cast<uint32_t>(m_HandlePointVertices.size()));
+		}
 	}
 
 	glm::vec3 LineRenderer::EvaluateBezierCubic(
@@ -318,6 +376,20 @@ namespace Kita {
 		m_Curve_VAO->AddVertexBuffer(m_Curve_VBO);
 	}
 
+	void LineRenderer::InitEditorHelperBuffers()
+	{
+		m_HelperLineLayout = { { ShaderDataType::Float3, "PositionOS" } };
+		m_HandlePointLayout = {
+			{ ShaderDataType::Float3, "position" },
+			{ ShaderDataType::Float4, "color" },
+			{ ShaderDataType::Float, "radius" },
+			{ ShaderDataType::Int, "index" }
+		};
+
+		ReCreateHelperLineBuffer(2);
+		ReCreateHandlePointBuffer(1);
+	}
+
 	void LineRenderer::ReCreateBuffer(const uint32_t size)
 	{
 		auto count = std::max(1u, size);
@@ -332,6 +404,137 @@ namespace Kita {
 
 		m_Curve_VBO->SetLayout(m_CurveVertexLayout);
 		m_Curve_VAO->AddVertexBuffer(m_Curve_VBO);
+	}
+
+	void LineRenderer::ReCreateHelperLineBuffer(uint32_t vertexCount)
+	{
+		const uint32_t requiredCount = std::max(2u, vertexCount);
+		if (m_HelperLineVAO && m_HelperLineVBO && requiredCount <= m_HelperLineCapacity)
+			return;
+
+		m_HelperLineCapacity = requiredCount;
+		m_HelperLineVAO = VertexArray::Create();
+		m_HelperLineVBO = VertexBuffer::Create(m_HelperLineCapacity * static_cast<uint32_t>(sizeof(glm::vec3)));
+		m_HelperLineVBO->SetLayout(m_HelperLineLayout);
+		m_HelperLineVAO->AddVertexBuffer(m_HelperLineVBO);
+	}
+
+	void LineRenderer::ReCreateHandlePointBuffer(uint32_t pointCount)
+	{
+		const uint32_t requiredBytes = std::max(1u, pointCount) * static_cast<uint32_t>(sizeof(EditorHandlePointData));
+		if (m_HandlePointVAO && m_HandlePointVBO && requiredBytes <= m_HandlePointCapacityBytes)
+			return;
+
+		m_HandlePointCapacityBytes = std::max(requiredBytes, 1024u);
+		m_HandlePointVAO = VertexArray::Create();
+		m_HandlePointVBO = VertexBuffer::Create(m_HandlePointCapacityBytes);
+		m_HandlePointVBO->SetLayout(m_HandlePointLayout);
+		m_HandlePointVAO->AddVertexBuffer(m_HandlePointVBO);
+	}
+
+	void LineRenderer::RebuildEditorHelpersIfNeeded()
+	{
+		if (!m_HelperDirty)
+			return;
+
+		ValidateSelectedControlPoint();
+		BuildSelectedHelperGeometry();
+
+		ReCreateHelperLineBuffer(static_cast<uint32_t>(m_HelperLineVertices.size()));
+		if (!m_HelperLineVertices.empty())
+		{
+			m_HelperLineVBO->SetData(
+				m_HelperLineVertices.data(),
+				static_cast<uint32_t>(m_HelperLineVertices.size() * sizeof(glm::vec3)),
+				0);
+		}
+
+		ReCreateHandlePointBuffer(static_cast<uint32_t>(m_HandlePointVertices.size()));
+		if (!m_HandlePointVertices.empty())
+		{
+			m_HandlePointVBO->SetData(
+				m_HandlePointVertices.data(),
+				static_cast<uint32_t>(m_HandlePointVertices.size() * sizeof(EditorHandlePointData)),
+				0);
+		}
+
+		m_HelperDirty = false;
+	}
+
+	void LineRenderer::BuildSelectedHelperGeometry()
+	{
+		m_HelperLineVertices.clear();
+		m_HandlePointVertices.clear();
+
+		if (m_CurveType != CurveType::BezierCubic || m_SelectedAnchorIndex == -1)
+			return;
+
+		const int anchorIndex = m_SelectedAnchorIndex;
+		if (!IsAnchorPoint(anchorIndex))
+			return;
+
+		const auto& anchor = m_ControlPoints[anchorIndex];
+		const int leftHandle = GetLeftHandleIndexForAnchor(anchorIndex);
+		const int rightHandle = GetRightHandleIndexForAnchor(anchorIndex);
+
+		const auto appendDashedSegment = [&](const glm::vec3& start, const glm::vec3& end)
+		{
+			const glm::vec3 direction = end - start;
+			const float length = glm::length(direction);
+			if (length < 0.0001f)
+				return;
+
+			const glm::vec3 normalized = direction / length;
+			const float dashLength = 0.16f;
+			const float gapLength = 0.08f;
+
+			float traveled = 0.0f;
+			while (traveled < length)
+			{
+				const float dashStart = traveled;
+				const float dashEnd = std::min(traveled + dashLength, length);
+				m_HelperLineVertices.push_back(start + normalized * dashStart);
+				m_HelperLineVertices.push_back(start + normalized * dashEnd);
+				traveled += dashLength + gapLength;
+			}
+		};
+
+		const auto appendHandlePoint = [&](int handleIndex)
+		{
+			if (handleIndex < 0 || handleIndex >= static_cast<int>(m_ControlPoints.size()))
+				return;
+
+			EditorHandlePointData point{};
+			point.position = m_ControlPoints[handleIndex].position;
+			point.color = m_ControlPoints[handleIndex].color;
+			point.radius = GetControlPointRadius(handleIndex) + 3.0f;
+			point.index = handleIndex;
+			m_HandlePointVertices.push_back(point);
+		};
+
+		if (leftHandle != -1)
+		{
+			appendDashedSegment(anchor.position, m_ControlPoints[leftHandle].position);
+			appendHandlePoint(leftHandle);
+		}
+
+		if (rightHandle != -1)
+		{
+			appendDashedSegment(anchor.position, m_ControlPoints[rightHandle].position);
+			appendHandlePoint(rightHandle);
+		}
+	}
+
+	void LineRenderer::ValidateSelectedControlPoint()
+	{
+		if (m_SelectedControlPointIndex < 0 || m_SelectedControlPointIndex >= static_cast<int>(m_ControlPoints.size()))
+		{
+			m_SelectedControlPointIndex = -1;
+			m_SelectedAnchorIndex = -1;
+			return;
+		}
+
+		m_SelectedAnchorIndex = GetAnchorIndexForControlPoint(m_SelectedControlPointIndex);
 	}
 
 	bool LineRenderer::IsAnchorPoint(int index) const
@@ -427,6 +630,7 @@ namespace Kita {
 		ResizeHandleModesToMatchAnchors();
 		m_HandleModes[static_cast<size_t>(anchorIndex / 3)] = mode;
 		m_Dirty = true;
+		m_HelperDirty = true;
 	}
 
 }

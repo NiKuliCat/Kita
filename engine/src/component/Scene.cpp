@@ -104,6 +104,7 @@ namespace Kita {
 				lineShader,
 				lineRenderer.GetCurveVertexCount(),
 				lineRenderer.GetLineWidth());
+			lineRenderer.RenderEditorHelpers(model, id);
 
 			for (auto point : points)
 			{

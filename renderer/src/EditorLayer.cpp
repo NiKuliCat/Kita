@@ -6,7 +6,6 @@
 #include <glm/glm.hpp>
 #include <imgui_internal.h>
 #include <glm/gtc/type_ptr.hpp>
-#include "render/scene/Gizmo.h"
 
 namespace Kita {
 
@@ -109,8 +108,6 @@ namespace Kita {
 		m_FrameBuffer->ClearIDBuffer(-1,2);
 
 		m_Scene->OnUpdate(daltaTime);
-		DrawSelectedBezierHelpers();
-		DrawSelectedBezierHandles();
 
 
 
@@ -414,161 +411,6 @@ namespace Kita {
 		return false;
 	}
 
-	void EditorLayer::DrawSelectedBezierHelpers()
-	{
-		auto& selectedObj = m_SceneHierarchyPanel.GetSelectedObject();
-		auto& selectedPoint = m_SceneHierarchyPanel.GetSelectedPoint();
-		if (!selectedObj || !selectedObj.HasComponent<LineRenderer>() || selectedPoint.id == -1)
-			return;
-
-		auto& lineRenderer = selectedObj.GetComponent<LineRenderer>();
-		if (lineRenderer.GetCurveType() != CurveType::BezierCubic)
-			return;
-
-		const int anchorIndex = lineRenderer.GetAnchorIndexForControlPoint(selectedPoint.id);
-		if (anchorIndex == -1)
-			return;
-
-		const auto& anchor = lineRenderer.GetControlPointByIndex(anchorIndex);
-		const int leftHandle = lineRenderer.GetLeftHandleIndexForAnchor(anchorIndex);
-		const int rightHandle = lineRenderer.GetRightHandleIndexForAnchor(anchorIndex);
-		auto lineShader = ShaderLibrary::GetInstance().Get("EditorLineShader");
-		lineShader->SetMat4("Model", selectedObj.GetComponent<Transform>().GetTransformMatrix());
-		lineShader->SetInt("id", static_cast<uint32_t>(selectedObj));
-		lineShader->SetColor("Color", glm::vec4(0.92f, 0.94f, 0.98f, 0.28f));
-
-		EnsureHelperLineBuffer(2);
-
-		const auto drawDashedSegment = [&](const glm::vec3& start, const glm::vec3& end)
-		{
-			const glm::vec3 direction = end - start;
-			const float length = glm::length(direction);
-			if (length < 0.0001f)
-				return;
-
-			const glm::vec3 normalized = direction / length;
-			const float dashLength = 0.24f;
-			const float gapLength = 0.14f;
-
-			float traveled = 0.0f;
-			while (traveled < length)
-			{
-				const float dashStart = traveled;
-				const float dashEnd = std::min(traveled + dashLength, length);
-				glm::vec3 dashVertices[2] = {
-					start + normalized * dashStart,
-					start + normalized * dashEnd
-				};
-
-				m_HelperLineVBO->SetData(dashVertices, static_cast<uint32_t>(sizeof(dashVertices)), 0);
-				Renderer::SubmitAsLine(m_HelperLineVAO, lineShader, 2, 1.5f);
-
-				traveled += dashLength + gapLength;
-			}
-		};
-
-		if (leftHandle != -1)
-		{
-			drawDashedSegment(anchor.position, lineRenderer.GetControlPointByIndex(leftHandle).position);
-		}
-
-		if (rightHandle != -1)
-		{
-			drawDashedSegment(anchor.position, lineRenderer.GetControlPointByIndex(rightHandle).position);
-		}
-	}
-
-	void EditorLayer::EnsureHelperLineBuffer(uint32_t vertexCount)
-	{
-		const uint32_t requiredCount = std::max(2u, vertexCount);
-		if (m_HelperLineVAO && m_HelperLineVBO && requiredCount <= m_HelperLineCapacity)
-			return;
-
-		m_HelperLineCapacity = requiredCount;
-		m_HelperLineLayout = { { ShaderDataType::Float3, "PositionOS" } };
-
-		m_HelperLineVAO = VertexArray::Create();
-		m_HelperLineVBO = VertexBuffer::Create(m_HelperLineCapacity * static_cast<uint32_t>(sizeof(glm::vec3)));
-		m_HelperLineVBO->SetLayout(m_HelperLineLayout);
-		m_HelperLineVAO->AddVertexBuffer(m_HelperLineVBO);
-	}
-
-	void EditorLayer::DrawSelectedBezierHandles()
-	{
-		auto& selectedObj = m_SceneHierarchyPanel.GetSelectedObject();
-		auto& selectedPoint = m_SceneHierarchyPanel.GetSelectedPoint();
-		if (!selectedObj || !selectedObj.HasComponent<LineRenderer>() || selectedPoint.id == -1)
-			return;
-
-		auto& lineRenderer = selectedObj.GetComponent<LineRenderer>();
-		if (lineRenderer.GetCurveType() != CurveType::BezierCubic)
-			return;
-
-		const int anchorIndex = lineRenderer.GetAnchorIndexForControlPoint(selectedPoint.id);
-		if (anchorIndex == -1)
-			return;
-
-		std::vector<GizmoPointUBOData> handlePoints;
-		handlePoints.reserve(2);
-
-		const int leftHandle = lineRenderer.GetLeftHandleIndexForAnchor(anchorIndex);
-		const int rightHandle = lineRenderer.GetRightHandleIndexForAnchor(anchorIndex);
-
-		if (leftHandle != -1)
-		{
-			GizmoPointUBOData point{};
-			point.position = lineRenderer.GetControlPointByIndex(leftHandle).position;
-			point.color = lineRenderer.GetControlPointByIndex(leftHandle).color;
-			point.radius = lineRenderer.GetControlPointRadius(leftHandle) + 2.0f;
-			point.index = leftHandle;
-			handlePoints.push_back(point);
-		}
-
-		if (rightHandle != -1)
-		{
-			GizmoPointUBOData point{};
-			point.position = lineRenderer.GetControlPointByIndex(rightHandle).position;
-			point.color = lineRenderer.GetControlPointByIndex(rightHandle).color;
-			point.radius = lineRenderer.GetControlPointRadius(rightHandle) + 2.0f;
-			point.index = rightHandle;
-			handlePoints.push_back(point);
-		}
-
-		if (handlePoints.empty())
-			return;
-
-		EnsureHandlePointBuffer(static_cast<uint32_t>(handlePoints.size()));
-		m_HandlePointVBO->SetData(
-			handlePoints.data(),
-			static_cast<uint32_t>(handlePoints.size() * sizeof(GizmoPointUBOData)),
-			0);
-
-		auto shader = ShaderLibrary::GetInstance().Get("GizmoDiamond");
-		shader->SetMat4("Matrix_M", selectedObj.GetComponent<Transform>().GetTransformMatrix());
-		shader->SetInt("id", static_cast<uint32_t>(selectedObj));
-		Renderer::DrawGizmoPoints(m_HandlePointVAO, shader, static_cast<uint32_t>(handlePoints.size()));
-	}
-
-	void EditorLayer::EnsureHandlePointBuffer(uint32_t pointCount)
-	{
-		const uint32_t requiredBytes = std::max(1u, pointCount) * static_cast<uint32_t>(sizeof(GizmoPointUBOData));
-		if (m_HandlePointVAO && m_HandlePointVBO && requiredBytes <= m_HandlePointCapacityBytes)
-			return;
-
-		m_HandlePointCapacityBytes = std::max(requiredBytes, 1024u);
-		m_HandlePointLayout = {
-			{ ShaderDataType::Float3, "position" },
-			{ ShaderDataType::Float4, "color" },
-			{ ShaderDataType::Float, "radius" },
-			{ ShaderDataType::Int, "index" }
-		};
-
-		m_HandlePointVAO = VertexArray::Create();
-		m_HandlePointVBO = VertexBuffer::Create(m_HandlePointCapacityBytes);
-		m_HandlePointVBO->SetLayout(m_HandlePointLayout);
-		m_HandlePointVAO->AddVertexBuffer(m_HandlePointVBO);
-	}
-
 	void EditorLayer::TryPickObject()
 	{
 		if (Input::IsKeyPressed(Key::LeftAlt))
@@ -618,6 +460,7 @@ namespace Kita {
 				m_SceneHierarchyPanel.ClearSelectedPoint();
 				m_SceneHierarchyPanel.SetSelectedObject(selectedObject);
 				m_SceneHierarchyPanel.SetSelectedPoint(lineRenderer.GetControlPointByIndex(pixel_index));
+				lineRenderer.SetSelectedControlPoint(pixel_index);
 
 				const glm::vec4 highlightColor = lineRenderer.IsAnchorControlPoint(pixel_index)
 					? glm::vec4(0.95f, 0.90f, 0.22f, 1.0f)

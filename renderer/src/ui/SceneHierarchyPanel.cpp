@@ -53,7 +53,9 @@ namespace Kita {
 	{
 		if (m_SelectedObject && m_SelectedPoint.id != -1 && m_SelectedObject.HasComponent<LineRenderer>())
 		{
-			m_SelectedObject.GetComponent<LineRenderer>().ResetControlPointVisual(m_SelectedPoint.id);
+			auto& lineRenderer = m_SelectedObject.GetComponent<LineRenderer>();
+			lineRenderer.ResetControlPointVisual(m_SelectedPoint.id);
+			lineRenderer.ClearSelectedControlPoint();
 		}
 
 		m_SelectedPoint = {};

@@ -1,4 +1,6 @@
 #pragma once
+#include <algorithm>
+#include <vector>
 #include <glm/glm.hpp>
 #include "render/Buffer.h"
 #include "render/VertexArray.h"
@@ -47,7 +49,7 @@ namespace Kita {
 
 		void SetControlPointColorByIndex(const glm::vec4& color, const int index);
 
-		void SetCurveType(CurveType type) { m_CurveType = type; m_Dirty = true; }
+		void SetCurveType(CurveType type) { m_CurveType = type; m_Dirty = true; m_HelperDirty = true; }
 		CurveType GetCurveType() const { return m_CurveType; }
 
 		void SetLineWidth(float width) { m_LineWidth = std::max(1.0f, width); }
@@ -78,15 +80,26 @@ namespace Kita {
 		uint32_t GetCurveVertexCount() const { return m_CurveVertexCount; }
 
 		void RebuildIfNeeded();
-		void MarkDirty() { m_Dirty = true; }
+		void MarkDirty() { m_Dirty = true; m_HelperDirty = true; }
 
 		void MoveControlPoint(int index, const glm::vec3& newPosition);
+		void SetSelectedControlPoint(int index);
+		void ClearSelectedControlPoint();
+		int GetSelectedControlPoint() const { return m_SelectedControlPointIndex; }
+		int GetSelectedAnchorIndex() const { return m_SelectedAnchorIndex; }
+		void RenderEditorHelpers(const glm::mat4& model, uint32_t objectId);
 
 	private:
 		glm::vec3 EvaluateBezierCubic(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, float t);
 		void BuildBezierCubic();
 		void InitBuffer();
 		void ReCreateBuffer(const uint32_t size);
+		void InitEditorHelperBuffers();
+		void ReCreateHelperLineBuffer(uint32_t vertexCount);
+		void ReCreateHandlePointBuffer(uint32_t pointCount);
+		void RebuildEditorHelpersIfNeeded();
+		void BuildSelectedHelperGeometry();
+		void ValidateSelectedControlPoint();
 
 		bool IsAnchorPoint(int index) const;
 		void MoveAnchorWithHandles(int anchorIndex, const glm::vec3& delta);
@@ -97,15 +110,30 @@ namespace Kita {
 
 
 	private:
+		struct EditorHandlePointData
+		{
+			glm::vec3 position;
+			glm::vec4 color;
+			float radius;
+			int index;
+		};
 
 		std::vector<PointData> m_ControlPoints;
 		std::vector<glm::vec3> m_CurveVertices;
+		std::vector<glm::vec3> m_HelperLineVertices;
+		std::vector<EditorHandlePointData> m_HandlePointVertices;
 
 		CurveType m_CurveType = CurveType::BezierCubic;
 
 		Ref<VertexArray> m_Curve_VAO = nullptr;
 		Ref<VertexBuffer> m_Curve_VBO = nullptr;
 		BufferLayout m_CurveVertexLayout;
+		Ref<VertexArray> m_HelperLineVAO = nullptr;
+		Ref<VertexBuffer> m_HelperLineVBO = nullptr;
+		BufferLayout m_HelperLineLayout;
+		Ref<VertexArray> m_HandlePointVAO = nullptr;
+		Ref<VertexBuffer> m_HandlePointVBO = nullptr;
+		BufferLayout m_HandlePointLayout;
 
 		int m_SegmentCountPerBezier = 128;
 		float m_LineWidth = 1.0f;
@@ -113,8 +141,13 @@ namespace Kita {
 		std::vector<BezierHandleMode> m_HandleModes;
 
 		bool m_Dirty = true;
+		bool m_HelperDirty = true;
 
 		uint32_t m_CurveVertexCapacity = 0;
 		uint32_t m_CurveVertexCount = 0;
+		uint32_t m_HelperLineCapacity = 0;
+		uint32_t m_HandlePointCapacityBytes = 0;
+		int m_SelectedControlPointIndex = -1;
+		int m_SelectedAnchorIndex = -1;
 	};
 }

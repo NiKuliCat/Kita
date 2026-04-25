@@ -15,8 +15,8 @@ namespace  Kita{
 		float MajorWidthPx = 0.50f;
 		float AxisWidthPx = 0.65f;
 
-		float FadeStart = 20.0f;
-		float FadeEnd = 75.0f;
+		float FadeStart = 30.0f;
+		float FadeEnd = 100.0f;
 
 		glm::vec4 MinorColor = glm::vec4(0.73f, 0.75f, 0.78f, 0.55f);
 		glm::vec4 MajorColor = glm::vec4(0.86f, 0.88f, 0.89f, 0.85f);
