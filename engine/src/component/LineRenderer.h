@@ -10,6 +10,13 @@ namespace Kita {
 		BezierCubic
 	};
 
+	enum class BezierHandleMode
+	{
+		Free = 0,
+		Aligned,
+		Mirrored
+	};
+
 	struct PointData
 	{
 		glm::vec3 position;
@@ -49,6 +56,23 @@ namespace Kita {
 		void SetLineColor(const glm::vec4& color) { m_LineColor = color; }
 		const glm::vec4& GetLineColor() const { return m_LineColor; }
 		uint32_t GetControlPointCount() const { return static_cast<uint32_t>(m_ControlPoints.size()); }
+		uint32_t GetBezierSegmentCount() const;
+
+		bool IsAnchorControlPoint(int index) const;
+		int GetAnchorIndexForControlPoint(int index) const;
+		int GetLeftHandleIndexForAnchor(int anchorIndex) const;
+		int GetRightHandleIndexForAnchor(int anchorIndex) const;
+
+		BezierHandleMode GetHandleModeForPoint(int index) const;
+		void SetHandleModeForPoint(int index, BezierHandleMode mode);
+
+		void AppendBezierSegment();
+		void RemoveLastBezierSegment();
+
+		glm::vec4 GetDefaultControlPointColor(int index) const;
+		float GetControlPointRadius(int index) const;
+		void ResetControlPointVisual(int index);
+		void ResetAllControlPointVisuals();
 
 		const Ref<VertexArray>& GetCurveVAO() const { return m_Curve_VAO; }
 		uint32_t GetCurveVertexCount() const { return m_CurveVertexCount; }
@@ -66,7 +90,10 @@ namespace Kita {
 
 		bool IsAnchorPoint(int index) const;
 		void MoveAnchorWithHandles(int anchorIndex, const glm::vec3& delta);
-		void MirrorOppositeHandle(int movedHandleIndex);
+		void ApplyHandleMode(int movedHandleIndex);
+		void ResizeHandleModesToMatchAnchors();
+		BezierHandleMode GetHandleModeForAnchor(int anchorIndex) const;
+		void SetHandleModeForAnchor(int anchorIndex, BezierHandleMode mode);
 
 
 	private:
@@ -83,6 +110,7 @@ namespace Kita {
 		int m_SegmentCountPerBezier = 128;
 		float m_LineWidth = 1.0f;
 		glm::vec4 m_LineColor = glm::vec4(1.0f);
+		std::vector<BezierHandleMode> m_HandleModes;
 
 		bool m_Dirty = true;
 

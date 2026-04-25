@@ -107,10 +107,13 @@ namespace Kita {
 
 			for (auto point : points)
 			{
+				if (!lineRenderer.IsAnchorControlPoint(point.id))
+					continue;
+
 				auto gizmoPoint = GizmoPointUBOData{};
 				gizmoPoint.position = point.position;
 				gizmoPoint.color = point.color;
-				gizmoPoint.radius = 6.0f;
+				gizmoPoint.radius = lineRenderer.GetControlPointRadius(point.id);
 				gizmoPoint.index = point.id;
 				gizmoPoints.push_back(gizmoPoint);
 			}

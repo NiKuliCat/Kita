@@ -53,7 +53,7 @@ namespace Kita {
 	{
 		if (m_SelectedObject && m_SelectedPoint.id != -1 && m_SelectedObject.HasComponent<LineRenderer>())
 		{
-			m_SelectedObject.GetComponent<LineRenderer>().SetControlPointColorByIndex({ 1,1,1,1 }, m_SelectedPoint.id);
+			m_SelectedObject.GetComponent<LineRenderer>().ResetControlPointVisual(m_SelectedPoint.id);
 		}
 
 		m_SelectedPoint = {};
@@ -474,6 +474,60 @@ namespace Kita {
 			separatorThickness);
 	}
 
+	static void DrawInspectorHandleModeRow(
+		const char* label,
+		BezierHandleMode& handleMode,
+		const ImVec2& tableStartPos,
+		float inspectorLabelColumnWidth,
+		bool& isHightLight)
+	{
+		ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
+		const ImU32 bgColor = isHightLight ? tableBgColor_Light : tableBgColor_Dark;
+		ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, bgColor);
+		isHightLight = !isHightLight;
+
+		const float textHeight = ImGui::GetTextLineHeight();
+		const float contentHeight = rowHeight - ImGui::GetStyle().CellPadding.y * 2.0f;
+		const float labelYOffset = ImMax(0.0f, (contentHeight - textHeight) * 0.5f);
+
+		ImGui::TableSetColumnIndex(0);
+		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + labelYOffset);
+		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + textPaddingX);
+		ImGui::TextUnformatted(label);
+
+		ImGui::TableSetColumnIndex(1);
+		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 2.0f);
+		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + textPaddingX);
+
+		const char* items[] = { "Free", "Aligned", "Mirrored" };
+		int currentIndex = static_cast<int>(handleMode);
+
+		ImGui::PushID(label);
+		ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.07f, 0.09f, 0.12f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.10f, 0.12f, 0.16f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.12f, 0.15f, 0.20f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.20f, 0.24f, 0.30f, 1.0f));
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - textPaddingX);
+		if (ImGui::Combo("##HandleMode", &currentIndex, items, IM_ARRAYSIZE(items)))
+		{
+			handleMode = static_cast<BezierHandleMode>(currentIndex);
+		}
+		ImGui::PopStyleVar(2);
+		ImGui::PopStyleColor(4);
+		ImGui::PopID();
+
+		const ImVec2 tableMin = ImGui::GetItemRectMin();
+		const ImVec2 tableMax = ImGui::GetItemRectMax();
+		const float separatorX = tableStartPos.x + inspectorLabelColumnWidth;
+		ImGui::GetWindowDrawList()->AddLine(
+			ImVec2(separatorX, tableMin.y - 3.0f),
+			ImVec2(separatorX, tableMax.y + 3.0f),
+			separatorColor,
+			separatorThickness);
+	}
+
 	static const char* ObjectTypeToString(Type type)
 	{
 		switch (type)
@@ -581,7 +635,41 @@ namespace Kita {
 						inspectorLabelColumn_LeftWidth,
 						isHightLight);
 
+					DrawInspectorInfoRow(
+						"Segment Count",
+						std::to_string(lineRenderer.GetBezierSegmentCount()),
+						tableStartPos,
+						inspectorLabelColumn_LeftWidth,
+						isHightLight);
+
+					if (m_SelectedPoint.id != -1)
+					{
+						BezierHandleMode handleMode = lineRenderer.GetHandleModeForPoint(m_SelectedPoint.id);
+						DrawInspectorHandleModeRow("Handle Mode", handleMode, tableStartPos, inspectorLabelColumn_LeftWidth, isHightLight);
+						if (handleMode != lineRenderer.GetHandleModeForPoint(m_SelectedPoint.id))
+						{
+							lineRenderer.SetHandleModeForPoint(m_SelectedPoint.id, handleMode);
+						}
+					}
+
 					ImGui::EndTable();
+				}
+
+				if (lineRenderer.GetCurveType() == CurveType::BezierCubic)
+				{
+					if (ImGui::Button("Add Segment"))
+					{
+						lineRenderer.AppendBezierSegment();
+					}
+					ImGui::SameLine();
+					if (ImGui::Button("Remove Segment"))
+					{
+						lineRenderer.RemoveLastBezierSegment();
+						if (m_SelectedPoint.id >= static_cast<int>(lineRenderer.GetControlPointCount()))
+						{
+							m_SelectedPoint = {};
+						}
+					}
 				}
 
 				const ImGuiTreeNodeFlags childNodeFlags =
@@ -613,7 +701,19 @@ namespace Kita {
 						{
 							auto currentPoint = lineRenderer.GetControlPointByIndex(static_cast<int>(i));
 							glm::vec3 pointPosition = currentPoint.position;
-							const std::string pointLabel = "Point " + std::to_string(i);
+							std::string pointLabel;
+							if (lineRenderer.IsAnchorControlPoint(static_cast<int>(i)))
+							{
+								pointLabel = "Anchor " + std::to_string(i / 3);
+							}
+							else if (static_cast<int>(i) % 3 == 1)
+							{
+								pointLabel = "Out Handle " + std::to_string(i / 3);
+							}
+							else
+							{
+								pointLabel = "In Handle " + std::to_string((i + 1) / 3);
+							}
 							DrawInspectorVec3Row(
 								pointLabel.c_str(),
 								pointPosition,

@@ -25,6 +25,10 @@ namespace Kita {
 		bool OnMouseButtonPressed(MouseButtonPressedEvent& event);
 
 		void TryPickObject();
+		void DrawSelectedBezierHelpers();
+		void EnsureHelperLineBuffer(uint32_t vertexCount);
+		void DrawSelectedBezierHandles();
+		void EnsureHandlePointBuffer(uint32_t pointCount);
 
 	
 	private:
@@ -48,6 +52,14 @@ namespace Kita {
 		//ui
 		SceneHierarchyPanel m_SceneHierarchyPanel;
 		int32_t m_GizmoControlType = -1;
+		Ref<VertexArray> m_HelperLineVAO = nullptr;
+		Ref<VertexBuffer> m_HelperLineVBO = nullptr;
+		BufferLayout m_HelperLineLayout;
+		uint32_t m_HelperLineCapacity = 0;
+		Ref<VertexArray> m_HandlePointVAO = nullptr;
+		Ref<VertexBuffer> m_HandlePointVBO = nullptr;
+		BufferLayout m_HandlePointLayout;
+		uint32_t m_HandlePointCapacityBytes = 0;
 
 	};
 }

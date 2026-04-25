@@ -25,6 +25,7 @@ namespace Kita {
 		shaderLibrary.Load("assets/shaders/EditorGridShader.glsl");
 		shaderLibrary.Load("assets/shaders/DefaultSkyBox.glsl");
 		shaderLibrary.Load("assets/shaders/GizmoPoint.glsl");
+		shaderLibrary.Load("assets/shaders/GizmoDiamond.glsl");
 	}
 
 	void Renderer::ShutDown()

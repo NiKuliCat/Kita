@@ -109,6 +109,8 @@ namespace Kita {
 		m_FrameBuffer->ClearIDBuffer(-1,2);
 
 		m_Scene->OnUpdate(daltaTime);
+		DrawSelectedBezierHelpers();
+		DrawSelectedBezierHandles();
 
 
 
@@ -412,6 +414,147 @@ namespace Kita {
 		return false;
 	}
 
+	void EditorLayer::DrawSelectedBezierHelpers()
+	{
+		auto& selectedObj = m_SceneHierarchyPanel.GetSelectedObject();
+		auto& selectedPoint = m_SceneHierarchyPanel.GetSelectedPoint();
+		if (!selectedObj || !selectedObj.HasComponent<LineRenderer>() || selectedPoint.id == -1)
+			return;
+
+		auto& lineRenderer = selectedObj.GetComponent<LineRenderer>();
+		if (lineRenderer.GetCurveType() != CurveType::BezierCubic)
+			return;
+
+		const int anchorIndex = lineRenderer.GetAnchorIndexForControlPoint(selectedPoint.id);
+		if (anchorIndex == -1)
+			return;
+
+		std::vector<glm::vec3> helperVertices;
+		helperVertices.reserve(4);
+
+		const auto& anchor = lineRenderer.GetControlPointByIndex(anchorIndex);
+		const int leftHandle = lineRenderer.GetLeftHandleIndexForAnchor(anchorIndex);
+		const int rightHandle = lineRenderer.GetRightHandleIndexForAnchor(anchorIndex);
+
+		if (leftHandle != -1)
+		{
+			helperVertices.push_back(anchor.position);
+			helperVertices.push_back(lineRenderer.GetControlPointByIndex(leftHandle).position);
+		}
+
+		if (rightHandle != -1)
+		{
+			helperVertices.push_back(anchor.position);
+			helperVertices.push_back(lineRenderer.GetControlPointByIndex(rightHandle).position);
+		}
+
+		if (helperVertices.empty())
+			return;
+
+		EnsureHelperLineBuffer(static_cast<uint32_t>(helperVertices.size()));
+		auto lineShader = ShaderLibrary::GetInstance().Get("EditorLineShader");
+		lineShader->SetMat4("Model", selectedObj.GetComponent<Transform>().GetTransformMatrix());
+		lineShader->SetInt("id", static_cast<uint32_t>(selectedObj));
+		lineShader->SetColor("Color", glm::vec4(0.95f, 0.95f, 0.95f, 0.45f));
+
+		for (uint32_t i = 0; i + 1 < static_cast<uint32_t>(helperVertices.size()); i += 2)
+		{
+			m_HelperLineVBO->SetData(helperVertices.data() + i, static_cast<uint32_t>(2 * sizeof(glm::vec3)), 0);
+			Renderer::SubmitAsLine(m_HelperLineVAO, lineShader, 2, 1.5f);
+		}
+	}
+
+	void EditorLayer::EnsureHelperLineBuffer(uint32_t vertexCount)
+	{
+		const uint32_t requiredCount = std::max(2u, vertexCount);
+		if (m_HelperLineVAO && m_HelperLineVBO && requiredCount <= m_HelperLineCapacity)
+			return;
+
+		m_HelperLineCapacity = requiredCount;
+		m_HelperLineLayout = { { ShaderDataType::Float3, "PositionOS" } };
+
+		m_HelperLineVAO = VertexArray::Create();
+		m_HelperLineVBO = VertexBuffer::Create(m_HelperLineCapacity * static_cast<uint32_t>(sizeof(glm::vec3)));
+		m_HelperLineVBO->SetLayout(m_HelperLineLayout);
+		m_HelperLineVAO->AddVertexBuffer(m_HelperLineVBO);
+	}
+
+	void EditorLayer::DrawSelectedBezierHandles()
+	{
+		auto& selectedObj = m_SceneHierarchyPanel.GetSelectedObject();
+		auto& selectedPoint = m_SceneHierarchyPanel.GetSelectedPoint();
+		if (!selectedObj || !selectedObj.HasComponent<LineRenderer>() || selectedPoint.id == -1)
+			return;
+
+		auto& lineRenderer = selectedObj.GetComponent<LineRenderer>();
+		if (lineRenderer.GetCurveType() != CurveType::BezierCubic)
+			return;
+
+		const int anchorIndex = lineRenderer.GetAnchorIndexForControlPoint(selectedPoint.id);
+		if (anchorIndex == -1)
+			return;
+
+		std::vector<GizmoPointUBOData> handlePoints;
+		handlePoints.reserve(2);
+
+		const int leftHandle = lineRenderer.GetLeftHandleIndexForAnchor(anchorIndex);
+		const int rightHandle = lineRenderer.GetRightHandleIndexForAnchor(anchorIndex);
+
+		if (leftHandle != -1)
+		{
+			GizmoPointUBOData point{};
+			point.position = lineRenderer.GetControlPointByIndex(leftHandle).position;
+			point.color = lineRenderer.GetControlPointByIndex(leftHandle).color;
+			point.radius = lineRenderer.GetControlPointRadius(leftHandle);
+			point.index = leftHandle;
+			handlePoints.push_back(point);
+		}
+
+		if (rightHandle != -1)
+		{
+			GizmoPointUBOData point{};
+			point.position = lineRenderer.GetControlPointByIndex(rightHandle).position;
+			point.color = lineRenderer.GetControlPointByIndex(rightHandle).color;
+			point.radius = lineRenderer.GetControlPointRadius(rightHandle);
+			point.index = rightHandle;
+			handlePoints.push_back(point);
+		}
+
+		if (handlePoints.empty())
+			return;
+
+		EnsureHandlePointBuffer(static_cast<uint32_t>(handlePoints.size()));
+		m_HandlePointVBO->SetData(
+			handlePoints.data(),
+			static_cast<uint32_t>(handlePoints.size() * sizeof(GizmoPointUBOData)),
+			0);
+
+		auto shader = ShaderLibrary::GetInstance().Get("GizmoDiamond");
+		shader->SetMat4("Matrix_M", selectedObj.GetComponent<Transform>().GetTransformMatrix());
+		shader->SetInt("id", static_cast<uint32_t>(selectedObj));
+		Renderer::DrawGizmoPoints(m_HandlePointVAO, shader, static_cast<uint32_t>(handlePoints.size()));
+	}
+
+	void EditorLayer::EnsureHandlePointBuffer(uint32_t pointCount)
+	{
+		const uint32_t requiredBytes = std::max(1u, pointCount) * static_cast<uint32_t>(sizeof(GizmoPointUBOData));
+		if (m_HandlePointVAO && m_HandlePointVBO && requiredBytes <= m_HandlePointCapacityBytes)
+			return;
+
+		m_HandlePointCapacityBytes = std::max(requiredBytes, 1024u);
+		m_HandlePointLayout = {
+			{ ShaderDataType::Float3, "position" },
+			{ ShaderDataType::Float4, "color" },
+			{ ShaderDataType::Float, "radius" },
+			{ ShaderDataType::Int, "index" }
+		};
+
+		m_HandlePointVAO = VertexArray::Create();
+		m_HandlePointVBO = VertexBuffer::Create(m_HandlePointCapacityBytes);
+		m_HandlePointVBO->SetLayout(m_HandlePointLayout);
+		m_HandlePointVAO->AddVertexBuffer(m_HandlePointVBO);
+	}
+
 	void EditorLayer::TryPickObject()
 	{
 		if (Input::IsKeyPressed(Key::LeftAlt))
@@ -457,10 +600,15 @@ namespace Kita {
 			Object selectedObject = Object{ (entt::entity)pixel_id,m_Scene.get() };
 			if (selectedObject.HasComponent<LineRenderer>())
 			{
+				auto& lineRenderer = selectedObject.GetComponent<LineRenderer>();
 				m_SceneHierarchyPanel.ClearSelectedPoint();
 				m_SceneHierarchyPanel.SetSelectedObject(selectedObject);
-				m_SceneHierarchyPanel.SetSelectedPoint(selectedObject.GetComponent<LineRenderer>().GetControlPointByIndex(pixel_index));
-				selectedObject.GetComponent<LineRenderer>().SetControlPointColorByIndex({ 0.8,0.85,0.2,1.0 }, pixel_index);
+				m_SceneHierarchyPanel.SetSelectedPoint(lineRenderer.GetControlPointByIndex(pixel_index));
+
+				const glm::vec4 highlightColor = lineRenderer.IsAnchorControlPoint(pixel_index)
+					? glm::vec4(0.95f, 0.90f, 0.22f, 1.0f)
+					: glm::vec4(0.55f, 0.85f, 1.0f, 1.0f);
+				lineRenderer.SetControlPointColorByIndex(highlightColor, pixel_index);
 			}
 			
 		}
