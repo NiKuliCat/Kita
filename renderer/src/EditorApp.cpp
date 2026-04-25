@@ -19,9 +19,9 @@ namespace Kita {
 	Application* CreateApplication(int argc, char** argv)
 	{
 		ApplicationDescriptor createDescription;
-		createDescription.name = "Kita Renderer";
-		createDescription.width = 1280;
-		createDescription.height = 720;
+		createDescription.name = "Kita Engine";
+		createDescription.width = 1920;
+		createDescription.height = 1080;
 		return new EditorApp(createDescription);
 	}
 

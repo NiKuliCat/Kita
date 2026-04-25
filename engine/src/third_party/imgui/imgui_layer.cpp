@@ -9,6 +9,7 @@
 #include <backends/imgui_impl_opengl3.h>
 #include "core/Application.h"
 #include "core/Log.h"
+#include "render/font/FontManager.h"
 namespace Kita {
 	ImGuiLayer::ImGuiLayer()
 		:Layer("ImGui Layer")
@@ -36,10 +37,6 @@ namespace Kita {
 		style.FramePadding.y = 2.0f; //title栏高度
 		style.WindowBorderSize = 3.0f;
 		style.TabBarBorderSize = 0.0f;
-		ImFont* mainFont = io.Fonts->AddFontFromFileTTF("assets/fonts/Poppins/Poppins-Regular.ttf", 20.0f, nullptr );
-		KITA_CORE_ASSERT(mainFont, "Failed to load ImGui font!");
-		io.FontDefault = mainFont;
-
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 		{
 			style.WindowRounding = 0.0f;
@@ -47,12 +44,16 @@ namespace Kita {
 		}
 
 		auto window = (GLFWwindow*)Application::Get().GetWindow()->GetNativeWindow();
+		FontManager::Init();
+		FontManager::RegisterImGuiFont({ "Default", "assets/fonts/Poppins/Poppins-Regular.ttf", 20.0f, 2, 2, true });
 		ImGui_ImplGlfw_InitForOpenGL(window, true);
 		ImGui_ImplOpenGL3_Init("#version 410");
+		FontManager::BuildImGuiFonts(window);
 
 	}
 	void ImGuiLayer::OnDestroy()
 	{
+		FontManager::Shutdown();
 		ImGui_ImplOpenGL3_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
 		ImGui::DestroyContext();
@@ -106,6 +107,8 @@ namespace Kita {
 
 	void ImGuiLayer::Begin()
 	{
+		auto window = (GLFWwindow*)Application::Get().GetWindow()->GetNativeWindow();
+		FontManager::RebuildImGuiFontsIfNeeded(window);
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();

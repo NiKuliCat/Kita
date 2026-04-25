@@ -156,8 +156,8 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="src\component\LineRenderer.h" />
     <ClInclude Include="src\Engine.h" />
+    <ClInclude Include="src\component\LineRenderer.h" />
     <ClInclude Include="src\component\MeshRenderer.h" />
     <ClInclude Include="src\component\Object.h" />
     <ClInclude Include="src\component\Scene.h" />
@@ -194,14 +194,15 @@
     <ClInclude Include="src\render\RenderCommand.h" />
     <ClInclude Include="src\render\Renderer.h" />
     <ClInclude Include="src\render\RendererAPI.h" />
-    <ClInclude Include="src\render\scene\Gizmo.h" />
     <ClInclude Include="src\render\Shader.h" />
     <ClInclude Include="src\render\ShaderLibrary.h" />
     <ClInclude Include="src\render\Texture.h" />
     <ClInclude Include="src\render\UniformBuffer.h" />
     <ClInclude Include="src\render\VertexArray.h" />
+    <ClInclude Include="src\render\font\FontManager.h" />
     <ClInclude Include="src\render\mesh\Mesh.h" />
     <ClInclude Include="src\render\scene\Camera.h" />
+    <ClInclude Include="src\render\scene\Gizmo.h" />
     <ClInclude Include="src\render\scene\OrthographicCamera.h" />
     <ClInclude Include="src\render\scene\PerspectiveCamera.h" />
     <ClInclude Include="src\third_party\imgui\imgui_layer.h" />
@@ -658,13 +659,14 @@
     <ClCompile Include="src\render\RenderCommand.cpp" />
     <ClCompile Include="src\render\Renderer.cpp" />
     <ClCompile Include="src\render\RendererAPI.cpp" />
-    <ClCompile Include="src\render\scene\Gizmo.cpp" />
     <ClCompile Include="src\render\Shader.cpp" />
     <ClCompile Include="src\render\ShaderLibrary.cpp" />
     <ClCompile Include="src\render\Texture.cpp" />
     <ClCompile Include="src\render\UniformBuffer.cpp" />
     <ClCompile Include="src\render\VertexArray.cpp" />
+    <ClCompile Include="src\render\font\FontManager.cpp" />
     <ClCompile Include="src\render\mesh\Mesh.cpp" />
+    <ClCompile Include="src\render\scene\Gizmo.cpp" />
     <ClCompile Include="src\render\scene\OrthographicCamera.cpp" />
     <ClCompile Include="src\render\scene\PerspectiveCamera.cpp" />
     <ClCompile Include="src\third_party\imgui\imgui_build.cpp" />

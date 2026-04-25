@@ -25,6 +25,9 @@
     <Filter Include="src\render">
       <UniqueIdentifier>{1CA98B76-0861-CDC3-7168-A61F5D3F68B4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\render\font">
+      <UniqueIdentifier>{C20F1AC2-2E9B-8786-37AC-0A7BA3B6E386}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\render\mesh">
       <UniqueIdentifier>{78BC1DC2-E447-8B86-ED58-0E7B5963E786}</UniqueIdentifier>
     </Filter>
@@ -68,6 +71,9 @@
   <ItemGroup>
     <ClInclude Include="src\Engine.h">
       <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\component\LineRenderer.h">
+      <Filter>src\component</Filter>
     </ClInclude>
     <ClInclude Include="src\component\MeshRenderer.h">
       <Filter>src\component</Filter>
@@ -192,10 +198,16 @@
     <ClInclude Include="src\render\VertexArray.h">
       <Filter>src\render</Filter>
     </ClInclude>
+    <ClInclude Include="src\render\font\FontManager.h">
+      <Filter>src\render\font</Filter>
+    </ClInclude>
     <ClInclude Include="src\render\mesh\Mesh.h">
       <Filter>src\render\mesh</Filter>
     </ClInclude>
     <ClInclude Include="src\render\scene\Camera.h">
+      <Filter>src\render\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\scene\Gizmo.h">
       <Filter>src\render\scene</Filter>
     </ClInclude>
     <ClInclude Include="src\render\scene\OrthographicCamera.h">
@@ -1470,10 +1482,11 @@
     <ClInclude Include="third-party\imguizmo\ImGuizmo.h">
       <Filter>third-party\imguizmo</Filter>
     </ClInclude>
-    <ClInclude Include="src\render\scene\Gizmo.h" />
-    <ClInclude Include="src\component\LineRenderer.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\component\LineRenderer.cpp">
+      <Filter>src\component</Filter>
+    </ClCompile>
     <ClCompile Include="src\component\MeshRenderer.cpp">
       <Filter>src\component</Filter>
     </ClCompile>
@@ -1570,8 +1583,14 @@
     <ClCompile Include="src\render\VertexArray.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
+    <ClCompile Include="src\render\font\FontManager.cpp">
+      <Filter>src\render\font</Filter>
+    </ClCompile>
     <ClCompile Include="src\render\mesh\Mesh.cpp">
       <Filter>src\render\mesh</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\scene\Gizmo.cpp">
+      <Filter>src\render\scene</Filter>
     </ClCompile>
     <ClCompile Include="src\render\scene\OrthographicCamera.cpp">
       <Filter>src\render\scene</Filter>
@@ -1591,7 +1610,5 @@
     <ClCompile Include="third-party\imguizmo\ImGuizmo.cpp">
       <Filter>third-party\imguizmo</Filter>
     </ClCompile>
-    <ClCompile Include="src\render\scene\Gizmo.cpp" />
-    <ClCompile Include="src\component\LineRenderer.cpp" />
   </ItemGroup>
 </Project>
