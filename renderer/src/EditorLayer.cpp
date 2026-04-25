@@ -429,38 +429,52 @@ namespace Kita {
 		if (anchorIndex == -1)
 			return;
 
-		std::vector<glm::vec3> helperVertices;
-		helperVertices.reserve(4);
-
 		const auto& anchor = lineRenderer.GetControlPointByIndex(anchorIndex);
 		const int leftHandle = lineRenderer.GetLeftHandleIndexForAnchor(anchorIndex);
 		const int rightHandle = lineRenderer.GetRightHandleIndexForAnchor(anchorIndex);
+		auto lineShader = ShaderLibrary::GetInstance().Get("EditorLineShader");
+		lineShader->SetMat4("Model", selectedObj.GetComponent<Transform>().GetTransformMatrix());
+		lineShader->SetInt("id", static_cast<uint32_t>(selectedObj));
+		lineShader->SetColor("Color", glm::vec4(0.92f, 0.94f, 0.98f, 0.28f));
+
+		EnsureHelperLineBuffer(2);
+
+		const auto drawDashedSegment = [&](const glm::vec3& start, const glm::vec3& end)
+		{
+			const glm::vec3 direction = end - start;
+			const float length = glm::length(direction);
+			if (length < 0.0001f)
+				return;
+
+			const glm::vec3 normalized = direction / length;
+			const float dashLength = 0.24f;
+			const float gapLength = 0.14f;
+
+			float traveled = 0.0f;
+			while (traveled < length)
+			{
+				const float dashStart = traveled;
+				const float dashEnd = std::min(traveled + dashLength, length);
+				glm::vec3 dashVertices[2] = {
+					start + normalized * dashStart,
+					start + normalized * dashEnd
+				};
+
+				m_HelperLineVBO->SetData(dashVertices, static_cast<uint32_t>(sizeof(dashVertices)), 0);
+				Renderer::SubmitAsLine(m_HelperLineVAO, lineShader, 2, 1.5f);
+
+				traveled += dashLength + gapLength;
+			}
+		};
 
 		if (leftHandle != -1)
 		{
-			helperVertices.push_back(anchor.position);
-			helperVertices.push_back(lineRenderer.GetControlPointByIndex(leftHandle).position);
+			drawDashedSegment(anchor.position, lineRenderer.GetControlPointByIndex(leftHandle).position);
 		}
 
 		if (rightHandle != -1)
 		{
-			helperVertices.push_back(anchor.position);
-			helperVertices.push_back(lineRenderer.GetControlPointByIndex(rightHandle).position);
-		}
-
-		if (helperVertices.empty())
-			return;
-
-		EnsureHelperLineBuffer(static_cast<uint32_t>(helperVertices.size()));
-		auto lineShader = ShaderLibrary::GetInstance().Get("EditorLineShader");
-		lineShader->SetMat4("Model", selectedObj.GetComponent<Transform>().GetTransformMatrix());
-		lineShader->SetInt("id", static_cast<uint32_t>(selectedObj));
-		lineShader->SetColor("Color", glm::vec4(0.95f, 0.95f, 0.95f, 0.45f));
-
-		for (uint32_t i = 0; i + 1 < static_cast<uint32_t>(helperVertices.size()); i += 2)
-		{
-			m_HelperLineVBO->SetData(helperVertices.data() + i, static_cast<uint32_t>(2 * sizeof(glm::vec3)), 0);
-			Renderer::SubmitAsLine(m_HelperLineVAO, lineShader, 2, 1.5f);
+			drawDashedSegment(anchor.position, lineRenderer.GetControlPointByIndex(rightHandle).position);
 		}
 	}
 
@@ -505,7 +519,7 @@ namespace Kita {
 			GizmoPointUBOData point{};
 			point.position = lineRenderer.GetControlPointByIndex(leftHandle).position;
 			point.color = lineRenderer.GetControlPointByIndex(leftHandle).color;
-			point.radius = lineRenderer.GetControlPointRadius(leftHandle);
+			point.radius = lineRenderer.GetControlPointRadius(leftHandle) + 2.0f;
 			point.index = leftHandle;
 			handlePoints.push_back(point);
 		}
@@ -515,7 +529,7 @@ namespace Kita {
 			GizmoPointUBOData point{};
 			point.position = lineRenderer.GetControlPointByIndex(rightHandle).position;
 			point.color = lineRenderer.GetControlPointByIndex(rightHandle).color;
-			point.radius = lineRenderer.GetControlPointRadius(rightHandle);
+			point.radius = lineRenderer.GetControlPointRadius(rightHandle) + 2.0f;
 			point.index = rightHandle;
 			handlePoints.push_back(point);
 		}
