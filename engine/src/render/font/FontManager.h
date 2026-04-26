@@ -7,6 +7,11 @@ struct GLFWwindow;
 
 namespace Kita {
 
+
+	#define ICON_FON_CANCEL u8"\ue800"
+	#define ICON_FON_DOWN u8"\ue801"
+	#define ICON_FON_RIGHT_OPEN   u8"\ue802"
+
 	struct ImGuiFontStyle
 	{
 		std::string Name;
@@ -15,6 +20,10 @@ namespace Kita {
 		int OversampleH = 2;
 		int OversampleV = 2;
 		bool PixelSnapH = true;
+
+		// new
+		bool MergeIntoPrevious = false;
+		std::vector<ImWchar> GlyphRanges = {};
 	};
 
 	class FontManager

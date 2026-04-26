@@ -37,6 +37,10 @@ namespace Kita {
 		style.FramePadding.y = 2.0f; //title栏高度
 		style.WindowBorderSize = 3.0f;
 		style.TabBarBorderSize = 0.0f;
+
+		style.TabRounding = 8.0f;
+		style.ChildRounding = 6.0f;
+		style.FrameRounding = 4.0f;
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
 		{
 			style.WindowRounding = 0.0f;
@@ -46,6 +50,8 @@ namespace Kita {
 		auto window = (GLFWwindow*)Application::Get().GetWindow()->GetNativeWindow();
 		FontManager::Init();
 		FontManager::RegisterImGuiFont({ "Default", "assets/fonts/Poppins/Poppins-Regular.ttf", 20.0f, 2, 2, true });
+		FontManager::RegisterImGuiFont({ "FontelloIcons", "assets/icons/fontello-d1c2b3c5/font/fontello.ttf",20.0f,1,1,true,true,{0xe800, 0xe802, 0}});
+
 		ImGui_ImplGlfw_InitForOpenGL(window, true);
 		ImGui_ImplOpenGL3_Init("#version 410");
 		FontManager::BuildImGuiFonts(window);
@@ -102,7 +108,7 @@ namespace Kita {
 
 
 		//docking
-		colors[ImGuiCol_Border] = ImVec4{ 0.055f,0.056f,0.060f,1.0f };
+		colors[ImGuiCol_Border] = ImVec4{ 0.115f,0.116f,0.123f,1.0f };
 	}
 
 	void ImGuiLayer::Begin()

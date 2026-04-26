@@ -28,6 +28,8 @@
 #include "render/Renderer.h"
 #include "render/scene/Gizmo.h"
 
+#include "render/font/FontManager.h"
+
 #include "component/Scene.h"
 #include "component/Object.h"
 #include "component/TagComponent.h"

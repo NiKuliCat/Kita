@@ -2,12 +2,60 @@
 #include "SceneViewportPanel.h"
 #include "imgui.h"
 #include "ImGuizmo.h"
+#include "render/font/FontManager.h"
 #include <imgui_internal.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 namespace Kita {
+
+	namespace
+	{
+		bool DrawViewportCloseButton(const ImRect& anchorRect, ImGuiID id)
+		{
+			ImGuiContext& g = *GImGui;
+			ImGuiStyle& style = ImGui::GetStyle();
+			ImDrawList* drawList = ImGui::GetForegroundDrawList();
+			const float buttonSize = g.FontSize;
+			const ImVec2 buttonMin(
+				anchorRect.Max.x - style.FramePadding.x - buttonSize,
+				anchorRect.Min.y + (anchorRect.GetHeight() - buttonSize) * 0.5f);
+			const ImVec2 buttonMax(buttonMin.x + buttonSize, buttonMin.y + buttonSize);
+			const ImRect buttonRect(buttonMin, buttonMax);
+			const bool hovered = ImGui::IsMouseHoveringRect(buttonRect.Min, buttonRect.Max, false);
+			const bool pressed = hovered && ImGui::IsMouseClicked(ImGuiMouseButton_Left);
+
+			if (hovered)
+				drawList->AddRectFilled(buttonRect.Min, buttonRect.Max, ImGui::GetColorU32(ImGuiCol_ButtonHovered));
+
+			const ImU32 iconColor = ImGui::GetColorU32(ImGuiCol_Text);
+			unsigned int iconCodepoint = 0;
+			ImTextCharFromUtf8(&iconCodepoint, ICON_FON_CANCEL, nullptr);
+			const ImFontGlyph* glyph = g.Font->FindGlyphNoFallback(iconCodepoint);
+			if (glyph)
+			{
+				const float glyphWidth = glyph->X1 - glyph->X0;
+				const float glyphHeight = glyph->Y1 - glyph->Y0;
+				const ImVec2 iconPos(
+					buttonRect.Min.x + ImFloor((buttonRect.GetWidth() - glyphWidth) * 0.5f - glyph->X0),
+					buttonRect.Min.y + ImFloor((buttonRect.GetHeight() - glyphHeight) * 0.5f - glyph->Y0));
+				drawList->AddText(g.Font, g.FontSize, iconPos, iconColor, ICON_FON_CANCEL);
+			}
+			else
+			{
+				const ImVec2 iconSize = ImGui::CalcTextSize(ICON_FON_CANCEL);
+				const ImVec2 iconPos(
+					buttonRect.Min.x + ImFloor((buttonRect.GetWidth() - iconSize.x) * 0.5f),
+					buttonRect.Min.y + ImFloor((buttonRect.GetHeight() - iconSize.y) * 0.5f));
+				drawList->AddText(iconPos, iconColor, ICON_FON_CANCEL);
+			}
+
+			if (hovered)
+				ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+			return pressed;
+		}
+	}
 
 	SceneViewportPanel::SceneViewportPanel(const Ref<Scene>& scene, const Ref<SceneSelectionContext>& selectionContext, std::string windowName)
 		: m_ViewportCamera(CreateUnique<ViewportCamera>()),
@@ -35,7 +83,7 @@ namespace Kita {
 
 	void SceneViewportPanel::OnImGuiRender()
 	{
-		if (!m_SelectionContext || !m_SceneContext)
+		if (!m_SelectionContext || !m_SceneContext || !m_IsOpen)
 			return;
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
@@ -51,11 +99,13 @@ namespace Kita {
 			const float offsetX = 48.0f * static_cast<float>(windowId % 4u);
 			const float offsetY = 40.0f * static_cast<float>((windowId / 4u) % 4u);
 
-			ImGui::SetNextWindowDockID(0, ImGuiCond_Always);
+			// Only provide a fallback layout for brand-new viewport windows.
+			// When imgui.ini already has persisted state, FirstUseEver keeps it intact.
+			ImGui::SetNextWindowDockID(0, ImGuiCond_FirstUseEver);
 			ImGui::SetNextWindowPos(
 				ImVec2(mainViewport->WorkPos.x + 72.0f + offsetX, mainViewport->WorkPos.y + 72.0f + offsetY),
-				ImGuiCond_Always);
-			ImGui::SetNextWindowSize(ImVec2(720.0f, 460.0f), ImGuiCond_Always);
+				ImGuiCond_FirstUseEver);
+			ImGui::SetNextWindowSize(ImVec2(720.0f, 460.0f), ImGuiCond_FirstUseEver);
 		}
 
 		if (m_RequestWindowFocus)
@@ -64,6 +114,32 @@ namespace Kita {
 		ImGui::Begin(m_WindowName.c_str());
 		m_UseInitialPlacement = false;
 		m_RequestWindowFocus = false;
+
+		ImGuiWindow* window = ImGui::GetCurrentWindow();
+		if (!window->DockIsActive || (window->DockNode && window->DockNode->VisibleWindow == window))
+		{
+			ImRect closeButtonAnchorRect{};
+			if (window->DockIsActive && window->DockNode && window->DockNode->TabBar)
+			{
+				closeButtonAnchorRect = window->DockNode->TabBar->BarRect;
+			}
+			else
+			{
+				closeButtonAnchorRect = window->TitleBarRect();
+			}
+
+			if (DrawViewportCloseButton(closeButtonAnchorRect, window->GetID("#VIEWPORT_CLOSE")))
+			{
+				m_IsOpen = false;
+				m_IsHovered = false;
+				m_IsFocused = false;
+				m_IsImageHovered = false;
+				ImGui::End();
+				ImGui::PopStyleVar();
+				return;
+			}
+		}
+
 		m_IsHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows);
 		m_IsFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
 		ImVec2 viewportSize = ImGui::GetContentRegionAvail();

@@ -24,6 +24,7 @@ namespace Kita {
 		void SetActive(bool isActive) { m_IsActive = isActive; }
 		bool IsImageHovered() const { return m_IsImageHovered; }
 		bool IsWindowFocused() const { return m_IsFocused; }
+		bool IsOpen() const { return m_IsOpen; }
 
 	private:
 		void InitFrameBuffer();
@@ -51,6 +52,7 @@ namespace Kita {
 		bool m_IsFocused = false;
 		bool m_IsImageHovered = false;
 		bool m_IsActive = false;
+		bool m_IsOpen = true;
 		bool m_UseInitialPlacement = true;
 		bool m_RequestWindowFocus = true;
 

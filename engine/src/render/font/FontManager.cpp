@@ -70,14 +70,22 @@ namespace Kita {
 			config.OversampleH = style.OversampleH;
 			config.OversampleV = style.OversampleV;
 			config.PixelSnapH = style.PixelSnapH;
+			config.MergeMode = style.MergeIntoPrevious;
+
+			const ImWchar* glyphRanges = style.GlyphRanges.empty()
+				? nullptr
+				: style.GlyphRanges.data();
 
 			ImFont* font = io.Fonts->AddFontFromFileTTF(
 				style.FilePath.c_str(),
 				style.BasePixelSize * s_CurrentDpiScale,
-				&config);
+				&config,
+				glyphRanges);
 
 			KITA_CORE_ASSERT(font, "Failed to load ImGui font.");
-			s_ImGuiFonts[style.Name] = font;
+
+			if (!style.MergeIntoPrevious)
+				s_ImGuiFonts[style.Name] = font;
 		}
 
 		auto defaultFont = GetDefaultImGuiFont();

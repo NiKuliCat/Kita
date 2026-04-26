@@ -53,11 +53,8 @@ namespace Kita {
 		m_SceneHierarchyPanel = SceneHierarchyPanel(m_Scene, m_SceneSelectionContext);
 
 		m_SceneViewportPanels.clear();
-		m_SceneViewportPanels.emplace_back(CreateUnique<SceneViewportPanel>(m_Scene,m_SceneSelectionContext,"Viewport"));
-	//	m_SceneViewportPanels.emplace_back(CreateUnique<SceneViewportPanel>(m_Scene, m_SceneSelectionContext, "Viewport 1"));
-	//	m_SceneViewportPanels.emplace_back(CreateUnique<SceneViewportPanel>(m_Scene, m_SceneSelectionContext, "Viewport 2"));
-	//	m_SceneViewportPanels.emplace_back(CreateUnique<SceneViewportPanel>(m_Scene, m_SceneSelectionContext, "Viewport 3"));
-		m_ActiveViewportIndex = m_SceneViewportPanels.empty() ? -1 : 0;
+		m_NextViewportSerial = 1;
+		AddViewportPanel("Viewport");
 	}
 
 	void EditorLayer::OnUpdate(float daltaTime)
@@ -141,9 +138,7 @@ namespace Kita {
 			{
 				if (ImGui::MenuItem("Viewport"))
 				{
-					const std::string viewportName = "Viewport " + std::to_string(m_SceneViewportPanels.size());
-					m_SceneViewportPanels.emplace_back(CreateUnique<SceneViewportPanel>(m_Scene, m_SceneSelectionContext, viewportName));
-					m_ActiveViewportIndex = static_cast<int32_t>(m_SceneViewportPanels.size()) - 1;
+					AddViewportPanel("Viewport " + std::to_string(m_NextViewportSerial++));
 				}
 
 				ImGui::EndMenu();
@@ -199,7 +194,7 @@ namespace Kita {
 				m_ActiveViewportIndex = static_cast<int32_t>(i);
 		}
 
-
+		RemoveClosedViewportPanels();
 
 		ImGui::End();
 
@@ -241,6 +236,37 @@ namespace Kita {
 	bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& event)
 	{
 		return false;
+	}
+
+	void EditorLayer::AddViewportPanel(std::string windowName)
+	{
+		m_SceneViewportPanels.emplace_back(CreateUnique<SceneViewportPanel>(m_Scene, m_SceneSelectionContext, std::move(windowName)));
+		m_ActiveViewportIndex = static_cast<int32_t>(m_SceneViewportPanels.size()) - 1;
+	}
+
+	void EditorLayer::RemoveClosedViewportPanels()
+	{
+		for (size_t i = 0; i < m_SceneViewportPanels.size();)
+		{
+			if (m_SceneViewportPanels[i]->IsOpen())
+			{
+				++i;
+				continue;
+			}
+
+			m_SceneViewportPanels.erase(m_SceneViewportPanels.begin() + static_cast<std::ptrdiff_t>(i));
+
+			if (m_ActiveViewportIndex > static_cast<int32_t>(i))
+			{
+				--m_ActiveViewportIndex;
+				continue;
+			}
+
+			if (m_SceneViewportPanels.empty())
+				m_ActiveViewportIndex = -1;
+			else if (m_ActiveViewportIndex >= static_cast<int32_t>(m_SceneViewportPanels.size()))
+				m_ActiveViewportIndex = static_cast<int32_t>(m_SceneViewportPanels.size()) - 1;
+		}
 	}
 
 }

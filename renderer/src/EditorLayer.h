@@ -25,6 +25,8 @@ namespace Kita {
 	private:
 		bool OnKeyPressed(KeyPressedEvent& event);
 		bool OnMouseButtonPressed(MouseButtonPressedEvent& event);
+		void AddViewportPanel(std::string windowName);
+		void RemoveClosedViewportPanels();
 	private:
 
 		Ref<Scene> m_Scene = nullptr;
@@ -33,6 +35,7 @@ namespace Kita {
 		SceneHierarchyPanel m_SceneHierarchyPanel;
 		std::vector<Unique<SceneViewportPanel>> m_SceneViewportPanels{};
 		int32_t m_ActiveViewportIndex = -1;
+		uint32_t m_NextViewportSerial = 1;
 
 		Ref<SceneSelectionContext> m_SceneSelectionContext = nullptr;
 	};
