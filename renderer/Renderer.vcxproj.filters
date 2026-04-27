@@ -23,6 +23,7 @@
     <ClInclude Include="src\ui\SceneViewportPanel.h">
       <Filter>ui</Filter>
     </ClInclude>
+    <ClInclude Include="src\utils\FileDialogs.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\EditorApp.cpp" />
@@ -37,5 +38,6 @@
     <ClCompile Include="src\ui\SceneViewportPanel.cpp">
       <Filter>ui</Filter>
     </ClCompile>
+    <ClCompile Include="src\utils\FileDialogs.cpp" />
   </ItemGroup>
 </Project>

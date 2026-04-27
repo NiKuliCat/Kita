@@ -80,7 +80,7 @@
       <PrecompiledHeaderFile>renderer_pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>PLATFORM_WINDOWS;KITA_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\engine\src;src;..\engine\third-party\glfw\include;..\engine\third-party\glad\include;..\engine\third-party\imgui;..\engine\third-party\spdlog\include;..\engine\third-party\glm;..\engine\third-party\assimp\include;..\engine\third-party\entt;..\engine\third-party\imguizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\engine\src;src;..\engine\third-party\glfw\include;..\engine\third-party\glad\include;..\engine\third-party\imgui;..\engine\third-party\spdlog\include;..\engine\third-party\glm;..\engine\third-party\assimp\include;..\engine\third-party\entt;..\engine\third-party\imguizmo;..\engine\third-party\nlohmann\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -107,7 +107,7 @@
       <PrecompiledHeaderFile>renderer_pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>PLATFORM_WINDOWS;KITA_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\engine\src;src;..\engine\third-party\glfw\include;..\engine\third-party\glad\include;..\engine\third-party\imgui;..\engine\third-party\spdlog\include;..\engine\third-party\glm;..\engine\third-party\assimp\include;..\engine\third-party\entt;..\engine\third-party\imguizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\engine\src;src;..\engine\third-party\glfw\include;..\engine\third-party\glad\include;..\engine\third-party\imgui;..\engine\third-party\spdlog\include;..\engine\third-party\glm;..\engine\third-party\assimp\include;..\engine\third-party\entt;..\engine\third-party\imguizmo;..\engine\third-party\nlohmann\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -139,7 +139,7 @@
       <PrecompiledHeaderFile>renderer_pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>PLATFORM_WINDOWS;KITA_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\engine\src;src;..\engine\third-party\glfw\include;..\engine\third-party\glad\include;..\engine\third-party\imgui;..\engine\third-party\spdlog\include;..\engine\third-party\glm;..\engine\third-party\assimp\include;..\engine\third-party\entt;..\engine\third-party\imguizmo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\engine\src;src;..\engine\third-party\glfw\include;..\engine\third-party\glad\include;..\engine\third-party\imgui;..\engine\third-party\spdlog\include;..\engine\third-party\glm;..\engine\third-party\assimp\include;..\engine\third-party\entt;..\engine\third-party\imguizmo;..\engine\third-party\nlohmann\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>None</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -172,6 +172,7 @@
     <ClInclude Include="src\ui\SceneHierarchyPanel.h" />
     <ClInclude Include="src\ui\SceneSelectionContext.h" />
     <ClInclude Include="src\ui\SceneViewportPanel.h" />
+    <ClInclude Include="src\utils\FileDialogs.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\EditorApp.cpp" />
@@ -182,6 +183,7 @@
     <ClCompile Include="src\scene\ViewportCamera.cpp" />
     <ClCompile Include="src\ui\SceneHierarchyPanel.cpp" />
     <ClCompile Include="src\ui\SceneViewportPanel.cpp" />
+    <ClCompile Include="src\utils\FileDialogs.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\engine\Engine.vcxproj">

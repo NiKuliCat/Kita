@@ -5,13 +5,18 @@
 namespace Kita {
 
     Object::Object(entt::entity entityHandle, Scene* scene, const std::string& name)
-        :m_EntityHandle(entityHandle), m_Scene(scene) {
+        :Object(entityHandle,scene,UUID(),name){
+    }
+
+    Object::Object(entt::entity entityHandle, Scene* scene, const UUID& uuid, const std::string& name)
+        :m_EntityHandle(entityHandle), m_Scene(scene)
+    {
 
         if (!HasComponent<IDComponent>()) {
-            AddComponent<IDComponent>();
+            AddComponent<IDComponent>(uuid);
         }
 
-        if(!HasComponent<Name>()) {
+        if (!HasComponent<Name>()) {
             AddComponent<Name>(name);
         }
 
@@ -19,7 +24,7 @@ namespace Kita {
         {
             AddComponent<ObjectType>(Type::StaticMesh);
         }
-        if(!HasComponent<Transform>()) {
+        if (!HasComponent<Transform>()) {
             AddComponent<Transform>();
         }
     }

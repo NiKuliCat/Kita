@@ -30,7 +30,8 @@ project "Renderer"
         "%{IncludeDir.glm}",
         "%{IncludeDir.assimp}",
         "%{IncludeDir.entt}",
-        "%{IncludeDir.ImGuizmo}"
+        "%{IncludeDir.ImGuizmo}",
+        "%{IncludeDir.nlohmann_json}"
         
     }
     

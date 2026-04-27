@@ -30,6 +30,7 @@ namespace Kita {
 	private:
 
 		Ref<Scene> m_Scene = nullptr;
+		SceneSerializer  m_SceneSerializer;
 
 		//ui
 		SceneHierarchyPanel m_SceneHierarchyPanel;

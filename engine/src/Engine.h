@@ -37,5 +37,7 @@
 #include "component/MeshRenderer.h"
 #include "component/LineRenderer.h"
 
+#include "serialize/SceneSerializer.h"
+
 
 #include "third_party/imgui/imgui_layer.h"

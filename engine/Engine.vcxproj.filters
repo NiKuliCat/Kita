@@ -34,6 +34,9 @@
     <Filter Include="src\render\scene">
       <UniqueIdentifier>{598B4006-4584-5F58-6EB6-44DD5A0E3F64}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\serialize">
+      <UniqueIdentifier>{44B52BFF-B075-A735-79B0-F0B2E52FEC11}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\third_party">
       <UniqueIdentifier>{A6E46709-1270-D5CD-1B81-58C2878B31CE}</UniqueIdentifier>
     </Filter>
@@ -218,6 +221,12 @@
     </ClInclude>
     <ClInclude Include="src\render\scene\PerspectiveCamera.h">
       <Filter>src\render\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\serialize\JsonUtils.h">
+      <Filter>src\serialize</Filter>
+    </ClInclude>
+    <ClInclude Include="src\serialize\SceneSerializer.h">
+      <Filter>src\serialize</Filter>
     </ClInclude>
     <ClInclude Include="src\third_party\imgui\imgui_layer.h">
       <Filter>src\third_party\imgui</Filter>
@@ -1603,6 +1612,12 @@
     </ClCompile>
     <ClCompile Include="src\render\scene\PerspectiveCamera.cpp">
       <Filter>src\render\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="src\serialize\JsonUtils.cpp">
+      <Filter>src\serialize</Filter>
+    </ClCompile>
+    <ClCompile Include="src\serialize\SceneSerializer.cpp">
+      <Filter>src\serialize</Filter>
     </ClCompile>
     <ClCompile Include="src\third_party\imgui\imgui_build.cpp">
       <Filter>src\third_party\imgui</Filter>

@@ -11,6 +11,7 @@ namespace Kita {
 	public:
 		Object() = default;
 		Object(entt::entity entityHandle, Scene* scene, const std::string& name);
+		Object(entt::entity entityHandle, Scene* scene,const UUID& uuid, const std::string& name);
 		Object(entt::entity entityHandle, Scene* scene);
 
 		Object(const Object& other) = default;

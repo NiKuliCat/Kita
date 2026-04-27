@@ -2,6 +2,7 @@
 #include "EditorLayer.h"
 #include "imgui.h"
 #include "ImGuizmo.h"
+#include "utils/FileDialogs.h"
 
 #include <glm/glm.hpp>
 #include <imgui_internal.h>
@@ -34,9 +35,9 @@ namespace Kita {
 			auto& lineRenderer2 = curveObj2.AddComponent<LineRenderer>();
 			lineRenderer2.SetLineWidth(4.0f);
 			lineRenderer2.SetLineColor({ 1,0,1,1 });
-
-
 		}
+
+		m_SceneSerializer = SceneSerializer(m_Scene);
 
 		CubemapFacePaths faces = {
 			"assets/textures/skybox/right.jpg",  // +X
@@ -127,9 +128,30 @@ namespace Kita {
 
 			if (ImGui::BeginMenu("File"))
 			{
-				if (ImGui::MenuItem("New"))
+				if (ImGui::MenuItem("Save Scene"))
 				{
+					if (m_Scene->HasFilePath())
+					{
+						m_SceneSerializer.Serialize();
+					}
+					else
+					{
+						auto path = FileDialogs::SaveFile(L"Kita Scene (*.sce)\0*.sce\0All Files (*.*)\0*.*\0", L"sce");
+						if (!path.empty())
+						{
+							m_SceneSerializer.Serialize(path);
+						}
+					}
+				}
 
+				if (ImGui::MenuItem("Load Scene"))
+				{
+					auto path = FileDialogs::OpenFile(L"Kita Scene (*.sce)\0*.sce\0All Files (*.*)\0*.*\0");
+					if (!path.empty())
+					{
+						m_SceneHierarchyPanel.ClearSelection();
+						m_SceneSerializer.Deserialize(path);
+					}
 				}
 
 				ImGui::EndMenu();

@@ -20,6 +20,10 @@ namespace Kita {
 		KITA_CORE_DEBUG("the uuid of {0} is : {1} ", obj.GetName(), obj.GetUUID());
 		return obj;
 	}
+	Object Scene::CreateObjectWithUUID(UUID uuid, const std::string& name)
+	{
+		return Object(m_Registry.create(), this, uuid, name);
+	}
 	void Scene::DestroyObject(Object object)
 	{
 		m_Registry.destroy(object);
@@ -32,6 +36,11 @@ namespace Kita {
 
 
 		m_SkyCubemap = Texture::CreateCubeMap(desc, faces);
+	}
+
+	void Scene::Clear()
+	{
+		m_Registry.clear();
 	}
 
 	void Scene::SimulateSceneEditor()
