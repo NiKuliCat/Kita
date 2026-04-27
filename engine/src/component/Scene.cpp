@@ -7,6 +7,8 @@
 #include "render/Renderer.h"
 #include "render/ShaderLibrary.h"
 #include <render/scene/Gizmo.h>
+
+
 namespace Kita {
 
 	Scene::~Scene()

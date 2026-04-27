@@ -17,6 +17,9 @@
     <ClInclude Include="src\ui\SceneHierarchyPanel.h">
       <Filter>ui</Filter>
     </ClInclude>
+    <ClInclude Include="src\ui\SceneSelectionContext.h">
+      <Filter>ui</Filter>
+    </ClInclude>
     <ClInclude Include="src\ui\SceneViewportPanel.h">
       <Filter>ui</Filter>
     </ClInclude>

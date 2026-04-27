@@ -170,6 +170,7 @@
     <ClInclude Include="src\renderer_pch.h" />
     <ClInclude Include="src\scene\ViewportCamera.h" />
     <ClInclude Include="src\ui\SceneHierarchyPanel.h" />
+    <ClInclude Include="src\ui\SceneSelectionContext.h" />
     <ClInclude Include="src\ui\SceneViewportPanel.h" />
   </ItemGroup>
   <ItemGroup>

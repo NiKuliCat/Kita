@@ -84,14 +84,15 @@ workspace "Kita"
 
     
     IncludeDir = {}
-    IncludeDir["GLFW"] = "%{wks.location}/engine/third-party/glfw/include"
-    IncludeDir["glad"] = "%{wks.location}/engine/third-party/glad/include"
-    IncludeDir["ImGui"] = "%{wks.location}/engine/third-party/imgui"
-    IncludeDir["spdlog"] = "%{wks.location}/engine/third-party/spdlog/include"
-    IncludeDir["glm"] = "%{wks.location}/engine/third-party/glm"
-    IncludeDir["assimp"] = "%{wks.location}/engine/third-party/assimp/include"
-    IncludeDir["entt"] = "%{wks.location}/engine/third-party/entt"
-    IncludeDir["ImGuizmo"] = "%{wks.location}/engine/third-party/imguizmo"
+    IncludeDir["GLFW"]              = "%{wks.location}/engine/third-party/glfw/include"
+    IncludeDir["glad"]              = "%{wks.location}/engine/third-party/glad/include"
+    IncludeDir["ImGui"]             = "%{wks.location}/engine/third-party/imgui"
+    IncludeDir["spdlog"]            = "%{wks.location}/engine/third-party/spdlog/include"
+    IncludeDir["glm"]               = "%{wks.location}/engine/third-party/glm"
+    IncludeDir["assimp"]            = "%{wks.location}/engine/third-party/assimp/include"
+    IncludeDir["entt"]              = "%{wks.location}/engine/third-party/entt"
+    IncludeDir["ImGuizmo"]          = "%{wks.location}/engine/third-party/imguizmo"
+    IncludeDir["nlohmann_json"]     = "%{wks.location}/engine/third-party/nlohmann/include"
 
     group "Dependencies"
         include "engine/third-party/glfw"

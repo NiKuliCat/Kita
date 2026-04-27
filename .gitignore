@@ -434,3 +434,9 @@ FodyWeavers.xsd
 
 # Generated VS solution wrapper
 Kita.slnx
+
+# Premake-generated Visual Studio project/solution files
+*.sln
+*.slnx
+*.vcxproj
+*.vcxproj.filters
