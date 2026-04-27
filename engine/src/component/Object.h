@@ -53,6 +53,7 @@ namespace Kita {
 
 
 		std::string& GetName() { return GetComponent<Name>().Get(); }
+		uint64_t GetUUID() { return GetComponent<IDComponent>().ID; }
 
 	private:
 

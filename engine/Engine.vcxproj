@@ -156,6 +156,7 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\core\UUID.h" />
     <ClInclude Include="src\Engine.h" />
     <ClInclude Include="src\component\LineRenderer.h" />
     <ClInclude Include="src\component\MeshRenderer.h" />
@@ -638,6 +639,7 @@
     <ClCompile Include="src\core\Application.cpp" />
     <ClCompile Include="src\core\Layer.cpp" />
     <ClCompile Include="src\core\Log.cpp" />
+    <ClCompile Include="src\core\UUID.cpp" />
     <ClCompile Include="src\kita_pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>

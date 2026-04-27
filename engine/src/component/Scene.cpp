@@ -15,7 +15,7 @@ namespace Kita {
 	Object Scene::CreateObject(const std::string& name)
 	{
 		Object obj = { m_Registry.create(), this, name };
-
+		KITA_CORE_DEBUG("the uuid of {0} is : {1} ", obj.GetName(), obj.GetUUID());
 		return obj;
 	}
 	void Scene::DestroyObject(Object object)

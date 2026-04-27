@@ -1482,6 +1482,7 @@
     <ClInclude Include="third-party\imguizmo\ImGuizmo.h">
       <Filter>third-party\imguizmo</Filter>
     </ClInclude>
+    <ClInclude Include="src\core\UUID.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\component\LineRenderer.cpp">
@@ -1610,5 +1611,6 @@
     <ClCompile Include="third-party\imguizmo\ImGuizmo.cpp">
       <Filter>third-party\imguizmo</Filter>
     </ClCompile>
+    <ClCompile Include="src\core\UUID.cpp" />
   </ItemGroup>
 </Project>

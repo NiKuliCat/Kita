@@ -1,4 +1,5 @@
 #pragma once
+#include "core/UUID.h"
 
 namespace Kita {
 
@@ -14,6 +15,20 @@ namespace Kita {
 	{
 		StaticMesh,
 		Curve
+	};
+
+
+	struct IDComponent
+	{
+		UUID ID;
+		IDComponent() = default;
+
+		IDComponent(const IDComponent&) = default;
+		IDComponent& operator=(const IDComponent&) = default;
+
+		IDComponent(const UUID& uuid)
+			:ID(uuid) {}
+
 	};
 
 	class ObjectType

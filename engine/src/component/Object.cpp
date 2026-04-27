@@ -6,6 +6,11 @@ namespace Kita {
 
     Object::Object(entt::entity entityHandle, Scene* scene, const std::string& name)
         :m_EntityHandle(entityHandle), m_Scene(scene) {
+
+        if (!HasComponent<IDComponent>()) {
+            AddComponent<IDComponent>();
+        }
+
         if(!HasComponent<Name>()) {
             AddComponent<Name>(name);
         }
