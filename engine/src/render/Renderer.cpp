@@ -20,12 +20,12 @@ namespace Kita {
 		Gizmo::Init();
 		// load shader
 		auto& shaderLibrary = ShaderLibrary::GetInstance();
-		shaderLibrary.Load("assets/shaders/EditorDefaultShader.glsl");
-		shaderLibrary.Load("assets/shaders/EditorLineShader.glsl");
-		shaderLibrary.Load("assets/shaders/EditorGridShader.glsl");
-		shaderLibrary.Load("assets/shaders/DefaultSkyBox.glsl");
-		shaderLibrary.Load("assets/shaders/GizmoPoint.glsl");
-		shaderLibrary.Load("assets/shaders/GizmoDiamond.glsl");
+		shaderLibrary.Load("packages/shaders/EditorDefaultShader.glsl");
+		shaderLibrary.Load("packages/shaders/EditorLineShader.glsl");
+		shaderLibrary.Load("packages/shaders/EditorGridShader.glsl");
+		shaderLibrary.Load("packages/shaders/DefaultSkyBox.glsl");
+		shaderLibrary.Load("packages/shaders/GizmoPoint.glsl");
+		shaderLibrary.Load("packages/shaders/GizmoDiamond.glsl");
 	}
 
 	void Renderer::ShutDown()

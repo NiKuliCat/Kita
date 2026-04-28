@@ -6,7 +6,7 @@
 namespace Kita {
     MeshRenderer::MeshRenderer()
     {
-        m_Material = CreateRef<Material>("assets/shaders/EditorDefaultShader.glsl", "assets/textures/test.jpg");
+        m_Material = CreateRef<Material>("packages/shaders/EditorDefaultShader.glsl", "content/textures/test.jpg");
     }
     void MeshRenderer::LoadMeshs(const std::string& filepath)
     {

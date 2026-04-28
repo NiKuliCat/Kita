@@ -22,7 +22,7 @@ namespace Kita {
 		{
 			auto obj = m_Scene->CreateObject("sphere");
 			auto& meshrenderer = obj.AddComponent<MeshRenderer>();
-			meshrenderer.LoadMeshs("assets/models/Sphere.fbx");
+			meshrenderer.LoadMeshs("content/models/Sphere.fbx");
 
 			auto curveObj1 = m_Scene->CreateObject("curve 1");
 			auto& lineRenderer1 = curveObj1.AddComponent<LineRenderer>();
@@ -40,12 +40,12 @@ namespace Kita {
 		m_SceneSerializer = SceneSerializer(m_Scene);
 
 		CubemapFacePaths faces = {
-			"assets/textures/skybox/right.jpg",  // +X
-			"assets/textures/skybox/left.jpg",   // -X
-			"assets/textures/skybox/top.jpg",    // +Y
-			"assets/textures/skybox/bottom.jpg", // -Y
-			"assets/textures/skybox/front.jpg",  // +Z
-			"assets/textures/skybox/back.jpg"    // -Z
+			"packages/skybox/right.jpg",  // +X
+			"packages/skybox/left.jpg",   // -X
+			"packages/skybox/top.jpg",    // +Y
+			"packages/skybox/bottom.jpg", // -Y
+			"packages/skybox/front.jpg",  // +Z
+			"packages/skybox/back.jpg"    // -Z
 		};
 
 		m_Scene->LoadSkyCubemap(faces);

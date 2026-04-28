@@ -24,6 +24,8 @@
       <Filter>ui</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\FileDialogs.h" />
+    <ClInclude Include="src\ui\ContentBrowserPanel.h" />
+    <ClInclude Include="src\file\Project.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\EditorApp.cpp" />
@@ -39,5 +41,7 @@
       <Filter>ui</Filter>
     </ClCompile>
     <ClCompile Include="src\utils\FileDialogs.cpp" />
+    <ClCompile Include="src\ui\ContentBrowserPanel.cpp" />
+    <ClCompile Include="src\file\Project.cpp" />
   </ItemGroup>
 </Project>
