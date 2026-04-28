@@ -6,9 +6,6 @@
 
 namespace Kita {
 
-
-
-
 	const float inspectorLabelColumn_LeftWidth = 130.0f; 
 
 	const float rowHeight = 32.0f;

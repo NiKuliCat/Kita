@@ -3,6 +3,7 @@
 #include "imgui.h"
 #include "ImGuizmo.h"
 #include "utils/FileDialogs.h"
+#include "file/Project.h"
 
 #include <glm/glm.hpp>
 #include <imgui_internal.h>
@@ -56,11 +57,14 @@ namespace Kita {
 		m_SceneViewportPanels.clear();
 		m_NextViewportSerial = 1;
 		AddViewportPanel("Viewport");
+
+		m_ContentBrowserPanel = ContentBrowserPanel(Project::GetActive()->GetContentDirectory());
 	}
 
 	void EditorLayer::OnUpdate(float daltaTime)
 	{
 		m_Scene->SimulateSceneEditor();
+		RemoveClosedViewportPanels();
 		for (auto& viewport : m_SceneViewportPanels)
 		{
 			viewport->Simulate(daltaTime);
@@ -205,6 +209,7 @@ namespace Kita {
 		}
 
 		m_SceneHierarchyPanel.OnImGuiRender();
+		m_ContentBrowserPanel.OnImGuiRender();
 
 		for (size_t i = 0; i < m_SceneViewportPanels.size(); ++i)
 		{
@@ -216,7 +221,7 @@ namespace Kita {
 				m_ActiveViewportIndex = static_cast<int32_t>(i);
 		}
 
-		RemoveClosedViewportPanels();
+
 
 		ImGui::End();
 

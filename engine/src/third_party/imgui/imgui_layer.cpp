@@ -108,7 +108,7 @@ namespace Kita {
 
 
 		//docking
-		colors[ImGuiCol_Border] = ImVec4{ 0.115f,0.116f,0.123f,1.0f };
+		colors[ImGuiCol_Border] = ImVec4{ 0.055f,0.056f,0.060f,1.0f };
 	}
 
 	void ImGuiLayer::Begin()

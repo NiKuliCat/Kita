@@ -4,6 +4,7 @@
 #include "ui/SceneHierarchyPanel.h"
 #include "ui/SceneSelectionContext.h"
 #include "ui/SceneViewportPanel.h"
+#include "ui/ContentBrowserPanel.h"
 namespace Kita {
 
 	class EditorLayer :public Layer{
@@ -34,6 +35,7 @@ namespace Kita {
 
 		//ui
 		SceneHierarchyPanel m_SceneHierarchyPanel;
+		ContentBrowserPanel m_ContentBrowserPanel;
 		std::vector<Unique<SceneViewportPanel>> m_SceneViewportPanels{};
 		int32_t m_ActiveViewportIndex = -1;
 		uint32_t m_NextViewportSerial = 1;
