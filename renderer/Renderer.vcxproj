@@ -174,6 +174,7 @@
     <ClInclude Include="src\ui\SceneHierarchyPanel.h" />
     <ClInclude Include="src\ui\SceneSelectionContext.h" />
     <ClInclude Include="src\ui\SceneViewportPanel.h" />
+    <ClInclude Include="src\ui\UIColorPanel.h" />
     <ClInclude Include="src\utils\FileDialogs.h" />
   </ItemGroup>
   <ItemGroup>
@@ -187,6 +188,7 @@
     <ClCompile Include="src\ui\ContentBrowserPanel.cpp" />
     <ClCompile Include="src\ui\SceneHierarchyPanel.cpp" />
     <ClCompile Include="src\ui\SceneViewportPanel.cpp" />
+    <ClCompile Include="src\ui\UIColorPanel.cpp" />
     <ClCompile Include="src\utils\FileDialogs.cpp" />
   </ItemGroup>
   <ItemGroup>

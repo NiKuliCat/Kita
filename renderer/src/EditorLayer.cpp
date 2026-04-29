@@ -167,6 +167,11 @@ namespace Kita {
 					AddViewportPanel("Viewport " + std::to_string(m_NextViewportSerial++));
 				}
 
+				if (ImGui::MenuItem("UI Color Panel"))
+				{
+					m_UIColorPanel.SetOpen(true);
+				}
+
 				ImGui::EndMenu();
 			}
 
@@ -210,6 +215,7 @@ namespace Kita {
 
 		m_SceneHierarchyPanel.OnImGuiRender();
 		m_ContentBrowserPanel.OnImGuiRender();
+		m_UIColorPanel.OnImGuiRender();
 
 		for (size_t i = 0; i < m_SceneViewportPanels.size(); ++i)
 		{

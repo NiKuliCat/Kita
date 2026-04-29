@@ -10,14 +10,68 @@ namespace Kita {
 
 	const float rowHeight = 32.0f;
 	const float textPaddingX = 10.0f;
+	const ImVec2 inspectorControlFramePadding = ImVec2(6.0f, 2.0f);
+	const float inspectorControlFrameRounding = 3.0f;
+	const float inspectorControlFrameBorderSize = 1.0f;
 
-	const float separatorThickness = 1.7f;
-	const ImU32 separatorColor = ImGui::ColorConvertFloat4ToU32(ImVec4(0.23f, 0.27f, 0.33f, 1.0f));
+	const ImU32 separatorColor = ImGui::ColorConvertFloat4ToU32(ImVec4(0.22f, 0.22f, 0.22f, 1.0f));
 
-	const ImU32 tableBgColor_Dark = ImGui::ColorConvertFloat4ToU32(ImVec4(0.10f, 0.11f, 0.135f, 1.0f));
-	const ImU32 tableBgColor_Light = ImGui::ColorConvertFloat4ToU32(ImVec4(0.14f, 0.15f, 0.19f, 1.0f));
+	const ImU32 tableBgColor_Dark = ImGui::ColorConvertFloat4ToU32(ImVec4(0.13f, 0.13f, 0.13f, 1.0f));
+	const ImU32 tableBgColor_Light = ImGui::ColorConvertFloat4ToU32(ImVec4(0.19f, 0.19f, 0.19f, 1.0f));
 
-	const float infoRowsGap = 3.0f;
+	static float GetInspectorContentHeight()
+	{
+		return rowHeight - ImGui::GetStyle().CellPadding.y * 2.0f;
+	}
+
+	static float GetInspectorLabelYOffset()
+	{
+		return ImMax(0.0f, (GetInspectorContentHeight() - ImGui::GetTextLineHeight()) * 0.5f);
+	}
+
+	static float GetInspectorControlYOffset()
+	{
+		return ImMax(0.0f, (GetInspectorContentHeight() - ImGui::GetFrameHeight()) * 0.5f);
+	}
+
+	static bool BeginInspectorPropertyTable(const char* id)
+	{
+		const ImGuiTableFlags tableFlags =
+			ImGuiTableFlags_SizingStretchProp |
+			ImGuiTableFlags_BordersInnerV |
+			ImGuiTableFlags_BordersOuter |
+			ImGuiTableFlags_NoSavedSettings;
+
+		ImGui::PushStyleColor(ImGuiCol_TableBorderStrong, separatorColor);
+		ImGui::PushStyleColor(ImGuiCol_TableBorderLight, separatorColor);
+		ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.30f, 0.30f, 0.30f, 1.0f));
+		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, inspectorControlFramePadding);
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, inspectorControlFrameRounding);
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, inspectorControlFrameBorderSize);
+
+		const float tableMinX = ImGui::GetWindowContentRegionMin().x;
+		const float tableMaxX = ImGui::GetWindowContentRegionMax().x;
+		ImGui::SetCursorPosX(tableMinX);
+
+		const bool open = ImGui::BeginTable(id, 2, tableFlags, ImVec2(tableMaxX - tableMinX, 0.0f));
+		if (!open)
+		{
+			ImGui::PopStyleColor(3);
+			ImGui::PopStyleVar(3);
+			return false;
+		}
+
+		ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, inspectorLabelColumn_LeftWidth);
+		ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
+		return true;
+	}
+
+	static void EndInspectorPropertyTable()
+	{
+		ImGui::EndTable();
+		ImGui::PopStyleColor(3);
+		ImGui::PopStyleVar(3);
+	}
 
 	void SceneHierarchyPanel::OnImGuiRender()
 	{
@@ -162,6 +216,8 @@ namespace Kita {
 		bool& isHightLight
 	)
 	{
+		(void)tableStartPos;
+		(void)inspectorLabelColumnWidth;
 		
 		ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
 	
@@ -169,9 +225,7 @@ namespace Kita {
 		ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, bgColor);
 		isHightLight = !isHightLight;
 
-		const float textHeight = ImGui::GetTextLineHeight();
-		const float contentHeight = rowHeight - ImGui::GetStyle().CellPadding.y * 2.0f;
-		const float yOffset = ImMax(0.0f, (contentHeight - textHeight) * 0.5f);
+		const float yOffset = GetInspectorLabelYOffset();
 
 		ImGui::TableSetColumnIndex(0);
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + yOffset);
@@ -181,15 +235,6 @@ namespace Kita {
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + yOffset);
 		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + textPaddingX);
 		ImGui::TextUnformatted(value.c_str());
-
-		const ImVec2 tableMin = ImGui::GetItemRectMin();
-		const ImVec2 tableMax = ImGui::GetItemRectMax();
-		const float separatorX = tableStartPos.x + inspectorLabelColumnWidth;
-		ImGui::GetWindowDrawList()->AddLine(
-			ImVec2(separatorX, tableMin.y - 3.0f),
-			ImVec2(separatorX, tableMax.y + 3.0f),
-			separatorColor,
-			separatorThickness);
 	}
 
 	static void DrawInspectorVec3Row(
@@ -200,6 +245,8 @@ namespace Kita {
 		bool& isHightLight,
 		float speed = 0.05f)
 	{
+		(void)tableStartPos;
+		(void)inspectorLabelColumnWidth;
 		const float itemSpacingX = 12.0f;
 
 		ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
@@ -207,9 +254,8 @@ namespace Kita {
 		ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, bgColor);
 		isHightLight = !isHightLight;
 
-		const float textHeight = ImGui::GetTextLineHeight();
-		const float contentHeight = rowHeight - ImGui::GetStyle().CellPadding.y * 2.0f;
-		const float labelYOffset = ImMax(0.0f, (contentHeight - textHeight) * 0.5f);
+		const float labelYOffset = GetInspectorLabelYOffset();
+		const float controlYOffset = GetInspectorControlYOffset();
 
 		ImGui::TableSetColumnIndex(0);
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + labelYOffset);
@@ -217,7 +263,7 @@ namespace Kita {
 		ImGui::TextUnformatted(label);
 
 		ImGui::TableSetColumnIndex(1);
-		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 2.0f);
+		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + controlYOffset);
 		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + textPaddingX);
 
 		const float availWidth = ImGui::GetContentRegionAvail().x - textPaddingX;
@@ -232,19 +278,17 @@ namespace Kita {
 		ImGui::PushID(label);
 		for (int i = 0; i < 3; i++)
 		{
-			ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.07f, 0.09f, 0.12f, 1.0f));
-			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.10f, 0.12f, 0.16f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.14f, 0.14f, 0.14f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.17f, 0.17f, 0.17f, 1.0f));
 			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.12f, 0.15f, 0.20f, 1.0f));
-			ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.20f, 0.24f, 0.30f, 1.0f));
-			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
-			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.30f, 0.30f, 0.30f, 1.0f));
 			ImGui::SetNextItemWidth(itemWidth);
 			ImGui::DragFloat(axisIds[i], (&value.x) + i, speed, 0.0f, 0.0f, "%.3f");
 			const ImVec2 itemMin = ImGui::GetItemRectMin();
 			const ImVec2 itemMax = ImGui::GetItemRectMax();
 			ImDrawList* drawList = ImGui::GetWindowDrawList();
 			const float markerRight = itemMin.x - 2.0f;
-			const float markerLeft = markerRight - 4.4f;
+			const float markerLeft = markerRight - 3.4f;
 			const float markerTop = itemMin.y + 0.8f;
 			const float markerBottom = itemMax.y - 0.2f;
 			const float markerLeftTopInset = 1.7f;
@@ -258,22 +302,12 @@ namespace Kita {
 
 			drawList->AddConvexPolyFilled(markerPoints, 4, axisColors[i]);
 			drawList->AddPolyline(markerPoints, 4, IM_COL32(255, 255, 255, 36), ImDrawFlags_Closed, 1.2f);
-			ImGui::PopStyleVar(2);
 			ImGui::PopStyleColor(4);
 
 			if (i < 2)
 				ImGui::SameLine(0.0f, itemSpacingX);
 		}
 		ImGui::PopID();
-
-		const ImVec2 tableMin = ImGui::GetItemRectMin();
-		const ImVec2 tableMax = ImGui::GetItemRectMax();
-		const float separatorX = tableStartPos.x + inspectorLabelColumnWidth;
-		ImGui::GetWindowDrawList()->AddLine(
-			ImVec2(separatorX, tableMin.y - 3.0f),
-			ImVec2(separatorX, tableMax.y + 3.0f),
-			separatorColor,
-			separatorThickness);
 	}
 
 	static void DrawInspectorFloatRow(
@@ -285,14 +319,15 @@ namespace Kita {
 		float speed = 0.05f,
 		float minValue = 0.0f)
 	{
+		(void)tableStartPos;
+		(void)inspectorLabelColumnWidth;
 		ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
 		const ImU32 bgColor = isHightLight ? tableBgColor_Light : tableBgColor_Dark;
 		ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, bgColor);
 		isHightLight = !isHightLight;
 
-		const float textHeight = ImGui::GetTextLineHeight();
-		const float contentHeight = rowHeight - ImGui::GetStyle().CellPadding.y * 2.0f;
-		const float labelYOffset = ImMax(0.0f, (contentHeight - textHeight) * 0.5f);
+		const float labelYOffset = GetInspectorLabelYOffset();
+		const float controlYOffset = GetInspectorControlYOffset();
 
 		ImGui::TableSetColumnIndex(0);
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + labelYOffset);
@@ -300,7 +335,7 @@ namespace Kita {
 		ImGui::TextUnformatted(label);
 
 		ImGui::TableSetColumnIndex(1);
-		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 2.0f);
+		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + controlYOffset);
 		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + textPaddingX);
 
 		ImGui::PushID(label);
@@ -308,22 +343,10 @@ namespace Kita {
 		ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.10f, 0.12f, 0.16f, 1.0f));
 		ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.12f, 0.15f, 0.20f, 1.0f));
 		ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.20f, 0.24f, 0.30f, 1.0f));
-		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
-		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
 		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - textPaddingX);
 		ImGui::DragFloat("##FloatValue", &value, speed, minValue, 0.0f, "%.3f");
-		ImGui::PopStyleVar(2);
 		ImGui::PopStyleColor(4);
 		ImGui::PopID();
-
-		const ImVec2 tableMin = ImGui::GetItemRectMin();
-		const ImVec2 tableMax = ImGui::GetItemRectMax();
-		const float separatorX = tableStartPos.x + inspectorLabelColumnWidth;
-		ImGui::GetWindowDrawList()->AddLine(
-			ImVec2(separatorX, tableMin.y - 3.0f),
-			ImVec2(separatorX, tableMax.y + 3.0f),
-			separatorColor,
-			separatorThickness);
 	}
 
 	static void DrawInspectorColorRow(
@@ -333,14 +356,15 @@ namespace Kita {
 		float inspectorLabelColumnWidth,
 		bool& isHightLight)
 	{
+		(void)tableStartPos;
+		(void)inspectorLabelColumnWidth;
 		ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
 		const ImU32 bgColor = isHightLight ? tableBgColor_Light : tableBgColor_Dark;
 		ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, bgColor);
 		isHightLight = !isHightLight;
 
-		const float textHeight = ImGui::GetTextLineHeight();
-		const float contentHeight = rowHeight - ImGui::GetStyle().CellPadding.y * 2.0f;
-		const float labelYOffset = ImMax(0.0f, (contentHeight - textHeight) * 0.5f);
+		const float labelYOffset = GetInspectorLabelYOffset();
+		const float controlYOffset = GetInspectorControlYOffset();
 
 		ImGui::TableSetColumnIndex(0);
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + labelYOffset);
@@ -348,12 +372,10 @@ namespace Kita {
 		ImGui::TextUnformatted(label);
 
 		ImGui::TableSetColumnIndex(1);
-		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 3.0f);
+		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + controlYOffset);
 		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + textPaddingX);
 
 		ImGui::PushID(label);
-		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
-		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
 		ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.20f, 0.24f, 0.30f, 1.0f));
 		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - textPaddingX);
 		ImGui::ColorEdit4("##ColorValue", &value.x,
@@ -361,17 +383,7 @@ namespace Kita {
 			ImGuiColorEditFlags_Float |
 			ImGuiColorEditFlags_AlphaBar);
 		ImGui::PopStyleColor();
-		ImGui::PopStyleVar(2);
 		ImGui::PopID();
-
-		const ImVec2 tableMin = ImGui::GetItemRectMin();
-		const ImVec2 tableMax = ImGui::GetItemRectMax();
-		const float separatorX = tableStartPos.x + inspectorLabelColumnWidth;
-		ImGui::GetWindowDrawList()->AddLine(
-			ImVec2(separatorX, tableMin.y - 3.0f),
-			ImVec2(separatorX, tableMax.y + 3.0f),
-			separatorColor,
-			separatorThickness);
 	}
 
 	static void DrawInspectorCurveTypeRow(
@@ -381,14 +393,15 @@ namespace Kita {
 		float inspectorLabelColumnWidth,
 		bool& isHightLight)
 	{
+		(void)tableStartPos;
+		(void)inspectorLabelColumnWidth;
 		ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
 		const ImU32 bgColor = isHightLight ? tableBgColor_Light : tableBgColor_Dark;
 		ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, bgColor);
 		isHightLight = !isHightLight;
 
-		const float textHeight = ImGui::GetTextLineHeight();
-		const float contentHeight = rowHeight - ImGui::GetStyle().CellPadding.y * 2.0f;
-		const float labelYOffset = ImMax(0.0f, (contentHeight - textHeight) * 0.5f);
+		const float labelYOffset = GetInspectorLabelYOffset();
+		const float controlYOffset = GetInspectorControlYOffset();
 
 		ImGui::TableSetColumnIndex(0);
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + labelYOffset);
@@ -396,7 +409,7 @@ namespace Kita {
 		ImGui::TextUnformatted(label);
 
 		ImGui::TableSetColumnIndex(1);
-		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 2.0f);
+		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + controlYOffset);
 		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + textPaddingX);
 
 		const char* items[] = { "Polyline", "BezierCubic" };
@@ -407,25 +420,13 @@ namespace Kita {
 		ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.10f, 0.12f, 0.16f, 1.0f));
 		ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.12f, 0.15f, 0.20f, 1.0f));
 		ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.20f, 0.24f, 0.30f, 1.0f));
-		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
-		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
 		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - textPaddingX);
 		if (ImGui::Combo("##CurveType", &currentIndex, items, IM_ARRAYSIZE(items)))
 		{
 			curveType = static_cast<CurveType>(currentIndex);
 		}
-		ImGui::PopStyleVar(2);
 		ImGui::PopStyleColor(4);
 		ImGui::PopID();
-
-		const ImVec2 tableMin = ImGui::GetItemRectMin();
-		const ImVec2 tableMax = ImGui::GetItemRectMax();
-		const float separatorX = tableStartPos.x + inspectorLabelColumnWidth;
-		ImGui::GetWindowDrawList()->AddLine(
-			ImVec2(separatorX, tableMin.y - 3.0f),
-			ImVec2(separatorX, tableMax.y + 3.0f),
-			separatorColor,
-			separatorThickness);
 	}
 
 	static void DrawInspectorHandleModeRow(
@@ -435,14 +436,15 @@ namespace Kita {
 		float inspectorLabelColumnWidth,
 		bool& isHightLight)
 	{
+		(void)tableStartPos;
+		(void)inspectorLabelColumnWidth;
 		ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
 		const ImU32 bgColor = isHightLight ? tableBgColor_Light : tableBgColor_Dark;
 		ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, bgColor);
 		isHightLight = !isHightLight;
 
-		const float textHeight = ImGui::GetTextLineHeight();
-		const float contentHeight = rowHeight - ImGui::GetStyle().CellPadding.y * 2.0f;
-		const float labelYOffset = ImMax(0.0f, (contentHeight - textHeight) * 0.5f);
+		const float labelYOffset = GetInspectorLabelYOffset();
+		const float controlYOffset = GetInspectorControlYOffset();
 
 		ImGui::TableSetColumnIndex(0);
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + labelYOffset);
@@ -450,7 +452,7 @@ namespace Kita {
 		ImGui::TextUnformatted(label);
 
 		ImGui::TableSetColumnIndex(1);
-		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 2.0f);
+		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + controlYOffset);
 		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + textPaddingX);
 
 		const char* items[] = { "Free", "Aligned", "Mirrored" };
@@ -461,25 +463,13 @@ namespace Kita {
 		ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.10f, 0.12f, 0.16f, 1.0f));
 		ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.12f, 0.15f, 0.20f, 1.0f));
 		ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.20f, 0.24f, 0.30f, 1.0f));
-		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 3.0f);
-		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
 		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - textPaddingX);
 		if (ImGui::Combo("##HandleMode", &currentIndex, items, IM_ARRAYSIZE(items)))
 		{
 			handleMode = static_cast<BezierHandleMode>(currentIndex);
 		}
-		ImGui::PopStyleVar(2);
 		ImGui::PopStyleColor(4);
 		ImGui::PopID();
-
-		const ImVec2 tableMin = ImGui::GetItemRectMin();
-		const ImVec2 tableMax = ImGui::GetItemRectMax();
-		const float separatorX = tableStartPos.x + inspectorLabelColumnWidth;
-		ImGui::GetWindowDrawList()->AddLine(
-			ImVec2(separatorX, tableMin.y - 3.0f),
-			ImVec2(separatorX, tableMax.y + 3.0f),
-			separatorColor,
-			separatorThickness);
 	}
 
 	static const char* ObjectTypeToString(Type type)
@@ -509,30 +499,22 @@ namespace Kita {
 
 #pragma region  ------------------------------------------------- Draw Name Component ---------------------------------------------------------
 
-			const ImGuiTableFlags infoTableFlags =
-				ImGuiTableFlags_SizingFixedFit |
-				ImGuiTableFlags_NoSavedSettings;
-
-			if (ImGui::BeginTable("##InspectorObjectInfoTable", 2, infoTableFlags))
+			if (BeginInspectorPropertyTable("##InspectorObjectInfoTable"))
 			{
 				bool isHightLight = false;
 				const ImVec2 tableStartPos = ImGui::GetCursorScreenPos();
-				ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, inspectorLabelColumn_LeftWidth);
-				ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
 
 				if (selectedObject.HasComponent<Name>())
 				{
 					auto& name = selectedObject.GetComponent<Name>().Get();
 					DrawInspectorInfoRow("Name", name, tableStartPos, inspectorLabelColumn_LeftWidth,isHightLight);
 				}
-				ImGui::TableNextRow(ImGuiTableRowFlags_None, infoRowsGap);
 				if (selectedObject.HasComponent<ObjectType>())
 				{
 					const Type& type = selectedObject.GetComponent<ObjectType>().Get();
 					const std::string typeText = ObjectTypeToString(type);
 					DrawInspectorInfoRow("Type",typeText,tableStartPos,inspectorLabelColumn_LeftWidth, isHightLight);
 				}
-				ImGui::TableNextRow(ImGuiTableRowFlags_None, infoRowsGap);
 				if (selectedObject.HasComponent<Transform>())
 				{
 					auto& transform = selectedObject.GetComponent<Transform>();
@@ -541,7 +523,7 @@ namespace Kita {
 					DrawInspectorVec3Row("Scale", transform.GetScale(), tableStartPos, inspectorLabelColumn_LeftWidth, isHightLight);
 				}
 
-				ImGui::EndTable();
+				EndInspectorPropertyTable();
 			}
 
 			DrawComponent<LineRenderer>("LineRenderer", selectedObject, [&](LineRenderer& lineRenderer)
@@ -549,16 +531,10 @@ namespace Kita {
 				const float treeIndent = ImGui::GetTreeNodeToLabelSpacing();
 				ImGui::Unindent(treeIndent);
 
-				const ImGuiTableFlags componentTableFlags =
-					ImGuiTableFlags_SizingFixedFit |
-					ImGuiTableFlags_NoSavedSettings;
-
-				if (ImGui::BeginTable("##LineRendererComponentTable", 2, componentTableFlags))
+				if (BeginInspectorPropertyTable("##LineRendererComponentTable"))
 				{
 					bool isHightLight = false;
 					const ImVec2 tableStartPos = ImGui::GetCursorScreenPos();
-					ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, inspectorLabelColumn_LeftWidth);
-					ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
 
 					CurveType curveType = lineRenderer.GetCurveType();
 					DrawInspectorCurveTypeRow("Curve Type", curveType, tableStartPos, inspectorLabelColumn_LeftWidth, isHightLight);
@@ -591,13 +567,6 @@ namespace Kita {
 						inspectorLabelColumn_LeftWidth,
 						isHightLight);
 
-					DrawInspectorInfoRow(
-						"Segment Count",
-						std::to_string(lineRenderer.GetBezierSegmentCount()),
-						tableStartPos,
-						inspectorLabelColumn_LeftWidth,
-						isHightLight);
-
 					if (selectedPoint.id != -1)
 					{
 						BezierHandleMode handleMode = lineRenderer.GetHandleModeForPoint(selectedPoint.id);
@@ -608,7 +577,7 @@ namespace Kita {
 						}
 					}
 
-					ImGui::EndTable();
+					EndInspectorPropertyTable();
 				}
 
 				if (lineRenderer.GetCurveType() == CurveType::BezierCubic)
@@ -642,34 +611,21 @@ namespace Kita {
 				{
 					ImGui::Unindent(treeIndent);
 
-					const ImGuiTableFlags pointTableFlags =
-						ImGuiTableFlags_SizingFixedFit |
-						ImGuiTableFlags_NoSavedSettings;
-
-					if (ImGui::BeginTable("##LineRendererControlPointsTable", 2, pointTableFlags))
+					if (BeginInspectorPropertyTable("##LineRendererControlPointsTable"))
 					{
 						bool pointHighlight = false;
 						const ImVec2 pointTableStartPos = ImGui::GetCursorScreenPos();
-						ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, inspectorLabelColumn_LeftWidth);
-						ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
 
 						for (uint32_t i = 0; i < lineRenderer.GetControlPointCount(); ++i)
 						{
+							if (!lineRenderer.IsAnchorControlPoint(static_cast<int>(i)))
+							{
+								continue;
+							}
+
 							auto currentPoint = lineRenderer.GetControlPointByIndex(static_cast<int>(i));
 							glm::vec3 pointPosition = currentPoint.position;
-							std::string pointLabel;
-							if (lineRenderer.IsAnchorControlPoint(static_cast<int>(i)))
-							{
-								pointLabel = "Anchor " + std::to_string(i / 3);
-							}
-							else if (static_cast<int>(i) % 3 == 1)
-							{
-								pointLabel = "Out Handle " + std::to_string(i / 3);
-							}
-							else
-							{
-								pointLabel = "In Handle " + std::to_string((i + 1) / 3);
-							}
+							const std::string pointLabel = "Anchor " + std::to_string(i / 3);
 							DrawInspectorVec3Row(
 								pointLabel.c_str(),
 								pointPosition,
@@ -689,7 +645,7 @@ namespace Kita {
 							}
 						}
 
-						ImGui::EndTable();
+						EndInspectorPropertyTable();
 					}
 
 					ImGui::Indent(treeIndent);

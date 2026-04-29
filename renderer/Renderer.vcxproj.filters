@@ -23,6 +23,9 @@
     <ClInclude Include="src\ui\SceneViewportPanel.h">
       <Filter>ui</Filter>
     </ClInclude>
+    <ClInclude Include="src\ui\UIColorPanel.h">
+      <Filter>ui</Filter>
+    </ClInclude>
     <ClInclude Include="src\utils\FileDialogs.h" />
     <ClInclude Include="src\ui\ContentBrowserPanel.h" />
     <ClInclude Include="src\file\Project.h" />
@@ -38,6 +41,9 @@
       <Filter>ui</Filter>
     </ClCompile>
     <ClCompile Include="src\ui\SceneViewportPanel.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\UIColorPanel.cpp">
       <Filter>ui</Filter>
     </ClCompile>
     <ClCompile Include="src\utils\FileDialogs.cpp" />
