@@ -40,7 +40,6 @@ namespace Kita {
 		LineRenderer();
 		~LineRenderer();
 
-		void SetControlPoints(const std::vector<glm::vec3>& points);
 		std::vector<PointData>& GetControlPoints() { return m_ControlPoints; }
 		const std::vector<PointData>& GetControlPoints() const { return m_ControlPoints; }
 
@@ -58,12 +57,8 @@ namespace Kita {
 		void SetLineColor(const glm::vec4& color) { m_LineColor = color; }
 		const glm::vec4& GetLineColor() const { return m_LineColor; }
 		uint32_t GetControlPointCount() const { return static_cast<uint32_t>(m_ControlPoints.size()); }
-		uint32_t GetBezierSegmentCount() const;
 
 		bool IsAnchorControlPoint(int index) const;
-		int GetAnchorIndexForControlPoint(int index) const;
-		int GetLeftHandleIndexForAnchor(int anchorIndex) const;
-		int GetRightHandleIndexForAnchor(int anchorIndex) const;
 
 		BezierHandleMode GetHandleModeForPoint(int index) const;
 		void SetHandleModeForPoint(int index, BezierHandleMode mode);
@@ -71,25 +66,26 @@ namespace Kita {
 		void AppendBezierSegment();
 		void RemoveLastBezierSegment();
 
-		glm::vec4 GetDefaultControlPointColor(int index) const;
 		float GetControlPointRadius(int index) const;
 		void ResetControlPointVisual(int index);
-		void ResetAllControlPointVisuals();
 
 		const Ref<VertexArray>& GetCurveVAO() const { return m_Curve_VAO; }
 		uint32_t GetCurveVertexCount() const { return m_CurveVertexCount; }
 
 		void RebuildIfNeeded();
-		void MarkDirty() { m_Dirty = true; m_HelperDirty = true; }
 
 		void MoveControlPoint(int index, const glm::vec3& newPosition);
 		void SetSelectedControlPoint(int index);
 		void ClearSelectedControlPoint();
-		int GetSelectedControlPoint() const { return m_SelectedControlPointIndex; }
-		int GetSelectedAnchorIndex() const { return m_SelectedAnchorIndex; }
 		void RenderEditorHelpers(const glm::mat4& model, uint32_t objectId);
 
 	private:
+		int GetAnchorIndexForControlPoint(int index) const;
+		int GetLeftHandleIndexForAnchor(int anchorIndex) const;
+		int GetRightHandleIndexForAnchor(int anchorIndex) const;
+		glm::vec4 GetDefaultControlPointColor(int index) const;
+		void ResetAllControlPointVisuals();
+
 		glm::vec3 EvaluateBezierCubic(const glm::vec3& p0, const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, float t);
 		void BuildBezierCubic();
 		void InitBuffer();

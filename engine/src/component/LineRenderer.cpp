@@ -27,20 +27,6 @@ namespace Kita {
 	{
 	}
 
-	void LineRenderer::SetControlPoints(const std::vector<glm::vec3>& points)
-	{
-		m_ControlPoints.clear();
-		for (int i = 0; i < (int)points.size(); ++i)
-		{
-			m_ControlPoints.push_back({ points[i], i });
-		}
-
-		ResizeHandleModesToMatchAnchors();
-		ResetAllControlPointVisuals();
-		m_Dirty = true;
-		m_HelperDirty = true;
-	}
-
 	const PointData& LineRenderer::GetControlPointByIndex(const int index) const
 	{
 		return m_ControlPoints[index];
@@ -55,14 +41,6 @@ namespace Kita {
 	{
 		m_ControlPoints[index].color = color;
 		m_HelperDirty = true;
-	}
-
-	uint32_t LineRenderer::GetBezierSegmentCount() const
-	{
-		if (m_ControlPoints.size() < 4 || (m_ControlPoints.size() - 1) % 3 != 0)
-			return 0;
-
-		return static_cast<uint32_t>((m_ControlPoints.size() - 1) / 3);
 	}
 
 	bool LineRenderer::IsAnchorControlPoint(int index) const

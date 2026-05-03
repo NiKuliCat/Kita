@@ -53,6 +53,7 @@ namespace Kita {
 
 		m_SceneSelectionContext = CreateRef<SceneSelectionContext>();
 		m_SceneHierarchyPanel = SceneHierarchyPanel(m_Scene, m_SceneSelectionContext);
+		m_InspectorPanel = InspectorPanel(m_SceneSelectionContext);
 
 		m_SceneViewportPanels.clear();
 		m_NextViewportSerial = 1;
@@ -214,6 +215,7 @@ namespace Kita {
 		}
 
 		m_SceneHierarchyPanel.OnImGuiRender();
+		m_InspectorPanel.OnImGuiRender();
 		m_ContentBrowserPanel.OnImGuiRender();
 		m_UIColorPanel.OnImGuiRender();
 

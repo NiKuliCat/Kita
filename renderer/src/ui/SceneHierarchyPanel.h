@@ -47,7 +47,6 @@ namespace Kita {
 		operator bool() const { return !(m_SceneContext == nullptr); }
 	private:
 		void DrawObjectNode(Object obj);
-		void DrawInspectorPanel();
 		void OnSlectedObjectChange(Object obj);
 
 	private:

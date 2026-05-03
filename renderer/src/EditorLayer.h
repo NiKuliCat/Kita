@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include <Engine.h>
 #include "scene/ViewportCamera.h"
+#include "ui/InspectorPanel.h"
 #include "ui/SceneHierarchyPanel.h"
 #include "ui/SceneSelectionContext.h"
 #include "ui/SceneViewportPanel.h"
@@ -36,6 +37,7 @@ namespace Kita {
 
 		//ui
 		SceneHierarchyPanel m_SceneHierarchyPanel;
+		InspectorPanel m_InspectorPanel;
 		ContentBrowserPanel m_ContentBrowserPanel;
 		UIColorPanel m_UIColorPanel;
 		std::vector<Unique<SceneViewportPanel>> m_SceneViewportPanels{};
