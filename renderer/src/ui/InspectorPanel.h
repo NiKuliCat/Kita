@@ -48,7 +48,7 @@ namespace Kita {
 
 		void DrawInfoRow(const char* label, const std::string& value, bool& isHighlight);
 		void DrawVec3Row(const char* label, glm::vec3& value, bool& isHighlight, float speed = 0.05f);
-		void DrawFloatRow(const char* label, float& value, bool& isHighlight, float speed = 0.05f, float minValue = 0.0f);
+		void DrawFloatRow(const char* label, float& value, bool& isHighlight, float speed = 0.05f, float minValue = 0.0f, float maxValue = 0.0f);
 		void DrawColorRow(const char* label, glm::vec4& value, bool& isHighlight);
 		void DrawCurveTypeRow(const char* label, CurveType& curveType, bool& isHighlight);
 		void DrawPointCountRow(LineRenderer& lineRenderer, PointData& selectedPoint, bool& isHighlight);

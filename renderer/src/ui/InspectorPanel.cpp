@@ -166,7 +166,7 @@ namespace Kita {
 		ImGui::PopID();
 	}
 
-	void InspectorPanel::DrawFloatRow(const char* label, float& value, bool& isHighlight, float speed, float minValue)
+	void InspectorPanel::DrawFloatRow(const char* label, float& value, bool& isHighlight, float speed, float minValue, float maxValue)
 	{
 		BeginPropertyRow(isHighlight);
 		DrawPropertyLabelCell(label);
@@ -178,7 +178,7 @@ namespace Kita {
 		ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.12f, 0.15f, 0.20f, 1.0f));
 		ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.20f, 0.24f, 0.30f, 1.0f));
 		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - textPaddingX);
-		ImGui::DragFloat("##FloatValue", &value, speed, minValue, 0.0f, "%.3f");
+		ImGui::DragFloat("##FloatValue", &value, speed, minValue, maxValue, "%.3f");
 		ImGui::PopStyleColor(4);
 		ImGui::PopID();
 	}
@@ -519,7 +519,7 @@ namespace Kita {
 			}
 
 			float intensity = lightComponent.intensity;
-			DrawFloatRow("Intensity", intensity, isHighlight, 0.05f, 0.0f);
+			DrawFloatRow("Intensity", intensity, isHighlight, 0.05f, 0.0f, 10.0f);
 			if (intensity != lightComponent.intensity)
 			{
 				lightComponent.intensity = intensity;

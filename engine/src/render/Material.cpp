@@ -1,6 +1,7 @@
 #include "kita_pch.h"
 #include "Material.h"
 #include "ShaderLibrary.h"
+#include "TextureLibrary.h"
 
 namespace Kita {
 
@@ -19,9 +20,8 @@ namespace Kita {
 
 	void Material::SetAlbedoTexture(const std::string& path)
 	{
-		TextureDescriptor texDesc{};
 		m_AlbedoTexPath = path;
-		m_AlbedoTex = Texture::Create(texDesc, m_AlbedoTexPath);
+		m_AlbedoTex = TextureLibrary::GetInstance().Load(m_AlbedoTexPath);
 	}
 
 	void Material::Bind()

@@ -1495,6 +1495,8 @@
       <Filter>third-party\imguizmo</Filter>
     </ClInclude>
     <ClInclude Include="src\component\LightComponent.h" />
+    <ClInclude Include="src\asset\Asset.h" />
+    <ClInclude Include="src\render\TextureLibrary.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\component\LineRenderer.cpp">
@@ -1630,5 +1632,6 @@
       <Filter>third-party\imguizmo</Filter>
     </ClCompile>
     <ClCompile Include="src\component\LightComponent.cpp" />
+    <ClCompile Include="src\asset\Asset.cpp" />
   </ItemGroup>
 </Project>
