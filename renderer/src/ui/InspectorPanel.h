@@ -42,6 +42,7 @@ namespace Kita {
 		void DrawSelectedObject(Object& selectedObject, PointData& selectedPoint);
 		void DrawObjectInfoSection(Object& selectedObject);
 		void DrawMeshRendererProperties(MeshRenderer& meshRenderer);
+		void DrawLightComponentProperties(LightComponent& lightComponent);
 		void DrawLineRendererProperties(LineRenderer& lineRenderer, PointData& selectedPoint);
 		void DrawLineRendererControlPoints(LineRenderer& lineRenderer, PointData& selectedPoint);
 

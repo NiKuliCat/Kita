@@ -369,6 +369,14 @@ namespace Kita {
 				DrawMeshRendererProperties(meshRenderer);
 			});
 
+		DrawComponentSection<LightComponent>(
+			selectedObject,
+			"LightComponent",
+			[&](LightComponent& lightComponent)
+			{
+				DrawLightComponentProperties(lightComponent);
+			});
+
 		DrawComponentSection<LineRenderer>(
 			selectedObject,
 			"LineRenderer",
@@ -483,6 +491,38 @@ namespace Kita {
 				}
 
 				DrawInfoRow(("Albedo " + std::to_string(i)).c_str(), material->GetAlbedoTexturePath(), isHighlight);
+			}
+
+			EndPropertyTable();
+		}
+
+		ImGui::Indent(treeIndent);
+	}
+
+	void InspectorPanel::DrawLightComponentProperties(LightComponent& lightComponent)
+	{
+		const float treeIndent = ImGui::GetTreeNodeToLabelSpacing();
+		ImGui::Unindent(treeIndent);
+
+		if (BeginPropertyTable("##LightComponentTable"))
+		{
+			bool isHighlight = false;
+
+			glm::vec4 lightColor = lightComponent.color;
+			DrawColorRow("Color", lightColor, isHighlight);
+			if (lightColor.x != lightComponent.color.x ||
+				lightColor.y != lightComponent.color.y ||
+				lightColor.z != lightComponent.color.z ||
+				lightColor.w != lightComponent.color.w)
+			{
+				lightComponent.color = lightColor;
+			}
+
+			float intensity = lightComponent.intensity;
+			DrawFloatRow("Intensity", intensity, isHighlight, 0.05f, 0.0f);
+			if (intensity != lightComponent.intensity)
+			{
+				lightComponent.intensity = intensity;
 			}
 
 			EndPropertyTable();
