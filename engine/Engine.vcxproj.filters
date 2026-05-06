@@ -207,13 +207,7 @@
     <ClInclude Include="src\render\Shader.h">
       <Filter>src\render</Filter>
     </ClInclude>
-    <ClInclude Include="src\render\ShaderLibrary.h">
-      <Filter>src\render</Filter>
-    </ClInclude>
     <ClInclude Include="src\render\Texture.h">
-      <Filter>src\render</Filter>
-    </ClInclude>
-    <ClInclude Include="src\render\TextureLibrary.h">
       <Filter>src\render</Filter>
     </ClInclude>
     <ClInclude Include="src\render\UniformBuffer.h">
@@ -1515,6 +1509,7 @@
     <ClInclude Include="third-party\imguizmo\ImGuizmo.h">
       <Filter>third-party\imguizmo</Filter>
     </ClInclude>
+    <ClInclude Include="src\render\RenderAssetUtils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\asset\Asset.cpp">
@@ -1611,9 +1606,6 @@
       <Filter>src\render</Filter>
     </ClCompile>
     <ClCompile Include="src\render\Shader.cpp">
-      <Filter>src\render</Filter>
-    </ClCompile>
-    <ClCompile Include="src\render\ShaderLibrary.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
     <ClCompile Include="src\render\Texture.cpp">

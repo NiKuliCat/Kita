@@ -77,10 +77,10 @@ namespace Kita {
 	public:
 		ShaderAsset() = default;
 		ShaderAsset(const std::filesystem::path& path)
-			:m_ShaderPath(path) 
 		{
-
+			SetShaderPath(path);
 		}
+
 		virtual ~ShaderAsset() = default;
 		virtual AssetType GetType() const override { return AssetType::Shader; }
 
@@ -102,8 +102,8 @@ namespace Kita {
 	public:
 		TextureAsset() = default;
 		TextureAsset(const std::filesystem::path& path)
-			:m_TexturePath(path)
 		{
+			SetTexturePath(path);
 		}
 		virtual ~TextureAsset() = default;
 		virtual AssetType GetType() const override { return AssetType::Texture; }

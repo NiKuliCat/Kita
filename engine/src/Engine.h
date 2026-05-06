@@ -13,8 +13,6 @@
 #include "core/Input.h"
 
 #include "render/Shader.h"
-#include "render/ShaderLibrary.h"
-#include "render/TextureLibrary.h"
 #include "render/Buffer.h"
 #include "render/VertexArray.h"
 #include "render/Texture.h"

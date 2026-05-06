@@ -3,7 +3,7 @@
 
 #include <core/Core.h>
 #include "render/Renderer.h"
-#include "render/ShaderLibrary.h"
+#include "render/RenderAssetUtils.h"
 namespace Kita {
 
 	LineRenderer::LineRenderer()
@@ -280,10 +280,13 @@ namespace Kita {
 	{
 		RebuildEditorHelpersIfNeeded();
 
-		auto& shaderLibrary = ShaderLibrary::GetInstance();
 		if (m_HelperLineVertices.size() >= 2)
 		{
-			auto lineShader = shaderLibrary.Get("EditorLineShader");
+			auto lineShader = RenderAssetUtils::GetRuntimeShader("packages/render/shaders/EditorLineShader.glsl");
+			if (!lineShader)
+			{
+				return;
+			}
 			lineShader->SetMat4("Model", model);
 			lineShader->SetInt("id", objectId);
 			lineShader->SetColor("Color", glm::vec4(0.92f, 0.94f, 0.98f, 0.28f));
@@ -296,7 +299,11 @@ namespace Kita {
 
 		if (!m_HandlePointVertices.empty())
 		{
-			auto handleShader = shaderLibrary.Get("GizmoDiamond");
+			auto handleShader = RenderAssetUtils::GetRuntimeShader("packages/render/shaders/GizmoDiamond.glsl");
+			if (!handleShader)
+			{
+				return;
+			}
 			handleShader->SetMat4("Matrix_M", model);
 			handleShader->SetInt("id", objectId);
 			Renderer::DrawGizmoPoints(m_HandlePointVAO, handleShader, static_cast<uint32_t>(m_HandlePointVertices.size()));

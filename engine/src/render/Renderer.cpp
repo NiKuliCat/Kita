@@ -1,6 +1,6 @@
 #include "kita_pch.h"
 #include "Renderer.h"
-#include "ShaderLibrary.h"
+#include "RenderAssetUtils.h"
 #include "scene/Gizmo.h"
 namespace Kita {
 
@@ -18,14 +18,6 @@ namespace Kita {
 
 		InitEditorGridData();
 		Gizmo::Init();
-		// load shader
-		auto& shaderLibrary = ShaderLibrary::GetInstance();
-		shaderLibrary.Load("packages/render/shaders/EditorDefaultShader.glsl");
-		shaderLibrary.Load("packages/render/shaders/EditorLineShader.glsl");
-		shaderLibrary.Load("packages/render/shaders/EditorGridShader.glsl");
-		shaderLibrary.Load("packages/render/shaders/DefaultSkyBox.glsl");
-		shaderLibrary.Load("packages/render/shaders/GizmoPoint.glsl");
-		shaderLibrary.Load("packages/render/shaders/GizmoDiamond.glsl");
 	}
 
 	void Renderer::ShutDown()
@@ -75,8 +67,11 @@ namespace Kita {
 
 		m_RenderData->editorGridData.EditorGrid_UBO->SetData(&ubo, sizeof(EditorGridUBOData), 0);
 
-		auto& shaderlib = ShaderLibrary::GetInstance();
-		auto gridShader = shaderlib.Get("EditorGridShader");
+		auto gridShader = RenderAssetUtils::GetRuntimeShader("packages/render/shaders/EditorGridShader.glsl");
+		if (!gridShader)
+		{
+			return;
+		}
 	
 
 		RenderCommand::SetCullMode(CullMode::None);
@@ -97,8 +92,7 @@ namespace Kita {
 			return;
 		}
 
-		auto& shaderlib = ShaderLibrary::GetInstance();
-		auto skyboxShader = shaderlib.Get("DefaultSkyBox");
+		auto skyboxShader = RenderAssetUtils::GetRuntimeShader("packages/render/shaders/DefaultSkyBox.glsl");
 		if (!skyboxShader)
 		{
 			return;

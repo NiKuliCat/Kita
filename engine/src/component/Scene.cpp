@@ -6,7 +6,7 @@
 #include "LineRenderer.h"
 #include "LightComponent.h"
 #include "render/Renderer.h"
-#include "render/ShaderLibrary.h"
+#include "render/RenderAssetUtils.h"
 #include <render/scene/Gizmo.h>
 
 
@@ -105,7 +105,11 @@ namespace Kita {
 			auto points = lineRenderer.GetControlPoints();
 			uint32_t id = (uint32_t)entity;
 
-			auto lineShader = ShaderLibrary::GetInstance().Get("EditorLineShader");
+			auto lineShader = RenderAssetUtils::GetRuntimeShader("packages/render/shaders/EditorLineShader.glsl");
+			if (!lineShader)
+			{
+				continue;
+			}
 			lineShader->SetMat4("Model", model);
 			lineShader->SetInt("id", id);
 			lineShader->SetColor("Color", lineRenderer.GetLineColor());

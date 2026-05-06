@@ -196,13 +196,12 @@
     <ClInclude Include="src\render\GraphicsContext.h" />
     <ClInclude Include="src\render\Light.h" />
     <ClInclude Include="src\render\Material.h" />
+    <ClInclude Include="src\render\RenderAssetUtils.h" />
     <ClInclude Include="src\render\RenderCommand.h" />
     <ClInclude Include="src\render\Renderer.h" />
     <ClInclude Include="src\render\RendererAPI.h" />
     <ClInclude Include="src\render\Shader.h" />
-    <ClInclude Include="src\render\ShaderLibrary.h" />
     <ClInclude Include="src\render\Texture.h" />
-    <ClInclude Include="src\render\TextureLibrary.h" />
     <ClInclude Include="src\render\UniformBuffer.h" />
     <ClInclude Include="src\render\VertexArray.h" />
     <ClInclude Include="src\render\font\FontManager.h" />
@@ -672,7 +671,6 @@
     <ClCompile Include="src\render\Renderer.cpp" />
     <ClCompile Include="src\render\RendererAPI.cpp" />
     <ClCompile Include="src\render\Shader.cpp" />
-    <ClCompile Include="src\render\ShaderLibrary.cpp" />
     <ClCompile Include="src\render\Texture.cpp" />
     <ClCompile Include="src\render\UniformBuffer.cpp" />
     <ClCompile Include="src\render\VertexArray.cpp" />

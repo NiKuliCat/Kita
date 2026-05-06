@@ -1,9 +1,8 @@
 #include "kita_pch.h"
 #include "Asset.h"
 #include "AssetManager.h"
+#include "core/Log.h"
 #include "render/Material.h"
-#include "render/ShaderLibrary.h"
-#include "render/TextureLibrary.h"
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
@@ -25,9 +24,9 @@ namespace Kita{
 		if (Asset::IsValidHandle(ShaderHandle))
 		{
 			auto shaderAsset = AssetManager::GetInstance().GetShaderAsset(ShaderHandle);
-			if (shaderAsset)
+			if (shaderAsset && shaderAsset->GetRuntimeShader())
 			{
-				material.SetShader(shaderAsset->GetFilePath().string());
+				material.SetShader(shaderAsset->GetRuntimeShader());
 			}
 			else
 			{
@@ -42,9 +41,9 @@ namespace Kita{
 		if (Asset::IsValidHandle(AlbedoTextureHandle))
 		{
 			auto textureAsset = AssetManager::GetInstance().GetTextureAsset(AlbedoTextureHandle);
-			if (textureAsset)
+			if (textureAsset && textureAsset->GetRuntimeTexture())
 			{
-				material.SetAlbedoTexture(textureAsset->GetFilePath().string());
+				material.SetAlbedoTexture(textureAsset->GetRuntimeTexture());
 			}
 			else
 			{
@@ -61,13 +60,20 @@ namespace Kita{
 	void ShaderAsset::SetShaderPath(const std::filesystem::path& path)
 	{
 		m_ShaderPath = path;
-		m_RuntimeShader = ShaderLibrary::GetInstance().Load(m_ShaderPath.string());
+		m_RuntimeShader = Shader::Create(m_ShaderPath.string());
 	}
 
 	void TextureAsset::SetTexturePath(const std::filesystem::path& path)
 	{
 		m_TexturePath = path;
-		m_RuntimeTexture = TextureLibrary::GetInstance().Load(m_TexturePath.string());
+		if (m_TexturePath.empty())
+		{
+			m_RuntimeTexture = nullptr;
+			return;
+		}
+
+		TextureDescriptor desc{};
+		m_RuntimeTexture = Texture::Create(desc, m_TexturePath.string());
 	}
 
 	bool MeshAsset::LoadFromFile(const std::filesystem::path& path)

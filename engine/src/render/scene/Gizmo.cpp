@@ -1,7 +1,7 @@
 #include "kita_pch.h"
 #include "Gizmo.h"
 #include "core/Log.h"
-#include "render/ShaderLibrary.h"
+#include "render/RenderAssetUtils.h"
 namespace Kita {
 
 	Gizmo::SceneGizmoData* Gizmo::m_SceneGizmoData = nullptr;
@@ -52,7 +52,11 @@ namespace Kita {
 
 		m_SceneGizmoData->m_Points_VBO->SetData(data.data(), bytes);
 
-		auto shader = ShaderLibrary::GetInstance().Get("GizmoPoint");
+		auto shader = RenderAssetUtils::GetRuntimeShader("packages/render/shaders/GizmoPoint.glsl");
+		if (!shader)
+		{
+			return;
+		}
 		shader->SetMat4("Matrix_M", model);
 		shader->SetInt("id", id);
 		Renderer::DrawGizmoPoints(m_SceneGizmoData->m_Points_VAO, shader, static_cast<uint32_t>(data.size()));

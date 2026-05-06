@@ -15,7 +15,6 @@
 #include "component/Object.h"
 #include "render/Renderer.h"
 #include "render/Texture.h"
-#include "render/ShaderLibrary.h"
 #include  "render/FrameBuffer.h"
 namespace Kita {
 

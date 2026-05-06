@@ -13,14 +13,14 @@ namespace Kita {
 
 		Ref<Shader>& GetShader() { return m_Shader; }
 		const Ref<Shader>& GetShader() const { return m_Shader; }
+		void SetShader(const Ref<Shader>& shader);
 		void SetShader(const std::string& path);
 		void ClearShader();
 
+		const Ref<Texture>& GetAlbedoTexture() const { return m_AlbedoTex; }
+		void SetAlbedoTexture(const Ref<Texture>& texture);
 		void SetAlbedoTexture(const std::string& path);
 		void ClearAlbedoTexture();
-
-		const std::string& GetShaderFilePath() const { return m_ShaderFilePath; }
-		const std::string& GetAlbedoTexturePath() const { return m_AlbedoTexPath; }
 
 		glm::vec4& GetBaseColor() { return m_BaseColor; }
 		const glm::vec4& GetBaseColor() const { return m_BaseColor; }
@@ -28,9 +28,6 @@ namespace Kita {
 
 		void Bind();
 	private:
-
-		std::string m_ShaderFilePath;
-		std::string m_AlbedoTexPath;
 		glm::vec4 m_BaseColor = { 1,1,1,1 };
 		Ref<Shader> m_Shader = nullptr;
 		Ref<Texture> m_AlbedoTex = nullptr;

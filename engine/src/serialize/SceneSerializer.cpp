@@ -1,6 +1,37 @@
 #include "kita_pch.h"
 #include "SceneSerializer.h"
 #include "asset/AssetManager.h"
+
+namespace
+{
+	Kita::CurveType DeserializeCurveType(const Kita::json& value)
+	{
+		const uint32_t curveTypeValue = value.get<uint32_t>();
+		if (curveTypeValue == static_cast<uint32_t>(Kita::CurveType::Polyline))
+		{
+			return Kita::CurveType::Polyline;
+		}
+
+		return Kita::CurveType::BezierCubic;
+	}
+
+	Kita::BezierHandleMode DeserializeBezierHandleMode(const Kita::json& value)
+	{
+		const uint32_t handleModeValue = value.get<uint32_t>();
+		if (handleModeValue == static_cast<uint32_t>(Kita::BezierHandleMode::Aligned))
+		{
+			return Kita::BezierHandleMode::Aligned;
+		}
+
+		if (handleModeValue == static_cast<uint32_t>(Kita::BezierHandleMode::Mirrored))
+		{
+			return Kita::BezierHandleMode::Mirrored;
+		}
+
+		return Kita::BezierHandleMode::Free;
+	}
+}
+
 namespace Kita {
 
 
@@ -100,6 +131,11 @@ namespace Kita {
 		{
 			objectJson["lightComponent"] = ComponentSerializer::SerializeLightComponent(object.GetComponent<LightComponent>());
 		}
+
+		if (object.HasComponent<LineRenderer>())
+		{
+			objectJson["lineRenderer"] = ComponentSerializer::SerializeLineRenderer(object.GetComponent<LineRenderer>());
+		}
 	}
 
 	void SceneSerializer::DeserializeObject(const json& entityData)
@@ -121,6 +157,12 @@ namespace Kita {
 		{
 			auto& lightComponent = object.AddComponent<LightComponent>();
 			lightComponent = ComponentSerializer::DeserializeLightComponent(entityData.at("lightComponent"));
+		}
+
+		if (entityData.contains("lineRenderer"))
+		{
+			auto& lineRenderer = object.AddComponent<LineRenderer>();
+			lineRenderer = ComponentSerializer::DeserializeLineRenderer(entityData.at("lineRenderer"));
 		}
 	}
 
@@ -213,6 +255,124 @@ namespace Kita {
 		light.intensity = lightComponentJson.at("intensity").get<float>();
 
 		return light;
+	}
+
+	json ComponentSerializer::SerializeLineRenderer(const LineRenderer& lineRenderer)
+	{
+		json lineRendererJson;
+		lineRendererJson["curveType"] = static_cast<uint32_t>(lineRenderer.GetCurveType());
+		lineRendererJson["lineWidth"] = lineRenderer.GetLineWidth();
+		lineRendererJson["lineColor"] = JsonUtils::SerializeVec4(lineRenderer.GetLineColor());
+
+		lineRendererJson["controlPoints"] = json::array();
+		const auto& controlPoints = lineRenderer.GetControlPoints();
+		for (const auto& point : controlPoints)
+		{
+			json pointJson;
+			pointJson["position"] = JsonUtils::SerializeVec3(point.position);
+			pointJson["color"] = JsonUtils::SerializeVec4(point.color);
+			lineRendererJson["controlPoints"].push_back(pointJson);
+		}
+
+		lineRendererJson["handleModes"] = json::array();
+		for (uint32_t i = 0; i < lineRenderer.GetControlPointCount(); i += 3)
+		{
+			lineRendererJson["handleModes"].push_back(
+				static_cast<uint32_t>(lineRenderer.GetHandleModeForPoint(static_cast<int>(i))));
+		}
+
+		return lineRendererJson;
+	}
+
+	LineRenderer ComponentSerializer::DeserializeLineRenderer(const json& lineRendererJson)
+	{
+		LineRenderer lineRenderer;
+		if (!lineRendererJson.is_object())
+		{
+			return lineRenderer;
+		}
+
+		if (lineRendererJson.contains("curveType"))
+		{
+			lineRenderer.SetCurveType(DeserializeCurveType(lineRendererJson.at("curveType")));
+		}
+
+		if (lineRendererJson.contains("lineWidth"))
+		{
+			lineRenderer.SetLineWidth(lineRendererJson.at("lineWidth").get<float>());
+		}
+
+		if (lineRendererJson.contains("lineColor"))
+		{
+			lineRenderer.SetLineColor(JsonUtils::DeserializeVec4(lineRendererJson.at("lineColor")));
+		}
+
+		std::vector<glm::vec3> serializedPositions;
+		std::vector<glm::vec4> serializedColors;
+		if (lineRendererJson.contains("controlPoints") && lineRendererJson.at("controlPoints").is_array())
+		{
+			const auto& controlPointsJson = lineRendererJson.at("controlPoints");
+			const size_t pointCount = controlPointsJson.size();
+			if (pointCount >= 4 && ((pointCount - 1) % 3 == 0))
+			{
+				while (lineRenderer.GetControlPointCount() < pointCount)
+				{
+					lineRenderer.AppendBezierSegment();
+				}
+
+				while (lineRenderer.GetControlPointCount() > pointCount)
+				{
+					lineRenderer.RemoveLastBezierSegment();
+				}
+
+				serializedPositions.resize(pointCount);
+				serializedColors.resize(pointCount);
+				const auto& runtimeControlPoints = lineRenderer.GetControlPoints();
+				for (size_t i = 0; i < pointCount; ++i)
+				{
+					const auto& pointJson = controlPointsJson[i];
+					serializedPositions[i] = pointJson.contains("position")
+						? JsonUtils::DeserializeVec3(pointJson.at("position"))
+						: runtimeControlPoints[i].position;
+					serializedColors[i] = pointJson.contains("color")
+						? JsonUtils::DeserializeVec4(pointJson.at("color"))
+						: runtimeControlPoints[i].color;
+				}
+			}
+			else if (pointCount > 0)
+			{
+				KITA_CORE_WARN("DeserializeLineRenderer skipped invalid control point count: {}", pointCount);
+			}
+		}
+
+		if (lineRendererJson.contains("handleModes") && lineRendererJson.at("handleModes").is_array())
+		{
+			const auto& handleModesJson = lineRendererJson.at("handleModes");
+			const size_t anchorCount = (static_cast<size_t>(lineRenderer.GetControlPointCount()) + 2) / 3;
+			const size_t count = std::min(anchorCount, handleModesJson.size());
+			for (size_t anchorIndex = 0; anchorIndex < count; ++anchorIndex)
+			{
+				lineRenderer.SetHandleModeForPoint(
+					static_cast<int>(anchorIndex * 3),
+					DeserializeBezierHandleMode(handleModesJson[anchorIndex]));
+			}
+		}
+
+		if (!serializedPositions.empty())
+		{
+			auto& runtimeControlPoints = lineRenderer.GetControlPoints();
+			const size_t count = std::min(runtimeControlPoints.size(), serializedPositions.size());
+			for (size_t i = 0; i < count; ++i)
+			{
+				runtimeControlPoints[i].position = serializedPositions[i];
+				runtimeControlPoints[i].color = serializedColors[i];
+				runtimeControlPoints[i].id = static_cast<int>(i);
+			}
+
+			lineRenderer.SetCurveType(lineRenderer.GetCurveType());
+		}
+
+		return lineRenderer;
 	}
 
 }
