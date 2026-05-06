@@ -4,6 +4,7 @@
 #include "Transform.h"
 #include "MeshRenderer.h"
 #include "LineRenderer.h"
+#include "LightComponent.h"
 #include "render/Renderer.h"
 #include "render/ShaderLibrary.h"
 #include <render/scene/Gizmo.h>
@@ -135,6 +136,24 @@ namespace Kita {
 		settings.CellSize = 1.0f;
 		Renderer::DrawEditorGrids(settings);
 
+	}
+
+	DirectLightData Scene::GetMainDirectLightData() const
+	{
+		DirectLightData lightData{};
+		lightData.Color = glm::vec4(1.0f);
+		lightData.Direction = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+
+		auto lightView = m_Registry.view<Transform, LightComponent>();
+		for (auto entity : lightView)
+		{
+			auto [lightTransform, lightComponent] = lightView.get<Transform, LightComponent>(entity);
+			lightData.Direction = glm::vec4(lightTransform.GetFrontDir(), lightComponent.intensity);
+			lightData.Color = lightComponent.color;
+			break;
+		}
+
+		return lightData;
 	}
 }
 

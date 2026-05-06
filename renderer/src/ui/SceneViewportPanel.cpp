@@ -64,9 +64,6 @@ namespace Kita {
 		m_WindowName(std::move(windowName))
 	{
 		InitFrameBuffer();
-
-		m_LightTransform = Transform();
-		m_LightTransform.SetRotation({ 135.0f, 60.0f, 0.0f });
 		m_GizmoControlType = ImGuizmo::OPERATION::TRANSLATE;
 	}
 
@@ -315,9 +312,7 @@ namespace Kita {
 			m_SceneTexID = m_SceneResolveFrameBuffer->GetColorAttachment(0);
 		}
 
-		DirectLightData lightData{};
-		lightData.Color = glm::vec4(1.0f);
-		lightData.Direction = glm::vec4(m_LightTransform.GetFrontDir(), 1.0f);
+		DirectLightData lightData = m_SceneContext->GetMainDirectLightData();
 
 		m_PickingFrameBuffer->Bind();
 		Renderer::BeginScene(

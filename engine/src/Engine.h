@@ -36,6 +36,7 @@
 #include "component/Transform.h"
 #include "component/MeshRenderer.h"
 #include "component/LineRenderer.h"
+#include "component/LightComponent.h"
 
 #include "serialize/SceneSerializer.h"
 

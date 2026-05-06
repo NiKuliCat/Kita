@@ -156,6 +156,7 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\component\LightComponent.h" />
     <ClInclude Include="src\Engine.h" />
     <ClInclude Include="src\component\LineRenderer.h" />
     <ClInclude Include="src\component\MeshRenderer.h" />
@@ -632,6 +633,7 @@
     <ClInclude Include="third-party\imguizmo\ImGuizmo.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\component\LightComponent.cpp" />
     <ClCompile Include="src\component\LineRenderer.cpp" />
     <ClCompile Include="src\component\MeshRenderer.cpp" />
     <ClCompile Include="src\component\Object.cpp" />
@@ -658,7 +660,6 @@
     <ClCompile Include="src\platform\windows\WindowsWindow.cpp" />
     <ClCompile Include="src\render\Buffer.cpp" />
     <ClCompile Include="src\render\FrameBuffer.cpp" />
-    <ClCompile Include="src\render\Light.cpp" />
     <ClCompile Include="src\render\Material.cpp" />
     <ClCompile Include="src\render\RenderCommand.cpp" />
     <ClCompile Include="src\render\Renderer.cpp" />

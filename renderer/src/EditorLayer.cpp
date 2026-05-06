@@ -36,6 +36,11 @@ namespace Kita {
 			auto& lineRenderer2 = curveObj2.AddComponent<LineRenderer>();
 			lineRenderer2.SetLineWidth(4.0f);
 			lineRenderer2.SetLineColor({ 1,0,1,1 });
+
+			auto light = m_Scene->CreateObject("light");
+			auto& lightcomponent = light.AddComponent<LightComponent>();
+			auto& lightTransform = light.GetComponent<Transform>();
+			lightTransform.SetRotation({ 135.0f, 60.0f, 0.0f });
 		}
 
 		m_SceneSerializer = SceneSerializer(m_Scene);

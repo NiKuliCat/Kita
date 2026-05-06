@@ -1494,6 +1494,7 @@
     <ClInclude Include="third-party\imguizmo\ImGuizmo.h">
       <Filter>third-party\imguizmo</Filter>
     </ClInclude>
+    <ClInclude Include="src\component\LightComponent.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\component\LineRenderer.cpp">
@@ -1568,9 +1569,6 @@
     <ClCompile Include="src\render\FrameBuffer.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
-    <ClCompile Include="src\render\Light.cpp">
-      <Filter>src\render</Filter>
-    </ClCompile>
     <ClCompile Include="src\render\Material.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
@@ -1631,5 +1629,6 @@
     <ClCompile Include="third-party\imguizmo\ImGuizmo.cpp">
       <Filter>third-party\imguizmo</Filter>
     </ClCompile>
+    <ClCompile Include="src\component\LightComponent.cpp" />
   </ItemGroup>
 </Project>

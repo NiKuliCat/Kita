@@ -55,8 +55,6 @@ namespace Kita {
 		bool m_IsOpen = true;
 		bool m_UseInitialPlacement = true;
 		bool m_RequestWindowFocus = true;
-
-		Transform m_LightTransform;
 	};
 
 }
