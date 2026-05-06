@@ -1,6 +1,7 @@
 #include "renderer_pch.h"
 #include "InspectorPanel.h"
 #include "imgui.h"
+#include "render/ShaderLibrary.h"
 #include <imgui_internal.h>
 
 namespace Kita {
@@ -228,9 +229,12 @@ namespace Kita {
 		DrawPropertyLabelCell("Point Count");
 		PreparePropertyValueCell(GetInspectorControlYOffset());
 
-		const std::string pointCountText = std::to_string(lineRenderer.GetControlPointCount());
+		const uint32_t anchorCount = lineRenderer.GetControlPointCount() == 0
+			? 0
+			: static_cast<uint32_t>((lineRenderer.GetControlPointCount() + 2) / 3);
+		const std::string pointCountText = std::to_string(anchorCount);
 		const float totalWidth = ImGui::GetContentRegionAvail().x - textPaddingX;
-		const float buttonWidth = 56.0f;
+		const float buttonWidth = 30.0f;
 		const float spacing = 8.0f;
 		const float textWidth = totalWidth - buttonWidth * 2.0f - spacing * 2.0f;
 		const bool canEditSegments = lineRenderer.GetCurveType() == CurveType::BezierCubic;
@@ -243,12 +247,12 @@ namespace Kita {
 		{
 			ImGui::BeginDisabled();
 		}
-		if (ImGui::Button("添加", ImVec2(buttonWidth, 0.0f)))
+		if (ImGui::Button("+", ImVec2(buttonWidth, 0.0f)))
 		{
 			lineRenderer.AppendBezierSegment();
 		}
 		ImGui::SameLine(0.0f, spacing);
-		if (ImGui::Button("减少", ImVec2(buttonWidth, 0.0f)))
+		if (ImGui::Button("-", ImVec2(buttonWidth, 0.0f)))
 		{
 			lineRenderer.RemoveLastBezierSegment();
 			if (selectedPoint.id >= static_cast<int>(lineRenderer.GetControlPointCount()))
@@ -357,6 +361,14 @@ namespace Kita {
 	{
 		DrawObjectInfoSection(selectedObject);
 
+		DrawComponentSection<MeshRenderer>(
+			selectedObject,
+			"MeshRenderer",
+			[&](MeshRenderer& meshRenderer)
+			{
+				DrawMeshRendererProperties(meshRenderer);
+			});
+
 		DrawComponentSection<LineRenderer>(
 			selectedObject,
 			"LineRenderer",
@@ -397,6 +409,86 @@ namespace Kita {
 		}
 
 		EndPropertyTable();
+	}
+
+	void InspectorPanel::DrawMeshRendererProperties(MeshRenderer& meshRenderer)
+	{
+		const float treeIndent = ImGui::GetTreeNodeToLabelSpacing();
+		ImGui::Unindent(treeIndent);
+
+		if (BeginPropertyTable("##MeshRendererComponentTable"))
+		{
+			bool isHighlight = false;
+
+			DrawInfoRow("Mesh Source", meshRenderer.GetMeshFilePath(), isHighlight);
+			DrawInfoRow("SubMesh Count", std::to_string(meshRenderer.GetSubMeshCount()), isHighlight);
+
+			auto shaderNames = ShaderLibrary::GetInstance().GetShaderNames();
+			auto& materials = meshRenderer.GetMaterials();
+			for (size_t i = 0; i < materials.size(); ++i)
+			{
+				auto& material = materials[i];
+				if (!material)
+				{
+					DrawInfoRow(("Material " + std::to_string(i)).c_str(), "None", isHighlight);
+					continue;
+				}
+
+				const std::string materialLabel = "Material " + std::to_string(i);
+				DrawInfoRow(materialLabel.c_str(), "Slot", isHighlight);
+
+				std::string currentShader = material->GetShader()
+					? material->GetShader()->GetName()
+					: material->GetShaderFilePath();
+
+				BeginPropertyRow(isHighlight);
+				DrawPropertyLabelCell(("Shader " + std::to_string(i)).c_str());
+				PreparePropertyValueCell(GetInspectorControlYOffset());
+
+				ImGui::PushID(static_cast<int>(i));
+				ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.07f, 0.09f, 0.12f, 1.0f));
+				ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.10f, 0.12f, 0.16f, 1.0f));
+				ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.12f, 0.15f, 0.20f, 1.0f));
+				ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.20f, 0.24f, 0.30f, 1.0f));
+				ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - textPaddingX);
+				if (ImGui::BeginCombo("##ShaderSelector", currentShader.c_str()))
+				{
+					for (const auto& shaderName : shaderNames)
+					{
+						const bool isSelected = (currentShader == shaderName);
+						if (ImGui::Selectable(shaderName.c_str(), isSelected))
+						{
+							material->SetShader(shaderName);
+							currentShader = shaderName;
+						}
+
+						if (isSelected)
+						{
+							ImGui::SetItemDefaultFocus();
+						}
+					}
+					ImGui::EndCombo();
+				}
+				ImGui::PopStyleColor(4);
+				ImGui::PopID();
+
+				glm::vec4 baseColor = material->GetBaseColor();
+				DrawColorRow(("Base Color " + std::to_string(i)).c_str(), baseColor, isHighlight);
+				if (baseColor.x != material->GetBaseColor().x ||
+					baseColor.y != material->GetBaseColor().y ||
+					baseColor.z != material->GetBaseColor().z ||
+					baseColor.w != material->GetBaseColor().w)
+				{
+					material->SetBaseColor(baseColor);
+				}
+
+				DrawInfoRow(("Albedo " + std::to_string(i)).c_str(), material->GetAlbedoTexturePath(), isHighlight);
+			}
+
+			EndPropertyTable();
+		}
+
+		ImGui::Indent(treeIndent);
 	}
 
 	void InspectorPanel::DrawLineRendererProperties(LineRenderer& lineRenderer, PointData& selectedPoint)

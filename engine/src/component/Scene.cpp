@@ -67,19 +67,18 @@ namespace Kita {
 
 			glm::mat4 model = transform.GetTransformMatrix();
 
-			auto shader = meshRenderer.GetMaterial()->GetShader();
-			uint32_t id = (uint32_t)entity;
-			shader->SetMat4("Model", model);
-			shader->SetInt("id", id);
 
-			auto& shaderLib = ShaderLibrary::GetInstance();
-			auto lineShader = shaderLib.Get("EditorLineShader");
 			const auto& meshs = meshRenderer.GetMeshs();
-			lineShader->SetMat4("Model", model);
-			lineShader->SetInt("id", id);
-
-			for (const auto& mesh : meshs)
+			const auto& mats = meshRenderer.GetMaterials();
+			for (size_t i = 0;i < meshs.size();i++)
 			{
+				auto mesh = meshs[i];
+				auto mat = mats[i];
+				auto shader = mat->GetShader();
+				uint32_t id = (uint32_t)entity;
+				shader->SetMat4("Model", model);
+				shader->SetInt("id", id);
+				mat->Bind();
 				Renderer::Submit(mesh->GetVAO(), shader);
 			}
 		}

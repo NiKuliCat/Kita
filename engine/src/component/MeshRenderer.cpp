@@ -6,7 +6,6 @@
 namespace Kita {
     MeshRenderer::MeshRenderer()
     {
-        m_Material = CreateRef<Material>("packages/shaders/EditorDefaultShader.glsl", "content/textures/test.jpg");
     }
     void MeshRenderer::LoadMeshs(const std::string& filepath)
     {
@@ -84,11 +83,13 @@ namespace Kita {
         auto  meshObj = Mesh::Create(vertices, indices);
 
         m_Meshs.push_back(meshObj);
-    }
 
-    void MeshRenderer::InitBuffer()
-    {
-       
+        auto mat = CreateRef<Material>();
+
+        mat->SetShader("packages/shaders/EditorDefaultShader.glsl");
+        mat->SetAlbedoTexture("content/textures/test.jpg");
+
+        m_Materials.push_back(mat);
     }
 
 }

@@ -41,6 +41,7 @@ namespace Kita {
 		void DrawInspectorPanel();
 		void DrawSelectedObject(Object& selectedObject, PointData& selectedPoint);
 		void DrawObjectInfoSection(Object& selectedObject);
+		void DrawMeshRendererProperties(MeshRenderer& meshRenderer);
 		void DrawLineRendererProperties(LineRenderer& lineRenderer, PointData& selectedPoint);
 		void DrawLineRendererControlPoints(LineRenderer& lineRenderer, PointData& selectedPoint);
 
