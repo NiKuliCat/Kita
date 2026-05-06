@@ -1497,6 +1497,7 @@
     <ClInclude Include="src\component\LightComponent.h" />
     <ClInclude Include="src\asset\Asset.h" />
     <ClInclude Include="src\render\TextureLibrary.h" />
+    <ClInclude Include="src\asset\AssetManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\component\LineRenderer.cpp">
@@ -1633,5 +1634,6 @@
     </ClCompile>
     <ClCompile Include="src\component\LightComponent.cpp" />
     <ClCompile Include="src\asset\Asset.cpp" />
+    <ClCompile Include="src\asset\AssetManager.cpp" />
   </ItemGroup>
 </Project>

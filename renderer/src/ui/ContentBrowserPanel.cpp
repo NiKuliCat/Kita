@@ -193,21 +193,26 @@ namespace Kita {
 
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 8.0f);
 
-		std::vector<std::filesystem::directory_entry> entries;
+		std::vector<ContentEntryInfo> entries;
 		for (const auto& entry : std::filesystem::directory_iterator(m_SelectedDirectory))
 		{
-			entries.push_back(entry);
+			if (!ShouldDisplayEntry(entry))
+			{
+				continue;
+			}
+
+			entries.push_back(BuildEntryInfo(entry));
 		}
 
 		std::sort(entries.begin(), entries.end(),
 			[](const auto& left, const auto& right)
 			{
-				if (left.is_directory() != right.is_directory())
+				if (left.entry.is_directory() != right.entry.is_directory())
 				{
-					return left.is_directory() > right.is_directory();
+					return left.entry.is_directory() > right.entry.is_directory();
 				}
 
-				return left.path().filename().string() < right.path().filename().string();
+				return left.entry.path().filename().string() < right.entry.path().filename().string();
 			});
 
 		const float tileSize = 92.0f;
@@ -219,18 +224,18 @@ namespace Kita {
 			for (const auto& entry : entries)
 			{
 				ImGui::TableNextColumn();
-				ImGui::PushID(entry.path().string().c_str());
+				ImGui::PushID(entry.entry.path().string().c_str());
 
-				const bool isDirectory = entry.is_directory();
-				const std::string filename = entry.path().filename().string();
-				const std::string stem = entry.path().stem().string();
+				const bool isDirectory = entry.entry.is_directory();
+				const std::string filename = entry.entry.path().filename().string();
+				const std::string stem = entry.entry.path().stem().string();
 				const std::string name = isDirectory || stem.empty() ? filename : stem;
 				const float itemWidth = tileSize - 12.0f;
 				const float topPadding = 5.0f;
 				const float iconTextGap = 2.0f;
 				const float bottomPadding = 5.0f;
 				const float iconFontSize = 32.0f;
-				const char* icon = isDirectory ? ICON_FON_FOLDER : ICON_FON_DOC_TEXT;
+				const char* icon = GetEntryIcon(entry);
 				ImFont* font = ImGui::GetFont();
 				unsigned int iconCodepoint = 0;
 				ImTextCharFromUtf8(&iconCodepoint, icon, nullptr);
@@ -260,12 +265,30 @@ namespace Kita {
 
 				if (clicked && isDirectory)
 				{
-					m_SelectedDirectory = entry.path();
+					m_SelectedDirectory = entry.entry.path();
 				}
 
 				if (isDirectory && ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 				{
-					m_SelectedDirectory = entry.path();
+					m_SelectedDirectory = entry.entry.path();
+				}
+
+				if (ImGui::IsItemHovered() && !isDirectory)
+				{
+					ImGui::BeginTooltip();
+					ImGui::Text("File: %s", filename.c_str());
+					if (entry.isAsset)
+					{
+						ImGui::Separator();
+						ImGui::Text("Asset Type: %s", GetAssetTypeLabel(entry.type));
+						ImGui::Text("Handle: %llu", static_cast<unsigned long long>(entry.handle));
+					}
+					else
+					{
+						ImGui::Separator();
+						ImGui::TextUnformatted("Non-asset file");
+					}
+					ImGui::EndTooltip();
 				}
 
 				ImGui::PopID();
@@ -328,5 +351,81 @@ namespace Kita {
 
 		const std::string filename = path.filename().string();
 		return filename.empty() ? path.string() : filename;
+	}
+
+	bool ContentBrowserPanel::ShouldDisplayEntry(const std::filesystem::directory_entry& entry) const
+	{
+		return entry.path().extension() != ".meta";
+	}
+
+	ContentBrowserPanel::ContentEntryInfo ContentBrowserPanel::BuildEntryInfo(const std::filesystem::directory_entry& entry)
+	{
+		ContentEntryInfo entryInfo{};
+		entryInfo.entry = entry;
+
+		if (entry.is_directory())
+		{
+			return entryInfo;
+		}
+
+		const auto& path = entry.path();
+		auto& assetManager = AssetManager::GetInstance();
+		AssetHandle handle = assetManager.GetHandleByPath(path);
+		if (handle == InvalidAssetHandle)
+		{
+			handle = assetManager.ImportAsset(path);
+		}
+
+		if (handle == InvalidAssetHandle)
+		{
+			return entryInfo;
+		}
+
+		entryInfo.isAsset = true;
+		entryInfo.handle = handle;
+
+		if (const AssetMetadata* metadata = assetManager.GetMetadata(handle))
+		{
+			entryInfo.type = metadata->type;
+		}
+
+		return entryInfo;
+	}
+
+	const char* ContentBrowserPanel::GetEntryIcon(const ContentEntryInfo& entryInfo) const
+	{
+		if (entryInfo.entry.is_directory())
+		{
+			return ICON_FON_FOLDER;
+		}
+
+		switch (entryInfo.type)
+		{
+		case AssetType::Texture:
+			return ICON_FON_PICTURE;
+		case AssetType::Mesh:
+			return ICON_FON_CUBE;
+		case AssetType::Shader:
+			return ICON_FON_DOC_TEXT;
+		default:
+			return ICON_FON_DOC_TEXT;
+		}
+	}
+
+	const char* ContentBrowserPanel::GetAssetTypeLabel(AssetType type) const
+	{
+		switch (type)
+		{
+		case AssetType::Material:
+			return "Material";
+		case AssetType::Shader:
+			return "Shader";
+		case AssetType::Texture:
+			return "Texture";
+		case AssetType::Mesh:
+			return "Mesh";
+		default:
+			return "None";
+		}
 	}
 }

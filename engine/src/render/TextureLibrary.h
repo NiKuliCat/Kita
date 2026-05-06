@@ -13,6 +13,9 @@ namespace Kita {
 			return instance;
 		}
 
+		TextureLibrary(const TextureLibrary&) = delete;
+		TextureLibrary& operator=(const TextureLibrary&) = delete;
+
 		Ref<Texture> Load(const std::string& path)
 		{
 			if (Exists(path))

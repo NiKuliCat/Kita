@@ -157,6 +157,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\asset\Asset.h" />
+    <ClInclude Include="src\asset\AssetManager.h" />
     <ClInclude Include="src\component\LightComponent.h" />
     <ClInclude Include="src\Engine.h" />
     <ClInclude Include="src\component\LineRenderer.h" />
@@ -636,6 +637,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\asset\Asset.cpp" />
+    <ClCompile Include="src\asset\AssetManager.cpp" />
     <ClCompile Include="src\component\LightComponent.cpp" />
     <ClCompile Include="src\component\LineRenderer.cpp" />
     <ClCompile Include="src\component\MeshRenderer.cpp" />

@@ -46,6 +46,9 @@ namespace Kita {
 		KITA_CORE_INFO("Project root: {0}", s_ActiveProject->GetProjectDirectory().string());
 		KITA_CORE_INFO("Content root: {0}", s_ActiveProject->GetContentDirectory().string());
 
+		AssetManager::GetInstance().ScanAssets(s_ActiveProject->GetContentDirectory());
+		KITA_CORE_INFO("Asset scan finished for project content root.");
+
 		return true;
 	}
 	void Project::Unload()

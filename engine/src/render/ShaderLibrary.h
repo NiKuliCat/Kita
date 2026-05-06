@@ -7,8 +7,10 @@ namespace Kita {
 	class ShaderLibrary
 	{
 	public:
-
 		static  ShaderLibrary& GetInstance();
+		ShaderLibrary(const ShaderLibrary&) = delete;
+		ShaderLibrary& operator=(const ShaderLibrary&) = delete;
+
 		void Add(const Ref<Shader>& shader);
 		Ref<Shader> Load(const std::string& filepath);
 		Ref<Shader> Load(const std::string& name, const std::string& filepath);

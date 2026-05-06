@@ -31,6 +31,9 @@
 
 #include "render/font/FontManager.h"
 
+#include "asset/Asset.h"
+#include "asset/AssetManager.h"
+
 #include "component/Scene.h"
 #include "component/Object.h"
 #include "component/TagComponent.h"
