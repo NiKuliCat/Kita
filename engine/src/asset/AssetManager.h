@@ -35,13 +35,15 @@ namespace Kita {
 		Ref<ShaderAsset> GetShaderAsset(AssetHandle handle);
 		Ref<TextureAsset> GetTextureAsset(AssetHandle handle);
 		Ref<MaterialAsset> GetMaterialAsset(AssetHandle handle);
+		Ref<MeshAsset> GetMeshAsset(AssetHandle handle);
+
+		const std::filesystem::path& GetAssetRoot() const { return m_AssetRoot; }
 
 		void Clear();
 
 	private:
 		AssetManager() = default;
 
-		Ref<Asset> CreateAssetFromMetadata(const AssetMetadata& metadata);
 		std::filesystem::path NormalizePath(const std::filesystem::path& path) const;
 		std::filesystem::path MakeRelativeToAssetRoot(const std::filesystem::path& path) const;
 		std::filesystem::path ResolveAssetPath(const std::filesystem::path& path) const;

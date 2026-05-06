@@ -8,6 +8,107 @@
 #include <glm/glm.hpp>
 #include <imgui_internal.h>
 #include <glm/gtc/type_ptr.hpp>
+#include "serialize/MaterialSerializer.h"
+
+namespace
+{
+	bool HasPathPrefix(const std::filesystem::path& path, const std::string& prefix)
+	{
+		const std::string pathString = path.generic_string();
+		return pathString.size() >= prefix.size()
+			&& pathString.compare(0, prefix.size(), prefix) == 0;
+	}
+
+	void PreloadRenderPackageAssets()
+	{
+		auto& assetManager = Kita::AssetManager::GetInstance();
+
+		const auto shaderAssets = assetManager.GetAssetsByType(Kita::AssetType::Shader);
+		for (const auto& metadata : shaderAssets)
+		{
+			if (HasPathPrefix(metadata.relativePath, "packages/render/"))
+			{
+				assetManager.LoadAsset(metadata.handle);
+			}
+		}
+
+		const auto textureAssets = assetManager.GetAssetsByType(Kita::AssetType::Texture);
+		for (const auto& metadata : textureAssets)
+		{
+			if (HasPathPrefix(metadata.relativePath, "packages/render/"))
+			{
+				assetManager.LoadAsset(metadata.handle);
+			}
+		}
+	}
+
+	Kita::AssetHandle EnsureDefaultMaterialAsset()
+	{
+		auto& assetManager = Kita::AssetManager::GetInstance();
+		const auto project = Kita::Project::GetActive();
+		if (!project)
+		{
+			KITA_CORE_WARN("Default material initialization skipped because project is not active.");
+			return Kita::InvalidAssetHandle;
+		}
+
+		const std::filesystem::path contentRoot = project->GetContentDirectory();
+		const std::filesystem::path packagesRoot = project->GetPackagesDirectory();
+
+		const std::filesystem::path shaderPath =
+			(packagesRoot / "render" / "shaders" / "EditorDefaultShader.glsl").lexically_normal();
+		const std::filesystem::path texturePath =
+			(contentRoot / "textures" / "test.jpg").lexically_normal();
+		const std::filesystem::path materialDirectory =
+			(contentRoot / "materials").lexically_normal();
+		const std::filesystem::path materialPath =
+			(materialDirectory / "Default.mat").lexically_normal();
+
+		Kita::AssetHandle shaderHandle = Kita::InvalidAssetHandle;
+		if (std::filesystem::exists(shaderPath))
+		{
+			shaderHandle = assetManager.ImportAsset(shaderPath);
+		}
+		else
+		{
+			KITA_CORE_WARN("Default shader file not found: {}", shaderPath.string());
+		}
+
+		Kita::AssetHandle textureHandle = Kita::InvalidAssetHandle;
+		if (std::filesystem::exists(texturePath))
+		{
+			textureHandle = assetManager.ImportAsset(texturePath);
+		}
+		else
+		{
+			KITA_CORE_WARN("Default texture file not found: {}", texturePath.string());
+		}
+
+		if (!std::filesystem::exists(materialPath))
+		{
+			std::error_code ec;
+			std::filesystem::create_directories(materialDirectory, ec);
+			if (ec)
+			{
+				KITA_CORE_WARN("Failed to create material directory: {}", materialDirectory.string());
+				return Kita::InvalidAssetHandle;
+			}
+
+			Kita::MaterialAsset defaultMaterialAsset;
+			defaultMaterialAsset.ShaderHandle = shaderHandle;
+			defaultMaterialAsset.AlbedoTextureHandle = textureHandle;
+			defaultMaterialAsset.BaseColor = glm::vec4(1.0f);
+
+			if (!Kita::MaterialSerializer::Serialize(materialPath, defaultMaterialAsset))
+			{
+				KITA_CORE_WARN("Failed to create default material file: {}", materialPath.string());
+				return Kita::InvalidAssetHandle;
+			}
+		}
+
+		return assetManager.ImportAsset(materialPath);
+	}
+}
 
 namespace Kita {
 
@@ -19,10 +120,18 @@ namespace Kita {
 	void EditorLayer::OnCreate()
 	{
 		m_Scene = CreateRef<Scene>( "example scene");
+		const auto project = Project::GetActive();
+		if (project)
+		{
+			PreloadRenderPackageAssets();
+		}
+
+		const AssetHandle defaultMaterialHandle = EnsureDefaultMaterialAsset();
 
 		{
 			auto obj = m_Scene->CreateObject("sphere");
 			auto& meshrenderer = obj.AddComponent<MeshRenderer>();
+			meshrenderer.SetDefaultMaterialAssetHandle(defaultMaterialHandle);
 			meshrenderer.LoadMeshs("content/models/Sphere.fbx");
 
 			auto curveObj1 = m_Scene->CreateObject("curve 1");
@@ -46,12 +155,12 @@ namespace Kita {
 		m_SceneSerializer = SceneSerializer(m_Scene);
 
 		CubemapFacePaths faces = {
-			"packages/skybox/right.jpg",  // +X
-			"packages/skybox/left.jpg",   // -X
-			"packages/skybox/top.jpg",    // +Y
-			"packages/skybox/bottom.jpg", // -Y
-			"packages/skybox/front.jpg",  // +Z
-			"packages/skybox/back.jpg"    // -Z
+			"packages/render/skybox/right.jpg",  // +X
+			"packages/render/skybox/left.jpg",   // -X
+			"packages/render/skybox/top.jpg",    // +Y
+			"packages/render/skybox/bottom.jpg", // -Y
+			"packages/render/skybox/front.jpg",  // +Z
+			"packages/render/skybox/back.jpg"    // -Z
 		};
 
 		m_Scene->LoadSkyCubemap(faces);
@@ -64,7 +173,10 @@ namespace Kita {
 		m_NextViewportSerial = 1;
 		AddViewportPanel("Viewport");
 
-		m_ContentBrowserPanel = ContentBrowserPanel(Project::GetActive()->GetContentDirectory());
+		if (project)
+		{
+			m_ContentBrowserPanel = ContentBrowserPanel(project->GetAssetRootDirectory());
+		}
 	}
 
 	void EditorLayer::OnUpdate(float daltaTime)

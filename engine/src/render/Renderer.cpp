@@ -20,12 +20,12 @@ namespace Kita {
 		Gizmo::Init();
 		// load shader
 		auto& shaderLibrary = ShaderLibrary::GetInstance();
-		shaderLibrary.Load("packages/shaders/EditorDefaultShader.glsl");
-		shaderLibrary.Load("packages/shaders/EditorLineShader.glsl");
-		shaderLibrary.Load("packages/shaders/EditorGridShader.glsl");
-		shaderLibrary.Load("packages/shaders/DefaultSkyBox.glsl");
-		shaderLibrary.Load("packages/shaders/GizmoPoint.glsl");
-		shaderLibrary.Load("packages/shaders/GizmoDiamond.glsl");
+		shaderLibrary.Load("packages/render/shaders/EditorDefaultShader.glsl");
+		shaderLibrary.Load("packages/render/shaders/EditorLineShader.glsl");
+		shaderLibrary.Load("packages/render/shaders/EditorGridShader.glsl");
+		shaderLibrary.Load("packages/render/shaders/DefaultSkyBox.glsl");
+		shaderLibrary.Load("packages/render/shaders/GizmoPoint.glsl");
+		shaderLibrary.Load("packages/render/shaders/GizmoDiamond.glsl");
 	}
 
 	void Renderer::ShutDown()
@@ -92,13 +92,22 @@ namespace Kita {
 
 	void Renderer::DrawSkyBox(const Ref<Texture>& cubemap, const uint32_t slot)
 	{
+		if (!cubemap)
+		{
+			return;
+		}
+
+		auto& shaderlib = ShaderLibrary::GetInstance();
+		auto skyboxShader = shaderlib.Get("DefaultSkyBox");
+		if (!skyboxShader)
+		{
+			return;
+		}
 
 		RenderCommand::SetDepthWrite(false);
 		RenderCommand::SetDepthTestMode(DepthTestMode::Lequal);
 
 		cubemap->Bind(slot);
-		auto& shaderlib = ShaderLibrary::GetInstance();
-		auto skyboxShader = shaderlib.Get("DefaultSkyBox");
 		skyboxShader->SetInt("SkyboxTex", slot);
 
 		Submit(m_RenderData->editorGridData.FullScreenTriangle_VAO, skyboxShader);

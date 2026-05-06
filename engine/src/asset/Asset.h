@@ -2,8 +2,14 @@
 #include <filesystem>
 #include <glm/glm.hpp>
 #include "core/UUID.h"
+#include "render/mesh/Mesh.h"
 #include "render/Shader.h"
 #include "render/Texture.h"
+
+struct aiMesh;
+struct aiNode;
+struct aiScene;
+
 namespace Kita {
 	class Material;
 	using AssetHandle = uint64_t;
@@ -110,6 +116,27 @@ namespace Kita {
 	private:
 		std::filesystem::path m_TexturePath;
 		Ref<Texture> m_RuntimeTexture = nullptr;
+	};
+
+	class MeshAsset : public Asset
+	{
+	public:
+		MeshAsset() = default;
+		virtual ~MeshAsset() = default;
+		virtual AssetType GetType() const override { return AssetType::Mesh; }
+
+		bool LoadFromFile(const std::filesystem::path& path);
+
+		const std::filesystem::path& GetFilePath() const { return m_MeshPath; }
+		const std::vector<Ref<Mesh>>& GetSubMeshes() const { return m_SubMeshes; }
+
+	private:
+		void ProcessNode(aiNode* node, const aiScene* scene);
+		void ProcessMesh(aiMesh* mesh, const aiScene* scene);
+
+	private:
+		std::filesystem::path m_MeshPath;
+		std::vector<Ref<Mesh>> m_SubMeshes;
 	};
 
 }

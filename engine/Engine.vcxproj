@@ -156,10 +156,11 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\Engine.h" />
     <ClInclude Include="src\asset\Asset.h" />
+    <ClInclude Include="src\asset\AssetFactory.h" />
     <ClInclude Include="src\asset\AssetManager.h" />
     <ClInclude Include="src\component\LightComponent.h" />
-    <ClInclude Include="src\Engine.h" />
     <ClInclude Include="src\component\LineRenderer.h" />
     <ClInclude Include="src\component\MeshRenderer.h" />
     <ClInclude Include="src\component\Object.h" />

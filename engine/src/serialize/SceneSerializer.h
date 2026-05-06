@@ -2,7 +2,8 @@
 #include "component/Scene.h"
 #include "component/Object.h"
 #include "JsonUtils.h"
-
+#include "component/MeshRenderer.h"
+#include "component/LightComponent.h"
 namespace Kita {
 
 	class SceneSerializer
@@ -22,5 +23,16 @@ namespace Kita {
 
 	private:
 		Ref<Scene> m_Scene;
+	};
+
+
+	class ComponentSerializer
+	{
+	public:
+		static json  SerializeMeshRenderer(const MeshRenderer& meshRenderer);
+		static MeshRenderer  DeserializeMeshRenderer(const json& meshRendererJson);
+
+		static json  SerializeLightComponent(const LightComponent& lightComponent);
+		static LightComponent  DeserializeLightComponent(const json& lightComponentJson);
 	};
 }

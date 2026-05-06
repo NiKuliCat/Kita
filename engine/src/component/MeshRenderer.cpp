@@ -1,124 +1,149 @@
 #include "kita_pch.h"
 #include "MeshRenderer.h"
+#include <filesystem>
 #include "core/Log.h"
-#include <assimp/Importer.hpp>
-#include <assimp/postprocess.h>
 #include "asset/AssetManager.h"
+
+namespace
+{
+	std::filesystem::path ResolveMeshAssetPath(
+		const std::filesystem::path& path,
+		const std::filesystem::path& assetRoot)
+	{
+		if (path.empty())
+		{
+			return {};
+		}
+
+		if (path.is_absolute())
+		{
+			return path.lexically_normal();
+		}
+
+		const std::filesystem::path fromWorkingDirectory = (std::filesystem::current_path() / path).lexically_normal();
+		if (std::filesystem::exists(fromWorkingDirectory))
+		{
+			return fromWorkingDirectory;
+		}
+
+		if (!assetRoot.empty())
+		{
+			const std::filesystem::path fromAssetRoot = (assetRoot / path).lexically_normal();
+			if (std::filesystem::exists(fromAssetRoot))
+			{
+				return fromAssetRoot;
+			}
+		}
+
+		return fromWorkingDirectory;
+	}
+}
+
 namespace Kita {
     MeshRenderer::MeshRenderer()
     {
     }
     void MeshRenderer::LoadMeshs(const std::string& filepath)
     {
-        m_MeshFilePath = filepath;
+        m_MeshFilePath.clear();
+        m_MeshAssetHandle = InvalidAssetHandle;
         m_Meshs.clear();
-        m_MaterialAssets.clear();
+        m_MaterialAssetHandles.clear();
         m_RuntimeMaterials.clear();
 
-        Assimp::Importer import;
-        const aiScene* scene = import.ReadFile(filepath, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
-        if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+        auto& assetManager = AssetManager::GetInstance();
+        const std::filesystem::path assetPath = ResolveMeshAssetPath(filepath, assetManager.GetAssetRoot());
+        m_MeshAssetHandle = assetManager.ImportAsset(assetPath);
+
+        if (!Asset::IsValidHandle(m_MeshAssetHandle))
         {
-            KITA_CORE_ERROR("assimp import error : {0}", import.GetErrorString());
+            KITA_CORE_WARN("Failed to import mesh asset: {}", assetPath.string());
             return;
         }
-        ProcessNode(scene->mRootNode, scene);
+
+        if (const AssetMetadata* metadata = assetManager.GetMetadata(m_MeshAssetHandle))
+        {
+            m_MeshFilePath = metadata->relativePath.generic_string();
+        }
+        else
+        {
+            m_MeshFilePath = assetPath.generic_string();
+        }
+
+        Ref<MeshAsset> meshAsset = assetManager.GetMeshAsset(m_MeshAssetHandle);
+        if (!meshAsset)
+        {
+            KITA_CORE_WARN("Failed to load mesh asset: {}", assetPath.string());
+            m_MeshAssetHandle = InvalidAssetHandle;
+            return;
+        }
+
+        m_Meshs = meshAsset->GetSubMeshes();
+        InitializeMaterialSlots(m_Meshs.size());
     }
-
-
 
     void MeshRenderer::SyncMaterial(size_t index)
     {
-        if (index >= m_MaterialAssets.size())
+        if (index >= m_MaterialAssetHandles.size())
             return;
 
         if (index >= m_RuntimeMaterials.size())
-            m_RuntimeMaterials.resize(m_MaterialAssets.size());
+            m_RuntimeMaterials.resize(m_MaterialAssetHandles.size());
 
         if (!m_RuntimeMaterials[index])
             m_RuntimeMaterials[index] = CreateRef<Material>();
 
-        m_MaterialAssets[index]->ApplyToRuntimeMaterial(*m_RuntimeMaterials[index]);
+        Ref<MaterialAsset> materialAsset = GetMaterialAsset(index);
+        if (!materialAsset)
+        {
+            materialAsset = CreateRef<MaterialAsset>();
+            materialAsset->BaseColor = glm::vec4(1.0f);
+        }
+
+        materialAsset->ApplyToRuntimeMaterial(*m_RuntimeMaterials[index]);
     }
 
     void MeshRenderer::SyncAllMaterials()
     {
-        for (size_t i = 0; i < m_MaterialAssets.size(); i++)
+        for (size_t i = 0; i < m_MaterialAssetHandles.size(); i++)
         {
             SyncMaterial(i);
         }
     }
 
-    void MeshRenderer::ProcessNode(aiNode* node, const aiScene* scene)
+    void MeshRenderer::InitializeMaterialSlots(size_t slotCount)
     {
-        for (unsigned int i = 0; i < node->mNumMeshes; i++)
+        m_MaterialAssetHandles.clear();
+        m_RuntimeMaterials.clear();
+        m_MaterialAssetHandles.reserve(slotCount);
+        m_RuntimeMaterials.reserve(slotCount);
+
+        for (size_t i = 0; i < slotCount; ++i)
         {
-            aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-            ProcessMesh(mesh, scene);
-        }
-        // Recurse into child nodes.
-        for (unsigned int i = 0; i < node->mNumChildren; i++)
-        {
-            ProcessNode(node->mChildren[i], scene);
+            m_MaterialAssetHandles.push_back(m_DefaultMaterialAssetHandle);
+            m_RuntimeMaterials.push_back(CreateRef<Material>());
+            SyncMaterial(i);
         }
     }
 
-    void MeshRenderer::ProcessMesh(aiMesh* mesh, const aiScene* scene)
+    void MeshRenderer::SetMaterialAssetHandle(size_t index, AssetHandle handle)
     {
-        std::vector<Vertex> vertices;
-        std::vector<uint32_t> indices;
+        if (index >= m_MaterialAssetHandles.size())
+            return;
 
-        bool hasColors = mesh->HasVertexColors(0);
+        m_MaterialAssetHandles[index] = handle;
+    }
 
-        for (uint32_t i = 0; i < mesh->mNumVertices; i++)
-        {
-            Vertex vertex;
+    Ref<MaterialAsset> MeshRenderer::GetMaterialAsset(size_t index) const
+    {
+        if (index >= m_MaterialAssetHandles.size())
+            return nullptr;
 
-            vertex.position = glm::vec3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
-            if (hasColors)
-            {
-                vertex.color = glm::vec4(mesh->mColors[i]->r, mesh->mColors[i]->g, mesh->mColors[i]->b, mesh->mColors[i]->a);
-            }
-            else
-            {
-                vertex.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
-            }
-            vertex.normal = glm::vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
-            vertex.tangent = glm::vec3(mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z);
-            vertex.bitangent = glm::vec3(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z);
+        const AssetHandle handle = m_MaterialAssetHandles[index];
+        if (!Asset::IsValidHandle(handle))
+            return nullptr;
 
-            if (mesh->mTextureCoords[0])
-            {
-                vertex.texcoords = glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
-            }
-            else
-            {
-                vertex.texcoords = glm::vec2(0.0f, 0.0f);
-            }
-
-            vertices.push_back(vertex);
-        }
-
-        for (uint32_t i = 0; i < mesh->mNumFaces; i++)
-        {
-            auto face = mesh->mFaces[i];
-            for (uint32_t j = 0; j < face.mNumIndices; j++)
-            {
-                indices.push_back(face.mIndices[j]);
-            }
-        }
-
-        auto  meshObj = Mesh::Create(vertices, indices);
-
-        m_Meshs.push_back(meshObj);
-
-        auto materialAsset = CreateRef<MaterialAsset>();
-        materialAsset->ShaderHandle = AssetManager::GetInstance().ImportAsset("packages/shaders/EditorDefaultShader.glsl");
-        materialAsset->AlbedoTextureHandle = AssetManager::GetInstance().ImportAsset("content/textures/test.jpg");
-        materialAsset->BaseColor = glm::vec4(1.0f);
-
-        m_MaterialAssets.push_back(materialAsset);
-        m_RuntimeMaterials.push_back(materialAsset->CreateRuntimeMaterial());
+        return AssetManager::GetInstance().GetMaterialAsset(handle);
     }
 
 }

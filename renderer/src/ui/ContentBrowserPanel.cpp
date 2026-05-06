@@ -7,6 +7,29 @@
 #include <algorithm>
 
 namespace Kita {
+	namespace
+	{
+		bool IsSupportedAssetPath(const std::filesystem::path& path)
+		{
+			std::string extension = path.extension().string();
+			std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
+
+			return extension == ".mat"
+				|| extension == ".glsl"
+				|| extension == ".vert"
+				|| extension == ".frag"
+				|| extension == ".png"
+				|| extension == ".jpg"
+				|| extension == ".jpeg"
+				|| extension == ".tga"
+				|| extension == ".bmp"
+				|| extension == ".fbx"
+				|| extension == ".obj"
+				|| extension == ".dae"
+				|| extension == ".gltf"
+				|| extension == ".glb";
+		}
+	}
 
 	const ImU32 separatorColor = ImGui::ColorConvertFloat4ToU32(ImVec4(0.055f, 0.056f, 0.060f, 1.0f));
 	const ImU32  searchColor = ImGui::ColorConvertFloat4ToU32(ImVec4(0.102f, 0.102f, 0.102f, 1.0f));
@@ -40,7 +63,7 @@ namespace Kita {
 
 		if (m_ContentRoot.empty() || !std::filesystem::exists(m_ContentRoot) || !std::filesystem::is_directory(m_ContentRoot))
 		{
-			ImGui::TextUnformatted("Content root is invalid.");
+			ImGui::TextUnformatted("Asset browser root is invalid.");
 			ImGui::End();
 			ImGui::PopStyleVar();
 			return;
@@ -304,7 +327,8 @@ namespace Kita {
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(8.0f, 0.0f));
 
-		if (ImGui::Button("Content"))
+		const std::string rootLabel = GetDisplayName(m_ContentRoot);
+		if (ImGui::Button(rootLabel.c_str()))
 		{
 			m_SelectedDirectory = m_ContentRoot;
 		}
@@ -346,7 +370,7 @@ namespace Kita {
 	{
 		if (std::filesystem::equivalent(path, m_ContentRoot))
 		{
-			return "Content";
+			return "Assets";
 		}
 
 		const std::string filename = path.filename().string();
@@ -355,7 +379,23 @@ namespace Kita {
 
 	bool ContentBrowserPanel::ShouldDisplayEntry(const std::filesystem::directory_entry& entry) const
 	{
-		return entry.path().extension() != ".meta";
+		if (entry.path().extension() == ".meta")
+		{
+			return false;
+		}
+
+		const std::string filename = entry.path().filename().string();
+		if (filename == "imgui.ini")
+		{
+			return false;
+		}
+
+		if (entry.path().extension() == ".kitaproj")
+		{
+			return false;
+		}
+
+		return true;
 	}
 
 	ContentBrowserPanel::ContentEntryInfo ContentBrowserPanel::BuildEntryInfo(const std::filesystem::directory_entry& entry)
@@ -369,6 +409,11 @@ namespace Kita {
 		}
 
 		const auto& path = entry.path();
+		if (!IsSupportedAssetPath(path))
+		{
+			return entryInfo;
+		}
+
 		auto& assetManager = AssetManager::GetInstance();
 		AssetHandle handle = assetManager.GetHandleByPath(path);
 		if (handle == InvalidAssetHandle)

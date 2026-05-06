@@ -34,8 +34,6 @@ namespace Kita {
 	{
 		TextureDescriptor desc{};
 		desc.EnableMipMaps = true;
-
-
 		m_SkyCubemap = Texture::CreateCubeMap(desc, faces);
 	}
 

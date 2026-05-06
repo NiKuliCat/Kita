@@ -68,6 +68,7 @@ namespace Kita {
 		{
 			int w, h, c;
 			loaded[i] = stbi_load(faces[i].c_str(), &w, &h, &c, 0);
+			KITA_CORE_ASSERT(loaded[i], "Failed to load cubemap face: {0}", faces[i]);
 
 			if (i == 0)
 			{

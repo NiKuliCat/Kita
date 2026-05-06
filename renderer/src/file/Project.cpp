@@ -4,6 +4,10 @@
 namespace Kita {
 	Ref<Project> Project::s_ActiveProject = nullptr;
 
+	namespace
+	{
+	}
+
 
 	static bool TryReadVersion(const json& value, uint32_t& outVersion)
 	{
@@ -44,10 +48,12 @@ namespace Kita {
 
 		KITA_CORE_INFO("Active project loaded: {0}", s_ActiveProject->GetName());
 		KITA_CORE_INFO("Project root: {0}", s_ActiveProject->GetProjectDirectory().string());
+		KITA_CORE_INFO("Asset root: {0}", s_ActiveProject->GetAssetRootDirectory().string());
 		KITA_CORE_INFO("Content root: {0}", s_ActiveProject->GetContentDirectory().string());
+		KITA_CORE_INFO("Packages root: {0}", s_ActiveProject->GetPackagesDirectory().string());
 
-		AssetManager::GetInstance().ScanAssets(s_ActiveProject->GetContentDirectory());
-		KITA_CORE_INFO("Asset scan finished for project content root.");
+		AssetManager::GetInstance().ScanAssets(s_ActiveProject->GetAssetRootDirectory());
+		KITA_CORE_INFO("Asset scan finished.");
 
 		return true;
 	}

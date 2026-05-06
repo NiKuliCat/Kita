@@ -430,14 +430,14 @@ namespace Kita {
 			DrawInfoRow("Mesh Source", meshRenderer.GetMeshFilePath(), isHighlight);
 			DrawInfoRow("SubMesh Count", std::to_string(meshRenderer.GetSubMeshCount()), isHighlight);
 
-			auto& materialAssets = meshRenderer.GetMaterialAssets();
+			auto& materialHandles = meshRenderer.GetMaterialAssetHandles();
 			auto& runtimeMaterials = meshRenderer.GetRuntimeMaterials();
 			auto& assetManager = AssetManager::GetInstance();
 			const auto shaderAssets = assetManager.GetAssetsByType(AssetType::Shader);
 			const auto textureAssets = assetManager.GetAssetsByType(AssetType::Texture);
-			for (size_t i = 0; i < materialAssets.size(); ++i)
+			for (size_t i = 0; i < materialHandles.size(); ++i)
 			{
-				auto& materialAsset = materialAssets[i];
+				Ref<MaterialAsset> materialAsset = meshRenderer.GetMaterialAsset(i);
 				if (!materialAsset)
 				{
 					DrawInfoRow(("Material " + std::to_string(i)).c_str(), "None", isHighlight);

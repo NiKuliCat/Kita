@@ -1,10 +1,68 @@
 #include "kita_pch.h"
 #include "Asset.h"
+#include "AssetFactory.h"
 #include "AssetManager.h"
 #include "core/Log.h"
 #include "serialize/JsonUtils.h"
-#include "serialize/MaterialSerializer.h"
 namespace Kita {
+
+	namespace
+	{
+		bool ShouldScanAsAssetFile(const std::filesystem::path& path)
+		{
+			std::string extension = path.extension().string();
+			std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
+
+			if (extension == ".meta")
+			{
+				return false;
+			}
+
+			return extension == ".mat"
+				|| extension == ".glsl"
+				|| extension == ".vert"
+				|| extension == ".frag"
+				|| extension == ".png"
+				|| extension == ".jpg"
+				|| extension == ".jpeg"
+				|| extension == ".tga"
+				|| extension == ".bmp"
+				|| extension == ".fbx"
+				|| extension == ".obj"
+				|| extension == ".dae"
+				|| extension == ".gltf"
+				|| extension == ".glb";
+		}
+
+		void ScanAssetDirectoryRecursive(
+			AssetManager& assetManager,
+			const std::filesystem::path& directory)
+		{
+			if (!std::filesystem::exists(directory) || !std::filesystem::is_directory(directory))
+			{
+				return;
+			}
+
+			for (const auto& entry : std::filesystem::recursive_directory_iterator(directory))
+			{
+				if (!entry.is_regular_file())
+				{
+					continue;
+				}
+
+				const auto& filePath = entry.path();
+				if (!ShouldScanAsAssetFile(filePath))
+				{
+					continue;
+				}
+
+				if (!assetManager.ImportAsset(filePath))
+				{
+					continue;
+				}
+			}
+		}
+	}
 
 	AssetManager& AssetManager::GetInstance()
 	{
@@ -29,20 +87,25 @@ namespace Kita {
 
 		Clear();
 
-		for (const auto& entry : std::filesystem::recursive_directory_iterator(m_AssetRoot))
+		const std::filesystem::path contentDirectory = m_AssetRoot / "content";
+		const std::filesystem::path renderPackageDirectory = m_AssetRoot / "packages" / "render";
+		bool scannedAnyDirectory = false;
+
+		if (std::filesystem::exists(contentDirectory))
 		{
-			if (!entry.is_regular_file())
-			{
-				continue;
-			}
+			ScanAssetDirectoryRecursive(*this, contentDirectory);
+			scannedAnyDirectory = true;
+		}
 
-			const auto& filePath = entry.path();
-			if (!IsAssetFile(filePath))
-			{
-				continue;
-			}
+		if (std::filesystem::exists(renderPackageDirectory))
+		{
+			ScanAssetDirectoryRecursive(*this, renderPackageDirectory);
+			scannedAnyDirectory = true;
+		}
 
-			ImportAsset(filePath);
+		if (!scannedAnyDirectory)
+		{
+			ScanAssetDirectoryRecursive(*this, m_AssetRoot);
 		}
 	}
 
@@ -162,13 +225,13 @@ namespace Kita {
 
 	bool AssetManager::HasPath(const std::filesystem::path& path) const
 	{
-		std::string key = NormalizePath(path).generic_string();
+		std::string key = MakeRelativeToAssetRoot(path).generic_string();
 		return m_PathToHandle.find(key) != m_PathToHandle.end();
 	}
 
 	AssetHandle AssetManager::GetHandleByPath(const std::filesystem::path& path) const
 	{
-		std::string key = NormalizePath(path).generic_string();
+		std::string key = MakeRelativeToAssetRoot(path).generic_string();
 		auto it = m_PathToHandle.find(key);
 		if (it == m_PathToHandle.end())
 		{
@@ -224,7 +287,8 @@ namespace Kita {
 			return nullptr;
 		}
 
-		Ref<Asset> asset = CreateAssetFromMetadata(metadataIt->second);
+		const std::filesystem::path assetPath = ResolveAssetPath(metadataIt->second.relativePath);
+		Ref<Asset> asset = AssetFactory::CreateFromMetadata(metadataIt->second, assetPath);
 		if (asset)
 		{
 			m_LoadedAssets[handle] = asset;
@@ -248,49 +312,16 @@ namespace Kita {
 		return GetAsset<MaterialAsset>(handle);
 	}
 
+	Ref<MeshAsset> AssetManager::GetMeshAsset(AssetHandle handle)
+	{
+		return GetAsset<MeshAsset>(handle);
+	}
+
 	void AssetManager::Clear()
 	{
 		m_MetadataRegistry.clear();
 		m_PathToHandle.clear();
 		m_LoadedAssets.clear();
-	}
-
-	Ref<Asset> AssetManager::CreateAssetFromMetadata(const AssetMetadata& metadata)
-	{
-		std::filesystem::path assetPath = ResolveAssetPath(metadata.relativePath);
-		switch (metadata.type)
-		{
-		case AssetType::Shader:
-		{
-			Ref<ShaderAsset> shaderAsset = CreateRef<ShaderAsset>();
-			shaderAsset->SetHandle(metadata.handle);
-			shaderAsset->SetShaderPath(assetPath);
-			return shaderAsset;
-		}
-		case AssetType::Texture:
-		{
-			Ref<TextureAsset> textureAsset = CreateRef<TextureAsset>();
-			textureAsset->SetHandle(metadata.handle);
-			textureAsset->SetTexturePath(assetPath);
-			return textureAsset;
-		}
-		case AssetType::Material:
-		{
-			Ref<MaterialAsset> materialAsset = CreateRef<MaterialAsset>();
-			materialAsset->SetHandle(metadata.handle);
-
-			if (!MaterialSerializer::Deserialize(assetPath, *materialAsset))
-			{
-				KITA_CORE_WARN("Failed to deserialize material asset: {}", assetPath.string());
-				return nullptr;
-			}
-
-			return materialAsset;
-		}
-		default:
-			KITA_CORE_WARN("CreateAssetFromMetadata unsupported asset type.");
-			return nullptr;
-		}
 	}
 
 	std::filesystem::path AssetManager::NormalizePath(const std::filesystem::path& path) const

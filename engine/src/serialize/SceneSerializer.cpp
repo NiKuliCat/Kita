@@ -1,6 +1,6 @@
 #include "kita_pch.h"
 #include "SceneSerializer.h"
-
+#include "asset/AssetManager.h"
 namespace Kita {
 
 
@@ -90,6 +90,16 @@ namespace Kita {
 		objectJson["uuid"] = JsonUtils::SerializeUUID(object.GetUUID());
 		objectJson["name"] = object.GetName();
 		objectJson["transform"] = JsonUtils::SerializeTransform(object.GetComponent<Transform>());
+
+		if (object.HasComponent<MeshRenderer>())
+		{
+			objectJson["meshRenderer"] = ComponentSerializer::SerializeMeshRenderer(object.GetComponent<MeshRenderer>());
+		}
+
+		if (object.HasComponent<LightComponent>())
+		{
+			objectJson["lightComponent"] = ComponentSerializer::SerializeLightComponent(object.GetComponent<LightComponent>());
+		}
 	}
 
 	void SceneSerializer::DeserializeObject(const json& entityData)
@@ -100,6 +110,109 @@ namespace Kita {
 		Object object = m_Scene->CreateObjectWithUUID(uuid, name);
 		Transform transform = JsonUtils::DeserializeTransform(entityData.at("transform"));
 		object.GetComponent<Transform>() = transform;
+
+		if (entityData.contains("meshRenderer"))
+		{
+			auto& meshRenderer = object.AddComponent<MeshRenderer>();
+			meshRenderer = ComponentSerializer::DeserializeMeshRenderer(entityData.at("meshRenderer"));
+		}
+
+		if (entityData.contains("lightComponent"))
+		{
+			auto& lightComponent = object.AddComponent<LightComponent>();
+			lightComponent = ComponentSerializer::DeserializeLightComponent(entityData.at("lightComponent"));
+		}
+	}
+
+
+
+	json ComponentSerializer::SerializeMeshRenderer(const MeshRenderer& meshRenderer)
+	{
+		json meshRendererJson;
+		meshRendererJson["meshAsset"] =
+			JsonUtils::SerializeAssetHandle(meshRenderer.GetMeshAssetHandle());
+
+		meshRendererJson["materialAssets"] = json::array();
+		const auto& materialHandles = meshRenderer.GetMaterialAssetHandles();
+		for (const AssetHandle materialHandle : materialHandles)
+		{
+			meshRendererJson["materialAssets"].push_back(
+				JsonUtils::SerializeAssetHandle(materialHandle));
+		}
+
+		return meshRendererJson;
+	}
+
+	MeshRenderer ComponentSerializer::DeserializeMeshRenderer(const json& meshRendererJson)
+	{
+		MeshRenderer meshRenderer;
+		if (!meshRendererJson.is_object())
+		{
+			return meshRenderer;
+		}
+
+		auto& assetManager = AssetManager::GetInstance();
+
+		AssetHandle meshAssetHandle = InvalidAssetHandle;
+		if (meshRendererJson.contains("meshAsset"))
+		{
+			meshAssetHandle = JsonUtils::DeserializeAssetHandle(meshRendererJson.at("meshAsset"));
+		}
+
+		if (!Asset::IsValidHandle(meshAssetHandle))
+		{
+			return meshRenderer;
+		}
+
+		const AssetMetadata* meshMetadata = assetManager.GetMetadata(meshAssetHandle);
+		if (!meshMetadata)
+		{
+			KITA_CORE_WARN("DeserializeMeshRenderer failed, mesh asset metadata not found: {}", meshAssetHandle);
+			return meshRenderer;
+		}
+
+		meshRenderer.LoadMeshs(meshMetadata->relativePath.generic_string());
+
+		if (!meshRendererJson.contains("materialAssets") || !meshRendererJson.at("materialAssets").is_array())
+		{
+			return meshRenderer;
+		}
+
+		const auto& materialArray = meshRendererJson.at("materialAssets");
+		auto& materialHandles = meshRenderer.GetMaterialAssetHandles();
+
+		const size_t count = std::min(materialHandles.size(), materialArray.size());
+		for (size_t i = 0; i < count; ++i)
+		{
+			AssetHandle materialHandle = JsonUtils::DeserializeAssetHandle(materialArray[i]);
+			if (!Asset::IsValidHandle(materialHandle) || !assetManager.HasHandle(materialHandle))
+			{
+				materialHandle = InvalidAssetHandle;
+			}
+
+			meshRenderer.SetMaterialAssetHandle(i, materialHandle);
+			meshRenderer.SyncMaterial(i);
+		}
+
+		return meshRenderer;
+	}
+
+	json ComponentSerializer::SerializeLightComponent(const LightComponent& lightComponent)
+	{
+		json lightComponentJson;
+		lightComponentJson["color"] = JsonUtils::SerializeVec4(lightComponent.color);
+		lightComponentJson["intensity"] = lightComponent.intensity;
+
+		return lightComponentJson;
+	}
+
+	LightComponent ComponentSerializer::DeserializeLightComponent(const json& lightComponentJson)
+	{
+		LightComponent light;
+		light.color = JsonUtils::DeserializeVec4(lightComponentJson.at("color"));
+		light.intensity = lightComponentJson.at("intensity").get<float>();
+
+		return light;
 	}
 
 }

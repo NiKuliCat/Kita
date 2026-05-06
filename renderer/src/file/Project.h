@@ -29,6 +29,8 @@ namespace Kita {
 		const std::filesystem::path& GetProjectFilePath() const { return m_Descriptor.projectFilePath; }
 		const std::filesystem::path& GetProjectDirectory() const { return m_Descriptor.projectRoot; }
 		const std::filesystem::path& GetContentDirectory() const { return m_Descriptor.contentRoot; }
+		std::filesystem::path GetAssetRootDirectory() const { return m_Descriptor.contentRoot.parent_path(); }
+		std::filesystem::path GetPackagesDirectory() const { return GetAssetRootDirectory() / "packages"; }
 
 		std::filesystem::path GetContentPath(const std::filesystem::path& relativePath) const{ return m_Descriptor.contentRoot / relativePath; }
 

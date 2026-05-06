@@ -52,8 +52,8 @@ namespace Kita {
 
 		auto window = (GLFWwindow*)Application::Get().GetWindow()->GetNativeWindow();
 		FontManager::Init();
-		FontManager::RegisterImGuiFont({ "Default", "packages/fonts/Poppins/Poppins-Regular.ttf", 20.0f, 2, 2, true });
-		FontManager::RegisterImGuiFont({ "FontelloIcons", "packages/icons/fontello-fe918da2/fontello-fe918da2/fontello.ttf",32.0f,3,3,true,true,{0xe800, 0xe81d, 0xf0c9, 0xf0c9, 0xf0f6, 0xf0f6, 0xf105, 0xf107, 0xf114, 0xf115, 0xf13e, 0xf13e, 0xf185, 0xf185, 0xf1b2, 0xf1b2, 0}});
+		FontManager::RegisterImGuiFont({ "Default", "packages/editor/fonts/Poppins/Poppins-Regular.ttf", 20.0f, 2, 2, true });
+		FontManager::RegisterImGuiFont({ "FontelloIcons", "packages/editor/icons/fontello-fe918da2/fontello-fe918da2/fontello.ttf",32.0f,3,3,true,true,{0xe800, 0xe81d, 0xf0c9, 0xf0c9, 0xf0f6, 0xf0f6, 0xf105, 0xf107, 0xf114, 0xf115, 0xf13e, 0xf13e, 0xf185, 0xf185, 0xf1b2, 0xf1b2, 0}});
 
 		ImGui_ImplGlfw_InitForOpenGL(window, true);
 		ImGui_ImplOpenGL3_Init("#version 410");

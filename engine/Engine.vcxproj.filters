@@ -4,6 +4,9 @@
     <Filter Include="src">
       <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\asset">
+      <UniqueIdentifier>{9C5DD8B4-08C8-8C2B-5106-3ED1BDAF6A80}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\component">
       <UniqueIdentifier>{EF3F6682-5B00-E2B8-243B-2B3690BA2695}</UniqueIdentifier>
     </Filter>
@@ -74,6 +77,18 @@
   <ItemGroup>
     <ClInclude Include="src\Engine.h">
       <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\asset\Asset.h">
+      <Filter>src\asset</Filter>
+    </ClInclude>
+    <ClInclude Include="src\asset\AssetFactory.h">
+      <Filter>src\asset</Filter>
+    </ClInclude>
+    <ClInclude Include="src\asset\AssetManager.h">
+      <Filter>src\asset</Filter>
+    </ClInclude>
+    <ClInclude Include="src\component\LightComponent.h">
+      <Filter>src\component</Filter>
     </ClInclude>
     <ClInclude Include="src\component\LineRenderer.h">
       <Filter>src\component</Filter>
@@ -198,6 +213,9 @@
     <ClInclude Include="src\render\Texture.h">
       <Filter>src\render</Filter>
     </ClInclude>
+    <ClInclude Include="src\render\TextureLibrary.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
     <ClInclude Include="src\render\UniformBuffer.h">
       <Filter>src\render</Filter>
     </ClInclude>
@@ -223,6 +241,9 @@
       <Filter>src\render\scene</Filter>
     </ClInclude>
     <ClInclude Include="src\serialize\JsonUtils.h">
+      <Filter>src\serialize</Filter>
+    </ClInclude>
+    <ClInclude Include="src\serialize\MaterialSerializer.h">
       <Filter>src\serialize</Filter>
     </ClInclude>
     <ClInclude Include="src\serialize\SceneSerializer.h">
@@ -1494,13 +1515,17 @@
     <ClInclude Include="third-party\imguizmo\ImGuizmo.h">
       <Filter>third-party\imguizmo</Filter>
     </ClInclude>
-    <ClInclude Include="src\component\LightComponent.h" />
-    <ClInclude Include="src\asset\Asset.h" />
-    <ClInclude Include="src\render\TextureLibrary.h" />
-    <ClInclude Include="src\asset\AssetManager.h" />
-    <ClInclude Include="src\serialize\MaterialSerializer.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\asset\Asset.cpp">
+      <Filter>src\asset</Filter>
+    </ClCompile>
+    <ClCompile Include="src\asset\AssetManager.cpp">
+      <Filter>src\asset</Filter>
+    </ClCompile>
+    <ClCompile Include="src\component\LightComponent.cpp">
+      <Filter>src\component</Filter>
+    </ClCompile>
     <ClCompile Include="src\component\LineRenderer.cpp">
       <Filter>src\component</Filter>
     </ClCompile>
@@ -1618,6 +1643,9 @@
     <ClCompile Include="src\serialize\JsonUtils.cpp">
       <Filter>src\serialize</Filter>
     </ClCompile>
+    <ClCompile Include="src\serialize\MaterialSerializer.cpp">
+      <Filter>src\serialize</Filter>
+    </ClCompile>
     <ClCompile Include="src\serialize\SceneSerializer.cpp">
       <Filter>src\serialize</Filter>
     </ClCompile>
@@ -1633,9 +1661,5 @@
     <ClCompile Include="third-party\imguizmo\ImGuizmo.cpp">
       <Filter>third-party\imguizmo</Filter>
     </ClCompile>
-    <ClCompile Include="src\component\LightComponent.cpp" />
-    <ClCompile Include="src\asset\Asset.cpp" />
-    <ClCompile Include="src\asset\AssetManager.cpp" />
-    <ClCompile Include="src\serialize\MaterialSerializer.cpp" />
   </ItemGroup>
 </Project>
