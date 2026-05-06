@@ -3,12 +3,18 @@
 #include "core/Log.h"
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
+#include "asset/AssetManager.h"
 namespace Kita {
     MeshRenderer::MeshRenderer()
     {
     }
     void MeshRenderer::LoadMeshs(const std::string& filepath)
     {
+        m_MeshFilePath = filepath;
+        m_Meshs.clear();
+        m_MaterialAssets.clear();
+        m_RuntimeMaterials.clear();
+
         Assimp::Importer import;
         const aiScene* scene = import.ReadFile(filepath, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
@@ -20,6 +26,28 @@ namespace Kita {
     }
 
 
+
+    void MeshRenderer::SyncMaterial(size_t index)
+    {
+        if (index >= m_MaterialAssets.size())
+            return;
+
+        if (index >= m_RuntimeMaterials.size())
+            m_RuntimeMaterials.resize(m_MaterialAssets.size());
+
+        if (!m_RuntimeMaterials[index])
+            m_RuntimeMaterials[index] = CreateRef<Material>();
+
+        m_MaterialAssets[index]->ApplyToRuntimeMaterial(*m_RuntimeMaterials[index]);
+    }
+
+    void MeshRenderer::SyncAllMaterials()
+    {
+        for (size_t i = 0; i < m_MaterialAssets.size(); i++)
+        {
+            SyncMaterial(i);
+        }
+    }
 
     void MeshRenderer::ProcessNode(aiNode* node, const aiScene* scene)
     {
@@ -84,12 +112,13 @@ namespace Kita {
 
         m_Meshs.push_back(meshObj);
 
-        auto mat = CreateRef<Material>();
+        auto materialAsset = CreateRef<MaterialAsset>();
+        materialAsset->ShaderHandle = AssetManager::GetInstance().ImportAsset("packages/shaders/EditorDefaultShader.glsl");
+        materialAsset->AlbedoTextureHandle = AssetManager::GetInstance().ImportAsset("content/textures/test.jpg");
+        materialAsset->BaseColor = glm::vec4(1.0f);
 
-        mat->SetShader("packages/shaders/EditorDefaultShader.glsl");
-        mat->SetAlbedoTexture("content/textures/test.jpg");
-
-        m_Materials.push_back(mat);
+        m_MaterialAssets.push_back(materialAsset);
+        m_RuntimeMaterials.push_back(materialAsset->CreateRuntimeMaterial());
     }
 
 }

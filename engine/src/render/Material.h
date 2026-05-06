@@ -14,8 +14,10 @@ namespace Kita {
 		Ref<Shader>& GetShader() { return m_Shader; }
 		const Ref<Shader>& GetShader() const { return m_Shader; }
 		void SetShader(const std::string& path);
+		void ClearShader();
 
 		void SetAlbedoTexture(const std::string& path);
+		void ClearAlbedoTexture();
 
 		const std::string& GetShaderFilePath() const { return m_ShaderFilePath; }
 		const std::string& GetAlbedoTexturePath() const { return m_AlbedoTexPath; }

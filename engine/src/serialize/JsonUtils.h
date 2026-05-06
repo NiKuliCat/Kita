@@ -24,6 +24,9 @@ namespace Kita {
 		static json SerializeUUID(const UUID& uuid);
 		static UUID DeserializeUUID(const json& value);
 
+		static json SerializeAssetHandle(const uint64_t handle);
+		static uint64_t DeserializeAssetHandle(const json& value);
+
 		static json SerializeTransform(const Transform& value);
 		static Transform DeserializeTransform(const json& value);
 	};

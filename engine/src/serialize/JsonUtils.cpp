@@ -43,6 +43,22 @@ namespace Kita {
 
 		return UUID(value.get<uint64_t>());
 	}
+
+	json JsonUtils::SerializeAssetHandle(const uint64_t handle)
+	{
+		return std::to_string(handle);
+	}
+
+	uint64_t JsonUtils::DeserializeAssetHandle(const json& value)
+	{
+		if (value.is_string())
+		{
+			return std::stoull(value.get<std::string>());
+		}
+
+		return value.get<uint64_t>();
+	}
+
 	json JsonUtils::SerializeTransform(const Transform& value)
 	{
 		json transformJson;

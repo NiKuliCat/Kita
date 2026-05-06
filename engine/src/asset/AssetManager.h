@@ -22,6 +22,7 @@ namespace Kita {
 
 		AssetHandle GetHandleByPath(const std::filesystem::path& path) const;
 		const AssetMetadata* GetMetadata(AssetHandle handle) const;
+		std::vector<AssetMetadata> GetAssetsByType(AssetType type) const;
 
 		Ref<Asset> LoadAsset(AssetHandle handle);
 
@@ -33,6 +34,7 @@ namespace Kita {
 
 		Ref<ShaderAsset> GetShaderAsset(AssetHandle handle);
 		Ref<TextureAsset> GetTextureAsset(AssetHandle handle);
+		Ref<MaterialAsset> GetMaterialAsset(AssetHandle handle);
 
 		void Clear();
 

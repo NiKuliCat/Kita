@@ -1,7 +1,6 @@
 #include "renderer_pch.h"
 #include "InspectorPanel.h"
 #include "imgui.h"
-#include "render/ShaderLibrary.h"
 #include <imgui_internal.h>
 
 namespace Kita {
@@ -431,43 +430,65 @@ namespace Kita {
 			DrawInfoRow("Mesh Source", meshRenderer.GetMeshFilePath(), isHighlight);
 			DrawInfoRow("SubMesh Count", std::to_string(meshRenderer.GetSubMeshCount()), isHighlight);
 
-			auto shaderNames = ShaderLibrary::GetInstance().GetShaderNames();
-			auto& materials = meshRenderer.GetMaterials();
-			for (size_t i = 0; i < materials.size(); ++i)
+			auto& materialAssets = meshRenderer.GetMaterialAssets();
+			auto& runtimeMaterials = meshRenderer.GetRuntimeMaterials();
+			auto& assetManager = AssetManager::GetInstance();
+			const auto shaderAssets = assetManager.GetAssetsByType(AssetType::Shader);
+			const auto textureAssets = assetManager.GetAssetsByType(AssetType::Texture);
+			for (size_t i = 0; i < materialAssets.size(); ++i)
 			{
-				auto& material = materials[i];
-				if (!material)
+				auto& materialAsset = materialAssets[i];
+				if (!materialAsset)
 				{
 					DrawInfoRow(("Material " + std::to_string(i)).c_str(), "None", isHighlight);
 					continue;
 				}
 
-				const std::string materialLabel = "Material " + std::to_string(i);
-				DrawInfoRow(materialLabel.c_str(), "Slot", isHighlight);
+				DrawInfoRow(("Material " + std::to_string(i)).c_str(), "Slot", isHighlight);
 
-				std::string currentShader = material->GetShader()
-					? material->GetShader()->GetName()
-					: material->GetShaderFilePath();
+				std::string shaderPath = "None";
+				if (Asset::IsValidHandle(materialAsset->ShaderHandle))
+				{
+					if (auto shaderAsset = assetManager.GetShaderAsset(materialAsset->ShaderHandle))
+					{
+						shaderPath = shaderAsset->GetFilePath().string();
+					}
+				}
 
 				BeginPropertyRow(isHighlight);
 				DrawPropertyLabelCell(("Shader " + std::to_string(i)).c_str());
 				PreparePropertyValueCell(GetInspectorControlYOffset());
 
-				ImGui::PushID(static_cast<int>(i));
+				ImGui::PushID(static_cast<int>(i * 2));
 				ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.07f, 0.09f, 0.12f, 1.0f));
 				ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.10f, 0.12f, 0.16f, 1.0f));
 				ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.12f, 0.15f, 0.20f, 1.0f));
 				ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.20f, 0.24f, 0.30f, 1.0f));
 				ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - textPaddingX);
-				if (ImGui::BeginCombo("##ShaderSelector", currentShader.c_str()))
+				if (ImGui::BeginCombo("##ShaderAssetSelector", shaderPath.c_str()))
 				{
-					for (const auto& shaderName : shaderNames)
+					const bool isNoneSelected = !Asset::IsValidHandle(materialAsset->ShaderHandle);
+					if (ImGui::Selectable("None", isNoneSelected))
 					{
-						const bool isSelected = (currentShader == shaderName);
-						if (ImGui::Selectable(shaderName.c_str(), isSelected))
+						materialAsset->ShaderHandle = InvalidAssetHandle;
+						meshRenderer.SyncMaterial(i);
+						shaderPath = "None";
+					}
+
+					if (isNoneSelected)
+					{
+						ImGui::SetItemDefaultFocus();
+					}
+
+					for (const auto& metadata : shaderAssets)
+					{
+						const std::string label = metadata.relativePath.generic_string();
+						const bool isSelected = materialAsset->ShaderHandle == metadata.handle;
+						if (ImGui::Selectable(label.c_str(), isSelected))
 						{
-							material->SetShader(shaderName);
-							currentShader = shaderName;
+							materialAsset->ShaderHandle = metadata.handle;
+							meshRenderer.SyncMaterial(i);
+							shaderPath = label;
 						}
 
 						if (isSelected)
@@ -480,17 +501,81 @@ namespace Kita {
 				ImGui::PopStyleColor(4);
 				ImGui::PopID();
 
-				glm::vec4 baseColor = material->GetBaseColor();
-				DrawColorRow(("Base Color " + std::to_string(i)).c_str(), baseColor, isHighlight);
-				if (baseColor.x != material->GetBaseColor().x ||
-					baseColor.y != material->GetBaseColor().y ||
-					baseColor.z != material->GetBaseColor().z ||
-					baseColor.w != material->GetBaseColor().w)
+				std::string texturePath = "None";
+				if (Asset::IsValidHandle(materialAsset->AlbedoTextureHandle))
 				{
-					material->SetBaseColor(baseColor);
+					if (auto textureAsset = assetManager.GetTextureAsset(materialAsset->AlbedoTextureHandle))
+					{
+						texturePath = textureAsset->GetFilePath().string();
+					}
 				}
 
-				DrawInfoRow(("Albedo " + std::to_string(i)).c_str(), material->GetAlbedoTexturePath(), isHighlight);
+				DrawInfoRow(("Shader Handle " + std::to_string(i)).c_str(),
+					std::to_string(materialAsset->ShaderHandle), isHighlight);
+
+				BeginPropertyRow(isHighlight);
+				DrawPropertyLabelCell(("Albedo " + std::to_string(i)).c_str());
+				PreparePropertyValueCell(GetInspectorControlYOffset());
+
+				ImGui::PushID(static_cast<int>(i * 2 + 1));
+				ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.07f, 0.09f, 0.12f, 1.0f));
+				ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.10f, 0.12f, 0.16f, 1.0f));
+				ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.12f, 0.15f, 0.20f, 1.0f));
+				ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.20f, 0.24f, 0.30f, 1.0f));
+				ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - textPaddingX);
+				if (ImGui::BeginCombo("##TextureAssetSelector", texturePath.c_str()))
+				{
+					const bool isNoneSelected = !Asset::IsValidHandle(materialAsset->AlbedoTextureHandle);
+					if (ImGui::Selectable("None", isNoneSelected))
+					{
+						materialAsset->AlbedoTextureHandle = InvalidAssetHandle;
+						meshRenderer.SyncMaterial(i);
+						texturePath = "None";
+					}
+
+					if (isNoneSelected)
+					{
+						ImGui::SetItemDefaultFocus();
+					}
+
+					for (const auto& metadata : textureAssets)
+					{
+						const std::string label = metadata.relativePath.generic_string();
+						const bool isSelected = materialAsset->AlbedoTextureHandle == metadata.handle;
+						if (ImGui::Selectable(label.c_str(), isSelected))
+						{
+							materialAsset->AlbedoTextureHandle = metadata.handle;
+							meshRenderer.SyncMaterial(i);
+							texturePath = label;
+						}
+
+						if (isSelected)
+						{
+							ImGui::SetItemDefaultFocus();
+						}
+					}
+					ImGui::EndCombo();
+				}
+				ImGui::PopStyleColor(4);
+				ImGui::PopID();
+
+				DrawInfoRow(("Texture Handle " + std::to_string(i)).c_str(),
+					std::to_string(materialAsset->AlbedoTextureHandle), isHighlight);
+
+				glm::vec4 baseColor = materialAsset->BaseColor;
+				DrawColorRow(("Base Color " + std::to_string(i)).c_str(), baseColor, isHighlight);
+				if (baseColor != materialAsset->BaseColor)
+				{
+					materialAsset->BaseColor = baseColor;
+					meshRenderer.SyncMaterial(i);
+				}
+
+				std::string runtimeState = "Ready";
+				if (i >= runtimeMaterials.size() || !runtimeMaterials[i] || !runtimeMaterials[i]->GetShader())
+				{
+					runtimeState = "Invalid Runtime Material";
+				}
+				DrawInfoRow(("Runtime " + std::to_string(i)).c_str(), runtimeState, isHighlight);
 			}
 
 			EndPropertyTable();

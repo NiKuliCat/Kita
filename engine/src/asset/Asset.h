@@ -5,7 +5,7 @@
 #include "render/Shader.h"
 #include "render/Texture.h"
 namespace Kita {
-
+	class Material;
 	using AssetHandle = uint64_t;
 	static constexpr AssetHandle InvalidAssetHandle = 0;
 	enum class AssetType
@@ -58,7 +58,8 @@ namespace Kita {
 		virtual ~MaterialAsset() = default;
 		virtual AssetType GetType() const override { return AssetType::Material; }
 
-
+		Ref<Material> CreateRuntimeMaterial() const;
+		void ApplyToRuntimeMaterial(Material& material) const;
 
 		AssetHandle ShaderHandle = InvalidAssetHandle;
 		AssetHandle AlbedoTextureHandle = InvalidAssetHandle;

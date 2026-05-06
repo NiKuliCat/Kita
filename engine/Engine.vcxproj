@@ -211,6 +211,7 @@
     <ClInclude Include="src\render\scene\OrthographicCamera.h" />
     <ClInclude Include="src\render\scene\PerspectiveCamera.h" />
     <ClInclude Include="src\serialize\JsonUtils.h" />
+    <ClInclude Include="src\serialize\MaterialSerializer.h" />
     <ClInclude Include="src\serialize\SceneSerializer.h" />
     <ClInclude Include="src\third_party\imgui\imgui_layer.h" />
     <ClInclude Include="src\third_party\stb_image\stb_image.h" />
@@ -680,6 +681,7 @@
     <ClCompile Include="src\render\scene\OrthographicCamera.cpp" />
     <ClCompile Include="src\render\scene\PerspectiveCamera.cpp" />
     <ClCompile Include="src\serialize\JsonUtils.cpp" />
+    <ClCompile Include="src\serialize\MaterialSerializer.cpp" />
     <ClCompile Include="src\serialize\SceneSerializer.cpp" />
     <ClCompile Include="src\third_party\imgui\imgui_build.cpp" />
     <ClCompile Include="src\third_party\imgui\imgui_layer.cpp" />

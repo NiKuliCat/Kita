@@ -70,12 +70,18 @@ namespace Kita {
 
 
 			const auto& meshs = meshRenderer.GetMeshs();
-			const auto& mats = meshRenderer.GetMaterials();
+			const auto& mats = meshRenderer.GetRuntimeMaterials();
 			for (size_t i = 0;i < meshs.size();i++)
 			{
 				auto mesh = meshs[i];
+				if (i >= mats.size() || !mats[i])
+					continue;
+
 				auto mat = mats[i];
 				auto shader = mat->GetShader();
+				if (!shader)
+					continue;
+
 				uint32_t id = (uint32_t)entity;
 				shader->SetMat4("Model", model);
 				shader->SetInt("id", id);

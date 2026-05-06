@@ -2,23 +2,9 @@
 #include "Asset.h"
 #include "AssetManager.h"
 #include "core/Log.h"
-#include  "render/ShaderLibrary.h"
-#include "render/TextureLibrary.h"
 #include "serialize/JsonUtils.h"
-
+#include "serialize/MaterialSerializer.h"
 namespace Kita {
-
-	void ShaderAsset::SetShaderPath(const std::filesystem::path& path)
-	{
-		m_ShaderPath = path;
-		m_RuntimeShader = ShaderLibrary::GetInstance().Load(m_ShaderPath.string());
-	}
-
-	void TextureAsset::SetTexturePath(const std::filesystem::path& path)
-	{
-		m_TexturePath = path;
-		m_RuntimeTexture = TextureLibrary::GetInstance().Load(m_TexturePath.string());
-	}
 
 	AssetManager& AssetManager::GetInstance()
 	{
@@ -203,6 +189,26 @@ namespace Kita {
 		return &it->second;
 	}
 
+	std::vector<AssetMetadata> AssetManager::GetAssetsByType(AssetType type) const
+	{
+		std::vector<AssetMetadata> result;
+		for (const auto& [handle, metadata] : m_MetadataRegistry)
+		{
+			if (metadata.type == type)
+			{
+				result.push_back(metadata);
+			}
+		}
+
+		std::sort(result.begin(), result.end(),
+			[](const AssetMetadata& left, const AssetMetadata& right)
+			{
+				return left.relativePath.generic_string() < right.relativePath.generic_string();
+			});
+
+		return result;
+	}
+
 	Ref<Asset> AssetManager::LoadAsset(AssetHandle handle)
 	{
 		auto loadedIt = m_LoadedAssets.find(handle);
@@ -237,6 +243,11 @@ namespace Kita {
 		return GetAsset<TextureAsset>(handle);
 	}
 
+	Ref<MaterialAsset> AssetManager::GetMaterialAsset(AssetHandle handle)
+	{
+		return GetAsset<MaterialAsset>(handle);
+	}
+
 	void AssetManager::Clear()
 	{
 		m_MetadataRegistry.clear();
@@ -262,6 +273,19 @@ namespace Kita {
 			textureAsset->SetHandle(metadata.handle);
 			textureAsset->SetTexturePath(assetPath);
 			return textureAsset;
+		}
+		case AssetType::Material:
+		{
+			Ref<MaterialAsset> materialAsset = CreateRef<MaterialAsset>();
+			materialAsset->SetHandle(metadata.handle);
+
+			if (!MaterialSerializer::Deserialize(assetPath, *materialAsset))
+			{
+				KITA_CORE_WARN("Failed to deserialize material asset: {}", assetPath.string());
+				return nullptr;
+			}
+
+			return materialAsset;
 		}
 		default:
 			KITA_CORE_WARN("CreateAssetFromMetadata unsupported asset type.");
@@ -332,6 +356,11 @@ namespace Kita {
 	{
 		std::string ext = NormalizePath(path).extension().string();
 		std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+
+		if (ext == ".mat")
+		{
+			return AssetType::Material;
+		}
 
 		if (ext == ".glsl" || ext == ".vert" || ext == ".frag")
 		{
