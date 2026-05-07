@@ -1,6 +1,6 @@
 project "Engine"
     kind "StaticLib"
-    cppdialect "C++17"
+    cppdialect "C++20"
     staticruntime "off"
 
 
@@ -25,7 +25,8 @@ project "Engine"
     defines
     {
         "_CRT_SECURE_NO_WARNINGS",
-        "GLFW_INCLUDE_NONE"
+        "GLFW_INCLUDE_NONE",
+        "VULKAN_HPP_NO_STRUCT_CONSTRUCTORS"
     }
 
     includedirs
@@ -39,7 +40,8 @@ project "Engine"
         "%{IncludeDir.assimp}",
         "%{IncludeDir.entt}",
         "%{IncludeDir.ImGuizmo}",
-        "%{IncludeDir.nlohmann_json}"
+        "%{IncludeDir.nlohmann_json}",
+        "%{IncludeDir.VulkanSDK}"
     }
     buildoptions
     {
@@ -51,7 +53,8 @@ project "Engine"
         "GLFW",
         "glad",
         "ImGui",
-        "opengl32.lib"
+        "opengl32.lib",
+        "%{Library.Vulkan}"
     }
 
     filter "files:third-party/imguizmo/ImGuizmo.cpp"

@@ -80,6 +80,8 @@ workspace "Kita"
     configurations { "Debug", "Release", "Dist" }
     multiprocessorcompile "On"
 
+    
+    VULKANSDK = os.getenv("VULKAN_SDK")
     outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
     
@@ -93,6 +95,13 @@ workspace "Kita"
     IncludeDir["entt"]              = "%{wks.location}/engine/third-party/entt"
     IncludeDir["ImGuizmo"]          = "%{wks.location}/engine/third-party/imguizmo"
     IncludeDir["nlohmann_json"]     = "%{wks.location}/engine/third-party/nlohmann/include"
+    IncludeDir["VulkanSDK"] = "%{VULKANSDK}/Include"
+
+    LibraryDir = {}
+    LibraryDir["VulkanSDK"] = "%{VULKANSDK}/Lib"
+
+    Library = {}
+    Library["Vulkan"] = "%{LibraryDir.VulkanSDK}/vulkan-1.lib"
 
     group "Dependencies"
         include "engine/third-party/glfw"

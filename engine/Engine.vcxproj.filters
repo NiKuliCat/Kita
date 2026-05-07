@@ -22,6 +22,9 @@
     <Filter Include="src\platform\opengl">
       <UniqueIdentifier>{B57427EB-21D6-04F9-AA43-4BAB16A43BB8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\platform\vulkan">
+      <UniqueIdentifier>{C1D4D9FB-2D36-B709-B6A3-FDBB2204EEC8}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\platform\windows">
       <UniqueIdentifier>{9B5931A8-87E8-BA71-3007-CF6C1C75CB17}</UniqueIdentifier>
     </Filter>
@@ -177,6 +180,9 @@
     <ClInclude Include="src\platform\opengl\OpenGLVertexArray.h">
       <Filter>src\platform\opengl</Filter>
     </ClInclude>
+    <ClInclude Include="src\platform\vulkan\VulkanDivces.h">
+      <Filter>src\platform\vulkan</Filter>
+    </ClInclude>
     <ClInclude Include="src\platform\windows\WindowsWindow.h">
       <Filter>src\platform\windows</Filter>
     </ClInclude>
@@ -193,6 +199,9 @@
       <Filter>src\render</Filter>
     </ClInclude>
     <ClInclude Include="src\render\Material.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\RenderAssetUtils.h">
       <Filter>src\render</Filter>
     </ClInclude>
     <ClInclude Include="src\render\RenderCommand.h">
@@ -1509,7 +1518,6 @@
     <ClInclude Include="third-party\imguizmo\ImGuizmo.h">
       <Filter>third-party\imguizmo</Filter>
     </ClInclude>
-    <ClInclude Include="src\render\RenderAssetUtils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\asset\Asset.cpp">
@@ -1633,9 +1641,6 @@
       <Filter>src\render\scene</Filter>
     </ClCompile>
     <ClCompile Include="src\serialize\JsonUtils.cpp">
-      <Filter>src\serialize</Filter>
-    </ClCompile>
-    <ClCompile Include="src\serialize\MaterialSerializer.cpp">
       <Filter>src\serialize</Filter>
     </ClCompile>
     <ClCompile Include="src\serialize\SceneSerializer.cpp">

@@ -73,7 +73,8 @@ namespace Kita {
 
 			ImVec2 contentAvailable = ImGui::GetContentRegionAvail();
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 4,4 });
-			float lineHeight = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
+			const ImGuiStyle& style = ImGui::GetStyle();
+			float lineHeight = ImGui::GetFontSize() + style.FramePadding.y * 2.0f;
 			ImGui::Separator();
 			bool open = ImGui::TreeNodeEx((void*)typeid(T).hash_code(), componentNodeFlags, label);
 			ImGui::PopStyleVar();

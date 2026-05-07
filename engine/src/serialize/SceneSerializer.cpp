@@ -86,7 +86,7 @@ namespace Kita {
 		if (!in.is_open())
 		{
 			KITA_CORE_ERROR("Failed to open scene file: {0}", filepath.string());
-			return false;
+			return nullptr;
 		}
 		json root;
 		in >> root;

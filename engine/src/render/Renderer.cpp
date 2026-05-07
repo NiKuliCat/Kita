@@ -30,7 +30,7 @@ namespace Kita {
 
 	void Renderer::BeginScene(const glm::mat4& v, const glm::mat4& p,const glm::vec3& pos,const DirectLightData& mainLightData,const glm::vec2& screenSize)
 	{
-		auto& cameraData = RenderCameraUBOData{};
+		RenderCameraUBOData cameraData{};
 		cameraData.Matrix_V = v;
 		cameraData.Matrix_P = p;
 		cameraData.Matrix_I_V = glm::inverse(v);
@@ -40,7 +40,7 @@ namespace Kita {
 		cameraData.CameraPosWS = glm::vec4(pos, 0.0f);
 
 
-		auto& screenData = RenderViewportUBOData{};
+		RenderViewportUBOData screenData{};
 		screenData.ScreenSize = glm::vec4(screenSize.x, screenSize.y, 1 / screenSize.x, 1 / screenSize.y);
 
 

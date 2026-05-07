@@ -1,7 +1,7 @@
 project "Renderer"
     kind "ConsoleApp"
     language "c++"
-    cppdialect "C++17"
+    cppdialect "C++20"
     staticruntime "off"
 
 
@@ -50,7 +50,7 @@ project "Renderer"
 
     filter "system:windows"
       systemversion "latest"
-      defines { "PLATFORM_WINDOWS" }
+      defines { "PLATFORM_WINDOWS", "VULKAN_HPP_NO_STRUCT_CONSTRUCTORS" }
 
    filter "configurations:Debug"
       defines { "KITA_DEBUG" }

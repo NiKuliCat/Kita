@@ -76,15 +76,15 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>kita_pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;GLFW_INCLUDE_NONE;PLATFORM_WINDOWS;KITA_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;third-party\glfw\include;third-party\glad\include;third-party\imgui;third-party\spdlog\include;third-party\glm;third-party\assimp\include;third-party\entt;third-party\imguizmo;third-party\nlohmann\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;GLFW_INCLUDE_NONE;VULKAN_HPP_NO_STRUCT_CONSTRUCTORS;PLATFORM_WINDOWS;KITA_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>src;third-party\glfw\include;third-party\glad\include;third-party\imgui;third-party\spdlog\include;third-party\glm;third-party\assimp\include;third-party\entt;third-party\imguizmo;third-party\nlohmann\include;C:\VulkanSDK\1.4.341.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <Link>
@@ -92,7 +92,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;C:\VulkanSDK\1.4.341.1\Lib\vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
     <ProjectReference>
     </ProjectReference>
@@ -102,8 +102,8 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>kita_pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;GLFW_INCLUDE_NONE;PLATFORM_WINDOWS;KITA_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;third-party\glfw\include;third-party\glad\include;third-party\imgui;third-party\spdlog\include;third-party\glm;third-party\assimp\include;third-party\entt;third-party\imguizmo;third-party\nlohmann\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;GLFW_INCLUDE_NONE;VULKAN_HPP_NO_STRUCT_CONSTRUCTORS;PLATFORM_WINDOWS;KITA_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>src;third-party\glfw\include;third-party\glad\include;third-party\imgui;third-party\spdlog\include;third-party\glm;third-party\assimp\include;third-party\entt;third-party\imguizmo;third-party\nlohmann\include;C:\VulkanSDK\1.4.341.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -112,7 +112,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <Link>
@@ -121,7 +121,7 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Lib>
-      <AdditionalDependencies>opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;C:\VulkanSDK\1.4.341.1\Lib\vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
     <ProjectReference>
     </ProjectReference>
@@ -131,8 +131,8 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>kita_pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;GLFW_INCLUDE_NONE;PLATFORM_WINDOWS;KITA_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;third-party\glfw\include;third-party\glad\include;third-party\imgui;third-party\spdlog\include;third-party\glm;third-party\assimp\include;third-party\entt;third-party\imguizmo;third-party\nlohmann\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;GLFW_INCLUDE_NONE;VULKAN_HPP_NO_STRUCT_CONSTRUCTORS;PLATFORM_WINDOWS;KITA_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>src;third-party\glfw\include;third-party\glad\include;third-party\imgui;third-party\spdlog\include;third-party\glm;third-party\assimp\include;third-party\entt;third-party\imguizmo;third-party\nlohmann\include;C:\VulkanSDK\1.4.341.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -141,7 +141,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <Link>
@@ -150,7 +150,7 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Lib>
-      <AdditionalDependencies>opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;C:\VulkanSDK\1.4.341.1\Lib\vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
     <ProjectReference>
     </ProjectReference>
@@ -190,6 +190,7 @@
     <ClInclude Include="src\platform\opengl\OpenGLUniformBuffer.h" />
     <ClInclude Include="src\platform\opengl\OpenGLUtil.h" />
     <ClInclude Include="src\platform\opengl\OpenGLVertexArray.h" />
+    <ClInclude Include="src\platform\vulkan\VulkanDivces.h" />
     <ClInclude Include="src\platform\windows\WindowsWindow.h" />
     <ClInclude Include="src\render\Buffer.h" />
     <ClInclude Include="src\render\FrameBuffer.h" />
@@ -680,7 +681,6 @@
     <ClCompile Include="src\render\scene\OrthographicCamera.cpp" />
     <ClCompile Include="src\render\scene\PerspectiveCamera.cpp" />
     <ClCompile Include="src\serialize\JsonUtils.cpp" />
-    <ClCompile Include="src\serialize\MaterialSerializer.cpp" />
     <ClCompile Include="src\serialize\SceneSerializer.cpp" />
     <ClCompile Include="src\third_party\imgui\imgui_build.cpp" />
     <ClCompile Include="src\third_party\imgui\imgui_layer.cpp" />
