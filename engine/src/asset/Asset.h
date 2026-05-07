@@ -44,7 +44,7 @@ namespace Kita {
 
 		virtual AssetType GetType() const = 0;
 
-		const AssetHandle& GetHandle() const { return m_Handle; }
+		AssetHandle GetHandle() const { return m_Handle; }
 		void SetHandle(const AssetHandle& handle) { m_Handle = handle; }
 
 		bool IsValid() const { return m_Handle != InvalidAssetHandle; }

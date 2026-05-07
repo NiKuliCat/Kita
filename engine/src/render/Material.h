@@ -9,22 +9,21 @@ namespace Kita {
 	{
 	public:
 		Material() = default;
-		Material(const std::string& shader_path, const std::string& tex_path);
+		Material(const Ref<Shader>& shader, const Ref<Texture>& tex);
 
 		Ref<Shader>& GetShader() { return m_Shader; }
 		const Ref<Shader>& GetShader() const { return m_Shader; }
-		void SetShader(const Ref<Shader>& shader);
-		void SetShader(const std::string& path);
-		void ClearShader();
+		void SetShader(const Ref<Shader>& shader) { m_Shader = shader; }
 
 		const Ref<Texture>& GetAlbedoTexture() const { return m_AlbedoTex; }
-		void SetAlbedoTexture(const Ref<Texture>& texture);
-		void SetAlbedoTexture(const std::string& path);
-		void ClearAlbedoTexture();
+		void SetAlbedoTexture(const Ref<Texture>& texture) { m_AlbedoTex = texture; }
 
 		glm::vec4& GetBaseColor() { return m_BaseColor; }
 		const glm::vec4& GetBaseColor() const { return m_BaseColor; }
 		void SetBaseColor(const glm::vec4& color) { m_BaseColor = color; }
+
+		void ClearShader() { m_Shader = nullptr; }
+		void ClearAlbedoTexture() { m_AlbedoTex = nullptr; }
 
 		void Bind();
 	private:

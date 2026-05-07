@@ -81,9 +81,9 @@ namespace Kita {
 		auto& colors = ImGui::GetStyle().Colors;
 
 		//header  最顶部颜色（file window ）
-		colors[ImGuiCol_MenuBarBg] = ImVec4{ 0.01, 0.01, 0.01, 1.0 };
+		colors[ImGuiCol_MenuBarBg] = ImVec4{ 0.010f, 0.010f, 0.010f, 1.00f };
 
-		colors[ImGuiCol_WindowBg] = ImVec4{ 0.177,0.177, 0.177, 1.0 };
+		colors[ImGuiCol_WindowBg] = ImVec4{ 0.177f,0.177f, 0.177f, 1.00f };
 
 		//header
 		colors[ImGuiCol_Header] = ImVec4{ 0.246f,0.467f,0.632f,0.645f };
@@ -91,29 +91,29 @@ namespace Kita {
 		colors[ImGuiCol_HeaderActive] = ImVec4{ 0.246f,0.467f,0.632f,0.645f };
 
 		//button
-		colors[ImGuiCol_Button] = ImVec4{ 0.25f,0.255f,0.26f,0.0f };
-		colors[ImGuiCol_ButtonHovered] = ImVec4{ 0.35f,0.355f,0.36f,1.0f };
-		colors[ImGuiCol_ButtonActive] = ImVec4{ 0.15f,0.155f,0.16f,1.0f };
+		colors[ImGuiCol_Button] = ImVec4{ 0.250f,0.255f,0.260f,0.000f };
+		colors[ImGuiCol_ButtonHovered] = ImVec4{ 0.350f,0.355f,0.360f,1.000f };
+		colors[ImGuiCol_ButtonActive] = ImVec4{ 0.150f,0.155f,0.160f,1.000f };
 
 		//frame background
-		colors[ImGuiCol_FrameBg] = ImVec4{ 0.20, 0.20, 0.20, 1.0 };
-		colors[ImGuiCol_FrameBgHovered] = ImVec4{ 0.260, 0.20, 0.20, 1.0 };
-		colors[ImGuiCol_FrameBgActive] = ImVec4{ 0.20, 0.20, 0.20, 1.0 };
+		colors[ImGuiCol_FrameBg] = ImVec4{ 0.200f, 0.200f, 0.200f, 1.00f };
+		colors[ImGuiCol_FrameBgHovered] = ImVec4{ 0.260f, 0.20f, 0.20f, 1.0f };
+		colors[ImGuiCol_FrameBgActive] = ImVec4{ 0.20f, 0.20f, 0.20f, 1.0f };
 
 		//tab
-		colors[ImGuiCol_Tab] = ImVec4{ 0.157, 0.157, 0.157, 1.0 };
-		colors[ImGuiCol_TabHovered] = ImVec4{ 0.157, 0.157, 0.157, 1.0 };
-		colors[ImGuiCol_TabActive] = ImVec4{ 0.157, 0.157, 0.157, 1.0 };
-		colors[ImGuiCol_TabUnfocused] = ImVec4{ 0.157, 0.157, 0.157, 1.0 };
-		colors[ImGuiCol_TabUnfocusedActive] = ImVec4{0.157, 0.157, 0.157, 1.0};
-		colors[ImGuiCol_TabSelectedOverline] = ImVec4{ 0.000,1.000,0.416,1.0 };
-		colors[ImGuiCol_TabDimmedSelected] = ImVec4{ 0.177,0.177, 0.177, 1.0 };
+		colors[ImGuiCol_Tab] = ImVec4{ 0.157f, 0.157f, 0.157f, 1.0f };
+		colors[ImGuiCol_TabHovered] = ImVec4{ 0.157f, 0.157f, 0.157f, 1.0f };
+		colors[ImGuiCol_TabActive] = ImVec4{ 0.157f, 0.157f, 0.157f, 1.0f };
+		colors[ImGuiCol_TabUnfocused] = ImVec4{ 0.157f, 0.157f, 0.157f, 1.0f };
+		colors[ImGuiCol_TabUnfocusedActive] = ImVec4{0.157f, 0.157f, 0.157f, 1.0f};
+		colors[ImGuiCol_TabSelectedOverline] = ImVec4{ 0.000f,1.000f,0.416f,1.0f };
+		colors[ImGuiCol_TabDimmedSelected] = ImVec4{ 0.177f,0.177f, 0.177f, 1.0f };
 
 
 		//title  子窗口顶部栏配色
-		colors[ImGuiCol_TitleBg] = ImVec4{ 0.102, 0.102, 0.102, 1.0 };
-		colors[ImGuiCol_TitleBgActive] = ImVec4{ 0.102, 0.102, 0.102, 1.0 };
-		colors[ImGuiCol_TitleBgCollapsed] = ImVec4{ 0.102, 0.102, 0.102, 1.0 };
+		colors[ImGuiCol_TitleBg] = ImVec4{ 0.102f, 0.102f, 0.102f, 1.0f };
+		colors[ImGuiCol_TitleBgActive] = ImVec4{ 0.102f, 0.102f, 0.102f, 1.0f };
+		colors[ImGuiCol_TitleBgCollapsed] = ImVec4{ 0.102f, 0.102f, 0.102f, 1.0f };
 
 
 
