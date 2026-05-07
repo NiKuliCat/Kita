@@ -31,7 +31,8 @@ project "Renderer"
         "%{IncludeDir.assimp}",
         "%{IncludeDir.entt}",
         "%{IncludeDir.ImGuizmo}",
-        "%{IncludeDir.nlohmann_json}"
+        "%{IncludeDir.nlohmann_json}",
+        "%{IncludeDir.VulkanSDK}"
         
     }
     
@@ -57,6 +58,9 @@ project "Renderer"
       runtime "Debug"
       symbols "On"
       configure_assimp("Debug", true)
+      postbuildcommands {
+          '{COPY} "%{VULKANSDK}/Bin/slang.dll" "%{cfg.targetdir}"'
+      }
 
    filter "configurations:Release"
       defines { "KITA_RELEASE" }
@@ -64,6 +68,9 @@ project "Renderer"
       optimize "On"
       symbols "On"
       configure_assimp("Release", true)
+      postbuildcommands {
+          '{COPY} "%{VULKANSDK}/Bin/slang.dll" "%{cfg.targetdir}"'
+      }
 
    filter "configurations:Dist"
       defines { "KITA_DIST" }

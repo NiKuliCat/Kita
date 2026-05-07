@@ -2,7 +2,8 @@
 #include "OpenGLRendererAPI.h"
 #include "core/Log.h"
 #include <glad/glad.h>
-
+#include "OpenGLVertexArray.h"
+#include "OpenGLShader.h"
 namespace Kita {
 
 	static const  GLenum ConvertToGLDepthFunc(const DepthTestMode testMode)

@@ -54,7 +54,8 @@ project "Engine"
         "glad",
         "ImGui",
         "opengl32.lib",
-        "%{Library.Vulkan}"
+        "%{Library.Vulkan}",
+        "%{Library.slang}"
     }
 
     filter "files:third-party/imguizmo/ImGuizmo.cpp"

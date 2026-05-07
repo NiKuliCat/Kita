@@ -10,6 +10,13 @@
 #include "render/VertexArray.h"
 #include "render/Shader.h"
 #include "render/UniformBuffer.h"
+#include "render/VulkanContext.h"
+#include "render/VulkanGraphicsPipeline.h"
+#include "render/VulkanShader.h"
+#include "render/ShaderCompiler.h"
+#include "render/mesh/Mesh.h"
+
+#include <vector>
 namespace Kita {
 
 	struct ApplicationDescriptor
@@ -29,9 +36,12 @@ namespace Kita {
 	public:
 		void Run();
 		void InitWindow();
+		void InitVulkanContext();
 		void InitImGuiLayer();
 		void InitRenderer();
+		void InitDemoMeshRendering();
 		void MainLoop();
+		void RenderDemoMesh();
 		void ShutDown();
 
 		void OnEvent(Event& event);
@@ -46,6 +56,8 @@ namespace Kita {
 		void PushLayer(Layer* layer);
 		void PushOverlay(Layer* overlay);
 
+		inline VulkanContext& GetVulkanContext() { return *m_VulkanContext; }
+		inline const VulkanContext& GetVulkanContext() const { return *m_VulkanContext; }
 
 	private:
 		bool OnWindowClosed(WindowCloseEvent& event);
@@ -58,7 +70,12 @@ namespace Kita {
 		ApplicationDescriptor m_Descriptor{};
 
 		Ref<Window> m_Window = nullptr;
-		
+		Unique<VulkanContext> m_VulkanContext = nullptr;
+		Unique<ShaderCompiler> m_ShaderCompiler = nullptr;
+		std::vector<Ref<Mesh>> m_DemoMeshes;
+		Unique<VulkanShader> m_DemoVertexShader = nullptr;
+		Unique<VulkanShader> m_DemoFragmentShader = nullptr;
+		Unique<VulkanGraphicsPipeline> m_DemoPipeline = nullptr;
 		LayerStack m_LayerStack;
 		ImGuiLayer* m_ImGuiLayer = nullptr;
 		bool m_Active = false;

@@ -1,9 +1,7 @@
 #pragma once
 #include "core/Window.h"
 #include "core/Core.h"
-#include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include "render/GraphicsContext.h"
 namespace  Kita {
 
 
@@ -21,10 +19,6 @@ namespace  Kita {
 		inline uint32_t GetHeight() const  override { return m_WindowData.Height; }
 
 		inline void SetEventCallback(const EventCallbackFn& callback) override { m_WindowData.EventCallback = callback; }
-
-		void SetVSync(bool enabled) override;
-		bool isVSync() const override { return m_WindowData.VSync; }
-
 		inline virtual void* GetNativeWindow() const  override { return m_Window; };
 
 	private:
@@ -36,13 +30,10 @@ namespace  Kita {
 		{
 			std::string Title;
 			uint32_t Width, Height;
-			RendererAPI::API GraphicsAPI;
-
-			bool VSync;
 			EventCallbackFn EventCallback;
 		};
+
 		GLFWwindow* m_Window { nullptr };
-		Unique<GraphicsContext> m_Context { nullptr };
 		WindowData m_WindowData;
 	};
 }

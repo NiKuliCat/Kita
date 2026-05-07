@@ -1,7 +1,6 @@
 #pragma once
 #include "Core.h"
 #include "event/Event.h"
-#include "render/RendererAPI.h"
 namespace Kita {
 
     struct WindowDescriptor
@@ -9,7 +8,6 @@ namespace Kita {
         std::string Title;
         uint32_t Width;
         uint32_t Height;
-        RendererAPI::API GraphicsAPI = RendererAPI::API::OpenGL;
     };
 
     class Window
@@ -25,9 +23,6 @@ namespace Kita {
         virtual void* GetNativeWindow()  const = 0;
         virtual uint32_t GetWidth() const = 0;
         virtual uint32_t GetHeight() const = 0;
-
-        virtual void SetVSync(bool enabled) = 0;
-        virtual bool isVSync() const = 0;
 
         virtual void SetEventCallback(const EventCallbackFn& callback) = 0;
 

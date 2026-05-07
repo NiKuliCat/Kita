@@ -70,15 +70,14 @@ namespace Kita {
             m_MeshFilePath = assetPath.generic_string();
         }
 
-        Ref<MeshAsset> meshAsset = assetManager.GetMeshAsset(m_MeshAssetHandle);
-        if (!meshAsset)
+        m_Meshs = Mesh::LoadMeshesFromFile(assetPath);
+        if (m_Meshs.empty())
         {
-            KITA_CORE_WARN("Failed to load mesh asset: {}", assetPath.string());
+            KITA_CORE_WARN("Failed to load mesh geometry from file: {}", assetPath.string());
             m_MeshAssetHandle = InvalidAssetHandle;
             return;
         }
 
-        m_Meshs = meshAsset->GetSubMeshes();
         InitializeMaterialSlots(m_Meshs.size());
     }
 

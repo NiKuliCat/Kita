@@ -1,57 +1,28 @@
 #include "kita_pch.h"
 #include "Shader.h"
-#include "RendererAPI.h"
-#include "platform/opengl/OpenGLShader.h"
 namespace Kita {
 
 	 Ref<Shader> Shader::Create(const std::string& filepath)
 	{
-		switch (RendererAPI::GetAPI())
-		{
-			case  RendererAPI::API::None:
-			{
-				return nullptr;
-				break;
-			}
-			case  RendererAPI::API::OpenGL:
-			{
-				return CreateRef<OpenGLShader>(filepath);
-				break;
-			}
-		}
+		(void)filepath;
+		throw std::runtime_error("Legacy Shader::Create(path) path is disabled during Vulkan-only migration.");
+		return nullptr;
 	}
 
 	Ref<Shader>  Shader::Create(const std::string& name, const std::string& filepath)
 	{
-		switch (RendererAPI::GetAPI())
-		{
-			case  RendererAPI::API::None:
-			{
-				return nullptr;
-				break;
-			}
-			case  RendererAPI::API::OpenGL:
-			{
-				return CreateRef<OpenGLShader>(name,filepath);
-				break;
-			}
-		}
+		(void)name;
+		(void)filepath;
+		throw std::runtime_error("Legacy Shader::Create(name, path) path is disabled during Vulkan-only migration.");
+		return nullptr;
 	}
 	Ref<Shader>  Shader::Create(const std::string& name, const std::string& vertexPath, const std::string& fragmentPath)
 	{
-		switch (RendererAPI::GetAPI())
-		{
-			case  RendererAPI::API::None:
-			{
-				return nullptr;
-				break;
-			}
-			case  RendererAPI::API::OpenGL:
-			{
-				return CreateRef<OpenGLShader>(name,vertexPath, fragmentPath);
-				break;
-			}
-		}
+		(void)name;
+		(void)vertexPath;
+		(void)fragmentPath;
+		throw std::runtime_error("Legacy Shader::Create(vs, fs) path is disabled during Vulkan-only migration.");
+		return nullptr;
 	}
 
 }

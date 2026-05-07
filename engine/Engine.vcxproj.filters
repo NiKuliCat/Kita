@@ -192,9 +192,6 @@
     <ClInclude Include="src\render\FrameBuffer.h">
       <Filter>src\render</Filter>
     </ClInclude>
-    <ClInclude Include="src\render\GraphicsContext.h">
-      <Filter>src\render</Filter>
-    </ClInclude>
     <ClInclude Include="src\render\Light.h">
       <Filter>src\render</Filter>
     </ClInclude>
@@ -210,10 +207,10 @@
     <ClInclude Include="src\render\Renderer.h">
       <Filter>src\render</Filter>
     </ClInclude>
-    <ClInclude Include="src\render\RendererAPI.h">
+    <ClInclude Include="src\render\Shader.h">
       <Filter>src\render</Filter>
     </ClInclude>
-    <ClInclude Include="src\render\Shader.h">
+    <ClInclude Include="src\render\ShaderCompiler.h">
       <Filter>src\render</Filter>
     </ClInclude>
     <ClInclude Include="src\render\Texture.h">
@@ -223,6 +220,30 @@
       <Filter>src\render</Filter>
     </ClInclude>
     <ClInclude Include="src\render\VertexArray.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\VulkanBuffer.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\VulkanContext.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\VulkanGeometry.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\VulkanGraphicsPipeline.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\VulkanIndexBuffer.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\VulkanRenderCommand.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\VulkanShader.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\VulkanVertexBuffer.h">
       <Filter>src\render</Filter>
     </ClInclude>
     <ClInclude Include="src\render\font\FontManager.h">
@@ -1518,7 +1539,6 @@
     <ClInclude Include="third-party\imguizmo\ImGuizmo.h">
       <Filter>third-party\imguizmo</Filter>
     </ClInclude>
-    <ClInclude Include="src\platform\vulkan\VulkanContext.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\asset\Asset.cpp">
@@ -1611,10 +1631,10 @@
     <ClCompile Include="src\render\Renderer.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
-    <ClCompile Include="src\render\RendererAPI.cpp">
+    <ClCompile Include="src\render\Shader.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
-    <ClCompile Include="src\render\Shader.cpp">
+    <ClCompile Include="src\render\ShaderCompiler.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
     <ClCompile Include="src\render\Texture.cpp">
@@ -1624,6 +1644,30 @@
       <Filter>src\render</Filter>
     </ClCompile>
     <ClCompile Include="src\render\VertexArray.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\VulkanBuffer.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\VulkanContext.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\VulkanGeometry.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\VulkanGraphicsPipeline.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\VulkanIndexBuffer.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\VulkanRenderCommand.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\VulkanShader.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\VulkanVertexBuffer.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
     <ClCompile Include="src\render\font\FontManager.cpp">
@@ -1659,6 +1703,5 @@
     <ClCompile Include="third-party\imguizmo\ImGuizmo.cpp">
       <Filter>third-party\imguizmo</Filter>
     </ClCompile>
-    <ClCompile Include="src\render\GraphicsContext.cpp" />
   </ItemGroup>
 </Project>

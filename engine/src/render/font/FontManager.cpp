@@ -2,7 +2,6 @@
 #include "FontManager.h"
 
 #include <GLFW/glfw3.h>
-#include <backends/imgui_impl_opengl3.h>
 #include "core/Log.h"
 
 namespace Kita {
@@ -58,7 +57,7 @@ namespace Kita {
 		KITA_CORE_ASSERT(window, "BuildImGuiFonts requires a valid GLFWwindow.");
 
 		ImGuiIO& io = ImGui::GetIO();
-		ImGui_ImplOpenGL3_DestroyFontsTexture();
+
 		io.Fonts->Clear();
 		ClearRuntimeData();
 
@@ -92,7 +91,7 @@ namespace Kita {
 		KITA_CORE_ASSERT(defaultFont, "No default ImGui font was built.");
 		io.FontDefault = defaultFont;
 
-		ImGui_ImplOpenGL3_CreateFontsTexture();
+		io.Fonts->Build();
 	}
 
 	bool FontManager::RebuildImGuiFontsIfNeeded(GLFWwindow* window)

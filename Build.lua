@@ -102,6 +102,7 @@ workspace "Kita"
 
     Library = {}
     Library["Vulkan"] = "%{LibraryDir.VulkanSDK}/vulkan-1.lib"
+    Library["slang"] = "%{LibraryDir.VulkanSDK}/slang.lib"
 
     group "Dependencies"
         include "engine/third-party/glfw"

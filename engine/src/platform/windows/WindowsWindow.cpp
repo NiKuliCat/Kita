@@ -30,8 +30,6 @@ namespace Kita {
 		m_WindowData.Title = descriptor.Title;
 		m_WindowData.Width = descriptor.Width;
 		m_WindowData.Height = descriptor.Height;
-		m_WindowData.GraphicsAPI = descriptor.GraphicsAPI;
-
 
 		KITA_CORE_INFO("Create Window {0} ({1},{2})", descriptor.Title, descriptor.Width, descriptor.Height);
 
@@ -45,6 +43,9 @@ namespace Kita {
 			s_GLFWInitialized = true;
 		}
 
+		glfwDefaultWindowHints();
+		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+
 		m_Window = glfwCreateWindow((int)m_WindowData.Width, (int)m_WindowData.Height, m_WindowData.Title.c_str(), nullptr, nullptr);
 
 		if (!m_Window)
@@ -55,25 +56,16 @@ namespace Kita {
 			exit(1);
 		}
 
-		m_Context = GraphicsContext::Create(m_Window, m_WindowData.GraphicsAPI);
-		m_Context->Init();
-
 		glfwSetWindowUserPointer(m_Window, this);
-		SetVSync(false);
 
 #pragma region ----------------------------------------------------glfw callback
 
-		glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int height)
+		glfwSetFramebufferSizeCallback(m_Window, [](GLFWwindow* window, int width, int height)
 			{
 				WindowsWindow* self = static_cast<WindowsWindow*>(glfwGetWindowUserPointer(window));
 
 				self->m_WindowData.Width = width;
 				self->m_WindowData.Height = height;
-
-				if (self->m_Context)
-				{
-					self->m_Context->OnResize((uint32_t)width, (uint32_t)height);
-				}
 
 				WindowResizeEvent event(width, height);
 				self->m_WindowData.EventCallback(event);
@@ -166,28 +158,18 @@ namespace Kita {
 		OnDestroy();
 	}
 
-	void WindowsWindow::SetVSync(bool enabled)
-	{
-		if (enabled)
-		{
-			glfwSwapInterval(1);
-		}
-		else
-		{
-			glfwSwapInterval(0);
-		}
-		m_WindowData.VSync = enabled;
-	}
-
 	void WindowsWindow::OnUpdate()
 	{
 		glfwPollEvents();
-		m_Context->SwapBuffers();
 	}
 
 	void WindowsWindow::OnDestroy()
 	{
-		glfwDestroyWindow(m_Window);
+		if (m_Window)
+		{
+			glfwDestroyWindow(m_Window);
+			m_Window = nullptr;
+		}
 	}
 
 

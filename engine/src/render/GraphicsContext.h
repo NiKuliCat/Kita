@@ -1,7 +1,7 @@
 #pragma once
-#include "render/RendererAPI.h"
-#include "core/Core.h"
-struct GLFWwindow;
+
+#include "RendererAPI.h"
+
 namespace Kita {
 
 	class GraphicsContext
@@ -12,11 +12,7 @@ namespace Kita {
 		virtual void Init() = 0;
 		virtual void SwapBuffers() = 0;
 		virtual void OnResize(uint32_t width, uint32_t height) = 0;
-
-
 		virtual RendererAPI::API GetAPI() const = 0;
-
-		static Unique<GraphicsContext> Create(GLFWwindow* windowHandle, RendererAPI::API api);
-
 	};
+
 }

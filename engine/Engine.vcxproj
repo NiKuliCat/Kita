@@ -92,7 +92,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>opengl32.lib;C:\VulkanSDK\1.4.341.1\Lib\vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;C:\VulkanSDK\1.4.341.1\Lib\vulkan-1.lib;C:\VulkanSDK\1.4.341.1\Lib\slang.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
     <ProjectReference>
     </ProjectReference>
@@ -121,7 +121,7 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Lib>
-      <AdditionalDependencies>opengl32.lib;C:\VulkanSDK\1.4.341.1\Lib\vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;C:\VulkanSDK\1.4.341.1\Lib\vulkan-1.lib;C:\VulkanSDK\1.4.341.1\Lib\slang.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
     <ProjectReference>
     </ProjectReference>
@@ -150,7 +150,7 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Lib>
-      <AdditionalDependencies>opengl32.lib;C:\VulkanSDK\1.4.341.1\Lib\vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;C:\VulkanSDK\1.4.341.1\Lib\vulkan-1.lib;C:\VulkanSDK\1.4.341.1\Lib\slang.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
     <ProjectReference>
     </ProjectReference>
@@ -190,22 +190,28 @@
     <ClInclude Include="src\platform\opengl\OpenGLUniformBuffer.h" />
     <ClInclude Include="src\platform\opengl\OpenGLUtil.h" />
     <ClInclude Include="src\platform\opengl\OpenGLVertexArray.h" />
-    <ClInclude Include="src\platform\vulkan\VulkanContext.h" />
     <ClInclude Include="src\platform\vulkan\VulkanDivces.h" />
     <ClInclude Include="src\platform\windows\WindowsWindow.h" />
     <ClInclude Include="src\render\Buffer.h" />
     <ClInclude Include="src\render\FrameBuffer.h" />
-    <ClInclude Include="src\render\GraphicsContext.h" />
     <ClInclude Include="src\render\Light.h" />
     <ClInclude Include="src\render\Material.h" />
     <ClInclude Include="src\render\RenderAssetUtils.h" />
     <ClInclude Include="src\render\RenderCommand.h" />
     <ClInclude Include="src\render\Renderer.h" />
-    <ClInclude Include="src\render\RendererAPI.h" />
     <ClInclude Include="src\render\Shader.h" />
+    <ClInclude Include="src\render\ShaderCompiler.h" />
     <ClInclude Include="src\render\Texture.h" />
     <ClInclude Include="src\render\UniformBuffer.h" />
     <ClInclude Include="src\render\VertexArray.h" />
+    <ClInclude Include="src\render\VulkanBuffer.h" />
+    <ClInclude Include="src\render\VulkanContext.h" />
+    <ClInclude Include="src\render\VulkanGeometry.h" />
+    <ClInclude Include="src\render\VulkanGraphicsPipeline.h" />
+    <ClInclude Include="src\render\VulkanIndexBuffer.h" />
+    <ClInclude Include="src\render\VulkanRenderCommand.h" />
+    <ClInclude Include="src\render\VulkanShader.h" />
+    <ClInclude Include="src\render\VulkanVertexBuffer.h" />
     <ClInclude Include="src\render\font\FontManager.h" />
     <ClInclude Include="src\render\mesh\Mesh.h" />
     <ClInclude Include="src\render\scene\Camera.h" />
@@ -668,15 +674,22 @@
     <ClCompile Include="src\platform\windows\WindowsWindow.cpp" />
     <ClCompile Include="src\render\Buffer.cpp" />
     <ClCompile Include="src\render\FrameBuffer.cpp" />
-    <ClCompile Include="src\render\GraphicsContext.cpp" />
     <ClCompile Include="src\render\Material.cpp" />
     <ClCompile Include="src\render\RenderCommand.cpp" />
     <ClCompile Include="src\render\Renderer.cpp" />
-    <ClCompile Include="src\render\RendererAPI.cpp" />
     <ClCompile Include="src\render\Shader.cpp" />
+    <ClCompile Include="src\render\ShaderCompiler.cpp" />
     <ClCompile Include="src\render\Texture.cpp" />
     <ClCompile Include="src\render\UniformBuffer.cpp" />
     <ClCompile Include="src\render\VertexArray.cpp" />
+    <ClCompile Include="src\render\VulkanBuffer.cpp" />
+    <ClCompile Include="src\render\VulkanContext.cpp" />
+    <ClCompile Include="src\render\VulkanGeometry.cpp" />
+    <ClCompile Include="src\render\VulkanGraphicsPipeline.cpp" />
+    <ClCompile Include="src\render\VulkanIndexBuffer.cpp" />
+    <ClCompile Include="src\render\VulkanRenderCommand.cpp" />
+    <ClCompile Include="src\render\VulkanShader.cpp" />
+    <ClCompile Include="src\render\VulkanVertexBuffer.cpp" />
     <ClCompile Include="src\render\font\FontManager.cpp" />
     <ClCompile Include="src\render\mesh\Mesh.cpp" />
     <ClCompile Include="src\render\scene\Gizmo.cpp" />
