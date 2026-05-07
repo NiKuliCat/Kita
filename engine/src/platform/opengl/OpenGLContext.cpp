@@ -33,4 +33,14 @@ namespace Kita {
 		glfwSwapBuffers(m_WindowHandle);
 	}
 
+	void OpenGLContext::OnResize(uint32_t width, uint32_t height)
+	{
+		if (width == 0 || height == 0)
+		{
+			return;
+		}
+
+		glViewport(0, 0, (GLsizei)width, (GLsizei)height);
+	}
+
 }

@@ -190,6 +190,7 @@
     <ClInclude Include="src\platform\opengl\OpenGLUniformBuffer.h" />
     <ClInclude Include="src\platform\opengl\OpenGLUtil.h" />
     <ClInclude Include="src\platform\opengl\OpenGLVertexArray.h" />
+    <ClInclude Include="src\platform\vulkan\VulkanContext.h" />
     <ClInclude Include="src\platform\vulkan\VulkanDivces.h" />
     <ClInclude Include="src\platform\windows\WindowsWindow.h" />
     <ClInclude Include="src\render\Buffer.h" />
@@ -667,6 +668,7 @@
     <ClCompile Include="src\platform\windows\WindowsWindow.cpp" />
     <ClCompile Include="src\render\Buffer.cpp" />
     <ClCompile Include="src\render\FrameBuffer.cpp" />
+    <ClCompile Include="src\render\GraphicsContext.cpp" />
     <ClCompile Include="src\render\Material.cpp" />
     <ClCompile Include="src\render\RenderCommand.cpp" />
     <ClCompile Include="src\render\Renderer.cpp" />

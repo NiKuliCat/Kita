@@ -36,12 +36,13 @@ namespace  Kita {
 		{
 			std::string Title;
 			uint32_t Width, Height;
+			RendererAPI::API GraphicsAPI;
 
 			bool VSync;
 			EventCallbackFn EventCallback;
 		};
 		GLFWwindow* m_Window { nullptr };
-		GraphicsContext* m_Context { nullptr };
+		Unique<GraphicsContext> m_Context { nullptr };
 		WindowData m_WindowData;
 	};
 }

@@ -22,9 +22,11 @@ namespace Kita {
 #ifdef KITA_DEBUG
 	#define KITA_ASSERT(x,...) { if(!x){KITA_ERROR("Assert Failed : {0}",__VA_ARGS__); __debugbreak();}}
 	#define KITA_CORE_ASSERT(x,...) { if(!x){KITA_CORE_ERROR("Assert Failed : {0}",__VA_ARGS__); __debugbreak();}}
+	#define KITA_CORE_BREAK(...) { KITA_CORE_ERROR("Assert Failed : {0}",__VA_ARGS__); __debugbreak();}
 #else
 	#define KITA_ASSERT(x, ...)
 	#define KITA_CORE_ASSERT(x,...)
+	#define KITA_CORE_BREAK(...)
 #endif
 
 

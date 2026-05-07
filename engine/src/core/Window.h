@@ -1,6 +1,7 @@
 #pragma once
 #include "Core.h"
 #include "event/Event.h"
+#include "render/RendererAPI.h"
 namespace Kita {
 
     struct WindowDescriptor
@@ -8,6 +9,7 @@ namespace Kita {
         std::string Title;
         uint32_t Width;
         uint32_t Height;
+        RendererAPI::API GraphicsAPI = RendererAPI::API::OpenGL;
     };
 
     class Window

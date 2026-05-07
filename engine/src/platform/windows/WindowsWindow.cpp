@@ -1,7 +1,6 @@
 #include "kita_pch.h"
 #include "WindowsWindow.h"
 #include "core/Log.h"
-#include "platform/opengl/OpenGLContext.h"
 
 #include "event/KeyBoardEvent.h"
 #include "event/MouseEvent.h"
@@ -31,6 +30,8 @@ namespace Kita {
 		m_WindowData.Title = descriptor.Title;
 		m_WindowData.Width = descriptor.Width;
 		m_WindowData.Height = descriptor.Height;
+		m_WindowData.GraphicsAPI = descriptor.GraphicsAPI;
+
 
 		KITA_CORE_INFO("Create Window {0} ({1},{2})", descriptor.Title, descriptor.Width, descriptor.Height);
 
@@ -54,62 +55,67 @@ namespace Kita {
 			exit(1);
 		}
 
-		m_Context = new OpenGLContext(m_Window);
+		m_Context = GraphicsContext::Create(m_Window, m_WindowData.GraphicsAPI);
 		m_Context->Init();
 
-		glfwSetWindowUserPointer(m_Window, &m_WindowData);
+		glfwSetWindowUserPointer(m_Window, this);
 		SetVSync(false);
 
 #pragma region ----------------------------------------------------glfw callback
 
 		glfwSetWindowSizeCallback(m_Window, [](GLFWwindow* window, int width, int height)
 			{
-				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+				WindowsWindow* self = static_cast<WindowsWindow*>(glfwGetWindowUserPointer(window));
 
-				data.Width = width;
-				data.Height = height;
+				self->m_WindowData.Width = width;
+				self->m_WindowData.Height = height;
+
+				if (self->m_Context)
+				{
+					self->m_Context->OnResize((uint32_t)width, (uint32_t)height);
+				}
+
 				WindowResizeEvent event(width, height);
-				KITA_CORE_INFO(event.ToString());
-				data.EventCallback(event);
+				self->m_WindowData.EventCallback(event);
 			});
 
 		glfwSetWindowCloseCallback(m_Window, [](GLFWwindow* window)
 			{
-				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+				WindowsWindow* self = static_cast<WindowsWindow*>(glfwGetWindowUserPointer(window));
 				WindowCloseEvent event;
-				data.EventCallback(event);
+				self->m_WindowData.EventCallback(event);
 			});
 
 		glfwSetCharCallback(m_Window, [](GLFWwindow* window, unsigned int codepoint)
 			{
-				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+				WindowsWindow* self = static_cast<WindowsWindow*>(glfwGetWindowUserPointer(window));
 				KeyTypedEvent event(codepoint);
-				data.EventCallback(event);
+				self->m_WindowData.EventCallback(event);
 			});
 
 
 		glfwSetKeyCallback(m_Window, [](GLFWwindow* window, int key, int scancode, int  action, int mods)
 			{
-				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+				WindowsWindow* self = static_cast<WindowsWindow*>(glfwGetWindowUserPointer(window));
 
 				switch (action)
 				{
 				case GLFW_PRESS:
 				{
 					KeyPressedEvent event(key, 0);
-					data.EventCallback(event);
+					self->m_WindowData.EventCallback(event);
 					break;
 				}
 				case GLFW_RELEASE:
 				{
 					KeyReleasedEvent event(key);
-					data.EventCallback(event);
+					self->m_WindowData.EventCallback(event);
 					break;
 				}
 				case GLFW_REPEAT:
 				{
 					KeyPressedEvent event(key, 1);
-					data.EventCallback(event);
+					self->m_WindowData.EventCallback(event);
 					break;
 				}
 				}
@@ -117,20 +123,20 @@ namespace Kita {
 
 		glfwSetMouseButtonCallback(m_Window, [](GLFWwindow* window, int button, int action, int mods)
 			{
-				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+				WindowsWindow* self = static_cast<WindowsWindow*>(glfwGetWindowUserPointer(window));
 
 				switch (action)
 				{
 				case GLFW_PRESS:
 				{
 					MouseButtonPressedEvent event(button);
-					data.EventCallback(event);
+					self->m_WindowData.EventCallback(event);
 					break;
 				}
 				case GLFW_RELEASE:
 				{
 					MouseButtonReleaseEvent event(button);
-					data.EventCallback(event);
+					self->m_WindowData.EventCallback(event);
 					break;
 				}
 				}
@@ -141,16 +147,16 @@ namespace Kita {
 
 		glfwSetScrollCallback(m_Window, [](GLFWwindow* window, double xoffset, double yoffset)
 			{
-				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+				WindowsWindow* self = static_cast<WindowsWindow*>(glfwGetWindowUserPointer(window));
 				MouseScrolledEvent event((float)xoffset, (float)yoffset);
-				data.EventCallback(event);
+				self->m_WindowData.EventCallback(event);
 			});
 
 		glfwSetCursorPosCallback(m_Window, [](GLFWwindow* window, double xpos, double ypos)
 			{
-				WindowData& data = *(WindowData*)glfwGetWindowUserPointer(window);
+				WindowsWindow* self = static_cast<WindowsWindow*>(glfwGetWindowUserPointer(window));
 				MouseMovedEvent event((float)xpos, (float)ypos);
-				data.EventCallback(event);
+				self->m_WindowData.EventCallback(event);
 			});
 #pragma endregion
 	}

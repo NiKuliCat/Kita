@@ -1518,6 +1518,7 @@
     <ClInclude Include="third-party\imguizmo\ImGuizmo.h">
       <Filter>third-party\imguizmo</Filter>
     </ClInclude>
+    <ClInclude Include="src\platform\vulkan\VulkanContext.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\asset\Asset.cpp">
@@ -1658,5 +1659,6 @@
     <ClCompile Include="third-party\imguizmo\ImGuizmo.cpp">
       <Filter>third-party\imguizmo</Filter>
     </ClCompile>
+    <ClCompile Include="src\render\GraphicsContext.cpp" />
   </ItemGroup>
 </Project>

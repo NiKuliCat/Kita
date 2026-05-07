@@ -44,6 +44,7 @@ namespace Kita {
 		descriptor.Title = m_Descriptor.name;
 		descriptor.Width = m_Descriptor.width;
 		descriptor.Height = m_Descriptor.height;
+		descriptor.GraphicsAPI = RendererAPI::API::OpenGL;
 
 		m_Window = Window::Create(descriptor);
 		m_Window->SetEventCallback(BIND_EVENT_FUNC(Application::OnEvent));
