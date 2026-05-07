@@ -4,6 +4,9 @@
 #include "scene/Gizmo.h"
 namespace Kita {
 
+
+	// 切换到 vulkan
+
 	Renderer::RenderData* Renderer::m_RenderData = nullptr;
 
 	void Renderer::Init()
