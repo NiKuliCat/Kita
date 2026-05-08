@@ -50,6 +50,7 @@
     <ClInclude Include="src\utils\FileDialogs.h">
       <Filter>utils</Filter>
     </ClInclude>
+    <ClInclude Include="src\scene\EditorRenderer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\EditorApp.cpp" />
@@ -82,5 +83,6 @@
     <ClCompile Include="src\utils\FileDialogs.cpp">
       <Filter>utils</Filter>
     </ClCompile>
+    <ClCompile Include="src\scene\EditorRenderer.cpp" />
   </ItemGroup>
 </Project>

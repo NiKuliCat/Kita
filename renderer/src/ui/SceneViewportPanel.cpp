@@ -90,12 +90,7 @@ namespace Kita {
 		DemoShaderData TryLoadDemoShaderAsset()
 		{
 			DemoShaderData data{};
-			auto& assetManager = AssetManager::GetInstance();
-			const AssetHandle handle = GetRequiredAssetHandle(EditorProjectBootstrap::GetViewportDemoShaderPath());
-			if (!Asset::IsValidHandle(handle))
-				return data;
-
-			Ref<ShaderAsset> shaderAsset = assetManager.GetShaderAsset(handle);
+			Ref<ShaderAsset> shaderAsset = EditorProjectBootstrap::GetPreLoadShader("default");
 			if (!shaderAsset)
 				return data;
 
@@ -111,12 +106,7 @@ namespace Kita {
 
 		std::vector<Ref<Mesh>> TryLoadDemoMeshesFromAsset()
 		{
-			auto& assetManager = AssetManager::GetInstance();
-			const AssetHandle handle = GetRequiredAssetHandle(EditorProjectBootstrap::GetViewportDemoMeshPath());
-			if (!Asset::IsValidHandle(handle))
-				return {};
-
-			Ref<MeshAsset> meshAsset = assetManager.GetMeshAsset(handle);
+			Ref<MeshAsset> meshAsset = EditorProjectBootstrap::GetPreLoadMesh("sphere");
 			if (!meshAsset)
 				return {};
 
@@ -125,6 +115,15 @@ namespace Kita {
 				return subMeshes;
 
 			return {};
+		}
+
+		Ref<VulkanTexture> TryLoadDemoTexture()
+		{
+			Ref<TextureAsset> textureAsset = EditorProjectBootstrap::GetPreLoadTexture("test");
+			if (!textureAsset)
+				return nullptr;
+
+			return textureAsset->GetRuntimeTexture();
 		}
 	}
 
@@ -195,8 +194,8 @@ namespace Kita {
 				if (!m_DemoMeshWarningIssued)
 				{
 					KITA_CORE_WARN(
-						"SceneViewportPanel missing required mesh asset: {}. Viewport will render clear color only.",
-						EditorProjectBootstrap::GetViewportDemoMeshPath().string());
+						"SceneViewportPanel missing required mesh asset with key '{}'. Viewport will render clear color only.",
+						"sphere");
 					m_DemoMeshWarningIssued = true;
 				}
 				return false;
@@ -220,8 +219,8 @@ namespace Kita {
 				if (!m_DemoShaderWarningIssued)
 				{
 					KITA_CORE_WARN(
-						"SceneViewportPanel missing required shader asset: {}. Viewport will render clear color only.",
-						EditorProjectBootstrap::GetViewportDemoShaderPath().string());
+						"SceneViewportPanel missing required shader asset with key '{}'. Viewport will render clear color only.",
+						"default");
 					m_DemoShaderWarningIssued = true;
 				}
 				return false;
@@ -245,6 +244,8 @@ namespace Kita {
 		if (!m_VertexShader || !m_FragmentShader)
 			return false;
 
+		m_Renderer->SetSceneTexture(TryLoadDemoTexture());
+
 		VulkanGraphicsPipeline::CreateInfo pipelineInfo{};
 		pipelineInfo.Name = m_WindowName + "_Pipeline";
 		pipelineInfo.VertexShader = m_VertexShader.get();
@@ -257,7 +258,7 @@ namespace Kita {
 		pipelineInfo.EnableDepthTest = true;
 		pipelineInfo.EnableDepthWrite = true;
 		pipelineInfo.EnableBlending = false;
-		pipelineInfo.DescriptorSetLayout = m_Renderer->GetCameraDescriptorSet().GetLayout();
+		pipelineInfo.DescriptorSetLayouts = { m_Renderer->GetSceneUniformDescriptorSet().GetLayout() };
 
 		m_Pipeline = CreateUnique<VulkanGraphicsPipeline>(context, pipelineInfo);
 		return m_Pipeline != nullptr;
@@ -455,8 +456,12 @@ namespace Kita {
 		cameraData.CameraPosWS = glm::vec4(m_ViewportCamera->GetPosition(), 1.0f);
 
 		const glm::vec4 clearColor(0.03f, 0.032f, 0.034f, 1.0f);
+		
+		VulkanRenderer::DirectionLightUBO light{};
+		light.Color = glm::vec4(1.0, 0.0, 1.0, 1.0);
+		light.Direction = glm::vec4(0.4, -0.3, 0.0, 0.0);
 
-		m_Renderer->BeginScene(commandBuffer, *m_RenderTarget, cameraData, clearColor);
+		m_Renderer->BeginScene(commandBuffer, *m_RenderTarget, cameraData, light, clearColor);
 
 		if (m_Pipeline && !m_DemoMeshes.empty())
 		{
@@ -514,8 +519,7 @@ namespace Kita {
 
 	void SceneViewportPanel::TryPickObject()
 	{
-		// Legacy picking depends on the removed framebuffer/id-buffer path.
-		// Keep selection untouched until a Vulkan picking pass is introduced.
+
 	}
 
 }

@@ -1,6 +1,7 @@
 #pragma once
 #include "VulkanUniformBuffer.h"
 #include "VulkanDescriptorSet.h"
+#include "VulkanTexture.h"
 #include <vulkan/vulkan.h>
 #include <glm/glm.hpp>
 #include <vector>
@@ -45,6 +46,19 @@ namespace Kita {
             glm::vec4 CameraPosWS;
         };
 
+        struct alignas(16) DirectionLightUBO
+        {
+            glm::vec4 Direction;
+            glm::vec4 Color; // w intensity
+        };
+
+        struct alignas(16) PointLightSSBO
+        {
+            glm::vec4 Position;
+            glm::vec4 Color; // w intensity
+            glm::vec4 Range;
+        };
+
         struct alignas(16) ObjectData
         {
             glm::mat4 Matrix_M;
@@ -78,13 +92,15 @@ namespace Kita {
 
         void Init(VulkanContext& context);
         void OnDestroy();
+        void SetSceneTexture(const Ref<VulkanTexture>& texture);
 
-        const VulkanDescriptorSet& GetCameraDescriptorSet() const { return m_CameraDescriptorSet; }
+        const VulkanDescriptorSet& GetSceneUniformDescriptorSet() const { return m_SceneUniformDescriptorSet; }
 
         void BeginScene(
             VkCommandBuffer        cmd,
             VulkanRenderTarget& renderTarget,
             const CameraUBO& camera,
+            const DirectionLightUBO& dirLight,
             const glm::vec4& clearColor,
             float                  clearDepth = 1.0f,
             uint32_t               clearStencil = 0);
@@ -114,13 +130,18 @@ namespace Kita {
         bool m_Initialized = false;
         VulkanContext* m_Context = nullptr;
         CameraUBO  m_CameraUBO{};
+        VulkanUniformBuffer m_DirLightUniformBuffer;
         VulkanUniformBuffer m_CameraUniformBuffer;
-        VulkanDescriptorSet m_CameraDescriptorSet;
+        VulkanDescriptorSet m_SceneUniformDescriptorSet;
 
         glm::vec4  m_CurrentClearColor{};
         float      m_CurrentClearDepth   = 1.0f;
         uint32_t   m_CurrentClearStencil = 0;
         bool       m_InScene = false;
+
+
+        //test 
+        Ref<VulkanTexture> m_TestTexture = nullptr;
     };
 
 }

@@ -196,6 +196,7 @@
     <ClInclude Include="src\render\VulkanRenderTarget.h" />
     <ClInclude Include="src\render\VulkanRenderer.h" />
     <ClInclude Include="src\render\VulkanShader.h" />
+    <ClInclude Include="src\render\VulkanStorageBuffer.h" />
     <ClInclude Include="src\render\VulkanTexture.h" />
     <ClInclude Include="src\render\VulkanTextureLoader.h" />
     <ClInclude Include="src\render\VulkanUniformBuffer.h" />
@@ -663,6 +664,7 @@
     <ClCompile Include="src\render\VulkanRenderTarget.cpp" />
     <ClCompile Include="src\render\VulkanRenderer.cpp" />
     <ClCompile Include="src\render\VulkanShader.cpp" />
+    <ClCompile Include="src\render\VulkanStorageBuffer.cpp" />
     <ClCompile Include="src\render\VulkanTexture.cpp" />
     <ClCompile Include="src\render\VulkanTextureLoader.cpp" />
     <ClCompile Include="src\render\VulkanUniformBuffer.cpp" />

@@ -172,6 +172,7 @@ IF EXIST "C:\VulkanSDK\1.4.341.1\Bin\slang.dll"\ (xcopy /Q /E /Y /I "C:\VulkanSD
     <ClInclude Include="src\file\Project.h" />
     <ClInclude Include="src\project\EditorProjectBootstrap.h" />
     <ClInclude Include="src\renderer_pch.h" />
+    <ClInclude Include="src\scene\EditorRenderer.h" />
     <ClInclude Include="src\scene\ViewportCamera.h" />
     <ClInclude Include="src\ui\ContentBrowserPanel.h" />
     <ClInclude Include="src\ui\InspectorPanel.h" />
@@ -189,6 +190,7 @@ IF EXIST "C:\VulkanSDK\1.4.341.1\Bin\slang.dll"\ (xcopy /Q /E /Y /I "C:\VulkanSD
     <ClCompile Include="src\renderer_pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\scene\EditorRenderer.cpp" />
     <ClCompile Include="src\scene\ViewportCamera.cpp" />
     <ClCompile Include="src\ui\ContentBrowserPanel.cpp" />
     <ClCompile Include="src\ui\InspectorPanel.cpp" />

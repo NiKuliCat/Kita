@@ -8,6 +8,7 @@ namespace Kita {
 
     class VulkanContext;
     class VulkanUniformBuffer;
+    class VulkanStorageBuffer;
 
     // ========================================================================
     // VulkanDescriptorSet — 描述符集生命周期管理
@@ -67,6 +68,8 @@ namespace Kita {
 
         void WriteStorageBuffer(uint32_t binding, VkBuffer buffer,
                                 VkDeviceSize offset = 0, VkDeviceSize range = VK_WHOLE_SIZE);
+
+        void WriteStorageBuffer(uint32_t binding, const VulkanStorageBuffer& ssbo);
 
         void WriteImageSampler(uint32_t binding, VkImageView view, VkSampler sampler,
                                VkImageLayout layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);

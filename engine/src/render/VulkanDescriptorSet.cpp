@@ -3,6 +3,7 @@
 
 #include "VulkanContext.h"
 #include "VulkanUniformBuffer.h"
+#include "VulkanStorageBuffer.h"
 #include "core/Log.h"
 
 namespace Kita {
@@ -240,6 +241,11 @@ namespace Kita {
         write.pBufferInfo     = &bufferInfo;
 
         vkUpdateDescriptorSets(m_Context->GetDevice(), 1, &write, 0, nullptr);
+    }
+    void VulkanDescriptorSet::WriteStorageBuffer(uint32_t binding, const VulkanStorageBuffer& ssbo)
+    {
+        VkDescriptorBufferInfo info = ssbo.GetDescriptorInfo();
+        WriteStorageBuffer(binding, info.buffer, info.offset, info.range);
     }
 
     void VulkanDescriptorSet::WriteImageSampler(uint32_t binding, VkImageView view, VkSampler sampler,

@@ -20,9 +20,11 @@ namespace Kita {
 
 	void EditorLayer::OnCreate()
 	{
-		m_Scene = CreateRef<Scene>("example scene");
 		EditorProjectBootstrap::Initialize();
 
+
+
+		m_Scene = CreateRef<Scene>("example scene");
 		m_SceneSerializer = SceneSerializer(m_Scene);
 
 		m_SceneSelectionContext = CreateRef<SceneSelectionContext>();

@@ -31,7 +31,7 @@ namespace Kita {
 			bool EnableDepthWrite = true;
 			bool EnableBlending = false;
 
-			VkDescriptorSetLayout DescriptorSetLayout = VK_NULL_HANDLE;
+			std::vector<VkDescriptorSetLayout> DescriptorSetLayouts{};
 		};
 
 	public:

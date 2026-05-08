@@ -7,8 +7,6 @@
 #include "VulkanGeometry.h"
 #include "VulkanRenderCommand.h"
 #include "core/Log.h"
-
-
 namespace Kita {
 
 
@@ -18,35 +16,52 @@ namespace Kita {
             return;
 
         m_Context = &context;
-        m_CameraUniformBuffer.Init(context, sizeof(CameraUBO), "Renderer_CameraUBO");
+        m_CameraUniformBuffer.Init(context, sizeof(CameraUBO), "SceneCameraUBO");
+        m_DirLightUniformBuffer.Init(context, sizeof(DirectionLightUBO), "SceneDirLightUBO");
 
         VulkanDescriptorSet::CreateInfo descInfo{};
-        descInfo.Name = "Renderer_CameraSet";
+        descInfo.Name = "Scene_Set";
         descInfo.Bindings = {
-            { 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT }
+            { 0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT },
+            { 1, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT },
+            { 2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT  },
         };
 
-        m_CameraDescriptorSet.Init(context, descInfo);
-        m_CameraDescriptorSet.WriteUniformBuffer(0, m_CameraUniformBuffer);
+        m_SceneUniformDescriptorSet.Init(context, descInfo);
+        m_SceneUniformDescriptorSet.WriteUniformBuffer(0, m_CameraUniformBuffer);
+        m_SceneUniformDescriptorSet.WriteUniformBuffer(1, m_DirLightUniformBuffer);
 
         m_Initialized = true;
     }
 
+    void VulkanRenderer::SetSceneTexture(const Ref<VulkanTexture>& texture)
+    {
+        m_TestTexture = texture;
+
+        if (!m_TestTexture)
+            return;
+
+        KITA_CORE_ASSERT(m_SceneUniformDescriptorSet.IsValid(), "VulkanRenderer scene descriptor set is invalid");
+        m_SceneUniformDescriptorSet.WriteImageSampler(2, m_TestTexture->GetDescriptorInfo());
+    }
+
     void VulkanRenderer::OnDestroy()
     {
-        m_CameraDescriptorSet.Destroy();
+        m_SceneUniformDescriptorSet.Destroy();
         m_CameraUniformBuffer.Destroy();
+        m_DirLightUniformBuffer.Destroy();
         m_Context = nullptr;
         m_Initialized = false;
     }
 
-    void VulkanRenderer::BeginScene(VkCommandBuffer cmd, VulkanRenderTarget& renderTarget, const CameraUBO& camera, const glm::vec4& clearColor, float clearDepth, uint32_t clearStencil)
+    void VulkanRenderer::BeginScene(VkCommandBuffer cmd, VulkanRenderTarget& renderTarget, const CameraUBO& camera, const DirectionLightUBO& dirLight, const glm::vec4& clearColor, float clearDepth, uint32_t clearStencil)
     {
         KITA_CORE_ASSERT(cmd != VK_NULL_HANDLE, "VulkanRenderer::BeginScene: command buffer is null");
         KITA_CORE_ASSERT(renderTarget.IsValid(), "VulkanRenderer::BeginScene: render target is invalid");
 
         m_CameraUBO = camera;
         m_CameraUniformBuffer.SetData(&m_CameraUBO, sizeof(CameraUBO));
+        m_DirLightUniformBuffer.SetData(&dirLight, sizeof(DirectionLightUBO));
 
         m_CurrentClearColor = clearColor;
         m_CurrentClearDepth = clearDepth;
@@ -98,7 +113,7 @@ namespace Kita {
 
 
         pipeline.Bind(cmd);
-        m_CameraDescriptorSet.Bind(cmd, pipeline.GetLayout(), 0);
+        m_SceneUniformDescriptorSet.Bind(cmd, pipeline.GetLayout(), 0);
         PushObjectData(cmd, pipeline.GetLayout(), model);
         VulkanRenderCommand::BindGeometry(cmd, geometry);
         VulkanRenderCommand::DrawGeometry(cmd, geometry);
