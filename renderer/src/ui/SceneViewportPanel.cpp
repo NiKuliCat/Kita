@@ -1,19 +1,41 @@
-﻿#include "renderer_pch.h"
+#include "renderer_pch.h"
 #include "SceneViewportPanel.h"
+
 #include "imgui.h"
 #include "ImGuizmo.h"
+#include "project/EditorProjectBootstrap.h"
 #include "render/font/FontManager.h"
+#include "render/VulkanDescriptorSet.h"
+#include "render/VulkanRenderCommand.h"
+#include "render/VulkanRenderer.h"
 #include <imgui_internal.h>
 
+#include <backends/imgui_impl_vulkan.h>
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_inverse.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 namespace Kita {
 
 	namespace
 	{
+		struct DemoShaderData
+		{
+			std::vector<uint8_t> VertexSpirv;
+			std::vector<uint8_t> FragmentSpirv;
+			std::string VertexEntryPoint = "VSMain";
+			std::string FragmentEntryPoint = "PSMain";
+
+			bool IsValid() const
+			{
+				return !VertexSpirv.empty() && !FragmentSpirv.empty();
+			}
+		};
+
 		bool DrawViewportCloseButton(const ImRect& anchorRect, ImGuiID id)
 		{
+			(void)id;
+
 			ImGuiContext& g = *GImGui;
 			ImGuiStyle& style = ImGui::GetStyle();
 			ImDrawList* drawList = ImGui::GetForegroundDrawList();
@@ -53,26 +75,197 @@ namespace Kita {
 
 			if (hovered)
 				ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+
 			return pressed;
+		}
+
+		AssetHandle GetRequiredAssetHandle(const std::filesystem::path& assetPath)
+		{
+			if (assetPath.empty())
+				return InvalidAssetHandle;
+
+			return AssetManager::GetInstance().GetHandleByPath(assetPath.lexically_normal());
+		}
+
+		DemoShaderData TryLoadDemoShaderAsset()
+		{
+			DemoShaderData data{};
+			auto& assetManager = AssetManager::GetInstance();
+			const AssetHandle handle = GetRequiredAssetHandle(EditorProjectBootstrap::GetViewportDemoShaderPath());
+			if (!Asset::IsValidHandle(handle))
+				return data;
+
+			Ref<ShaderAsset> shaderAsset = assetManager.GetShaderAsset(handle);
+			if (!shaderAsset)
+				return data;
+
+			if (!shaderAsset->GetVertexStage().Valid() || !shaderAsset->GetFragmentStage().Valid())
+				return data;
+
+			data.VertexSpirv = shaderAsset->GetVertexStage().Spirv;
+			data.FragmentSpirv = shaderAsset->GetFragmentStage().Spirv;
+			data.VertexEntryPoint = shaderAsset->GetVertexStage().EntryPoint;
+			data.FragmentEntryPoint = shaderAsset->GetFragmentStage().EntryPoint;
+			return data;
+		}
+
+		std::vector<Ref<Mesh>> TryLoadDemoMeshesFromAsset()
+		{
+			auto& assetManager = AssetManager::GetInstance();
+			const AssetHandle handle = GetRequiredAssetHandle(EditorProjectBootstrap::GetViewportDemoMeshPath());
+			if (!Asset::IsValidHandle(handle))
+				return {};
+
+			Ref<MeshAsset> meshAsset = assetManager.GetMeshAsset(handle);
+			if (!meshAsset)
+				return {};
+
+			const auto& subMeshes = meshAsset->GetSubMeshes();
+			if (!subMeshes.empty())
+				return subMeshes;
+
+			return {};
 		}
 	}
 
-	SceneViewportPanel::SceneViewportPanel(const Ref<Scene>& scene, const Ref<SceneSelectionContext>& selectionContext, std::string windowName)
-		: m_ViewportCamera(CreateUnique<ViewportCamera>()),
+	SceneViewportPanel::SceneViewportPanel(
+		const Ref<Scene>& scene,
+		const Ref<SceneSelectionContext>& selectionContext,
+		std::string windowName)
+		: m_WindowName(std::move(windowName)),
+		m_ViewportCamera(CreateUnique<ViewportCamera>()),
 		m_SceneContext(scene),
-		m_SelectionContext(selectionContext),
-		m_WindowName(std::move(windowName))
+		m_SelectionContext(selectionContext)
 	{
-		InitFrameBuffer();
 		m_GizmoControlType = ImGuizmo::OPERATION::TRANSLATE;
+		InitRenderResources();
+	}
+
+	SceneViewportPanel::~SceneViewportPanel()
+	{
+		if (m_SceneTextureID)
+		{
+			Application::Get().GetVulkanContext().WaitIdle();
+			ImGui_ImplVulkan_RemoveTexture(reinterpret_cast<VkDescriptorSet>(static_cast<uint64_t>(m_SceneTextureID)));
+			m_SceneTextureID = 0;
+		}
+	}
+
+	void SceneViewportPanel::InitRenderResources()
+	{
+		VulkanContext& context = Application::Get().GetVulkanContext();
+
+		VulkanRenderTarget::CreateInfo renderTargetInfo{};
+		renderTargetInfo.Name = m_WindowName + "_RenderTarget";
+		renderTargetInfo.Width = static_cast<uint32_t>(m_ViewportSize.x);
+		renderTargetInfo.Height = static_cast<uint32_t>(m_ViewportSize.y);
+		renderTargetInfo.Samples = VK_SAMPLE_COUNT_1_BIT;
+
+		VulkanRenderTarget::ColorAttachmentDesc colorAttachment{};
+		colorAttachment.Name = m_WindowName + "_Color";
+		colorAttachment.Format = VK_FORMAT_R16G16B16A16_SFLOAT;
+		colorAttachment.CreateSampler = true;
+		colorAttachment.CreateResolveImage = false;
+		colorAttachment.Filter = VK_FILTER_LINEAR;
+		colorAttachment.AddressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+		renderTargetInfo.ColorAttachments.push_back(colorAttachment);
+
+		renderTargetInfo.DepthAttachment.Enabled = true;
+		renderTargetInfo.DepthAttachment.Name = m_WindowName + "_Depth";
+		renderTargetInfo.DepthAttachment.Format = VK_FORMAT_D32_SFLOAT;
+		renderTargetInfo.DepthAttachment.CreateSampler = false;
+
+		m_Renderer = CreateUnique<VulkanRenderer>(context);
+		m_RenderTarget = CreateUnique<VulkanRenderTarget>(context, renderTargetInfo);
+		RecreateViewportTexture();
+	}
+
+	bool SceneViewportPanel::EnsureDemoRenderResources()
+	{
+		if (m_Pipeline && !m_DemoMeshes.empty())
+			return true;
+
+		VulkanContext& context = Application::Get().GetVulkanContext();
+
+		if (m_DemoMeshes.empty())
+		{
+			m_DemoMeshes = TryLoadDemoMeshesFromAsset();
+			if (m_DemoMeshes.empty())
+			{
+				if (!m_DemoMeshWarningIssued)
+				{
+					KITA_CORE_WARN(
+						"SceneViewportPanel missing required mesh asset: {}. Viewport will render clear color only.",
+						EditorProjectBootstrap::GetViewportDemoMeshPath().string());
+					m_DemoMeshWarningIssued = true;
+				}
+				return false;
+			}
+
+			for (const Ref<Mesh>& mesh : m_DemoMeshes)
+			{
+				if (!mesh)
+					continue;
+
+				mesh->CreateVulkanGeometry(context);
+				KITA_CORE_ASSERT(mesh->GetVulkanGeometry(), "Failed to create editor viewport Vulkan geometry");
+			}
+		}
+
+		if (!m_VertexShader || !m_FragmentShader)
+		{
+			DemoShaderData shaderData = TryLoadDemoShaderAsset();
+			if (!shaderData.IsValid())
+			{
+				if (!m_DemoShaderWarningIssued)
+				{
+					KITA_CORE_WARN(
+						"SceneViewportPanel missing required shader asset: {}. Viewport will render clear color only.",
+						EditorProjectBootstrap::GetViewportDemoShaderPath().string());
+					m_DemoShaderWarningIssued = true;
+				}
+				return false;
+			}
+
+			VulkanShader::CreateInfo vertexShaderInfo{};
+			vertexShaderInfo.Name = m_WindowName + "_VertexShader";
+			vertexShaderInfo.Stage = VK_SHADER_STAGE_VERTEX_BIT;
+			vertexShaderInfo.EntryPoint = shaderData.VertexEntryPoint;
+			vertexShaderInfo.Spirv = shaderData.VertexSpirv;
+			m_VertexShader = CreateUnique<VulkanShader>(&context, vertexShaderInfo);
+
+			VulkanShader::CreateInfo fragmentShaderInfo{};
+			fragmentShaderInfo.Name = m_WindowName + "_FragmentShader";
+			fragmentShaderInfo.Stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+			fragmentShaderInfo.EntryPoint = shaderData.FragmentEntryPoint;
+			fragmentShaderInfo.Spirv = shaderData.FragmentSpirv;
+			m_FragmentShader = CreateUnique<VulkanShader>(&context, fragmentShaderInfo);
+		}
+
+		if (!m_VertexShader || !m_FragmentShader)
+			return false;
+
+		VulkanGraphicsPipeline::CreateInfo pipelineInfo{};
+		pipelineInfo.Name = m_WindowName + "_Pipeline";
+		pipelineInfo.VertexShader = m_VertexShader.get();
+		pipelineInfo.FragmentShader = m_FragmentShader.get();
+		pipelineInfo.Geometry = m_DemoMeshes.front()->GetVulkanGeometry().get();
+		pipelineInfo.ColorFormat = m_RenderTarget->GetColorFormat(0);
+		pipelineInfo.DepthFormat = m_RenderTarget->GetDepthFormat();
+		pipelineInfo.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+		pipelineInfo.CullMode = VK_CULL_MODE_NONE;
+		pipelineInfo.EnableDepthTest = true;
+		pipelineInfo.EnableDepthWrite = true;
+		pipelineInfo.EnableBlending = false;
+		pipelineInfo.DescriptorSetLayout = m_Renderer->GetCameraDescriptorSet().GetLayout();
+
+		m_Pipeline = CreateUnique<VulkanGraphicsPipeline>(context, pipelineInfo);
+		return m_Pipeline != nullptr;
 	}
 
 	void SceneViewportPanel::Simulate(float daltaTime)
 	{
-		if (!m_ViewportCamera)
-			return;
-
-		if (!m_IsActive)
+		if (!m_ViewportCamera || !m_IsActive)
 			return;
 
 		m_ViewportCamera->OnUpdate(daltaTime);
@@ -96,8 +289,6 @@ namespace Kita {
 			const float offsetX = 48.0f * static_cast<float>(windowId % 4u);
 			const float offsetY = 40.0f * static_cast<float>((windowId / 4u) % 4u);
 
-			// Only provide a fallback layout for brand-new viewport windows.
-			// When imgui.ini already has persisted state, FirstUseEver keeps it intact.
 			ImGui::SetNextWindowDockID(0, ImGuiCond_FirstUseEver);
 			ImGui::SetNextWindowPos(
 				ImVec2(mainViewport->WorkPos.x + 72.0f + offsetX, mainViewport->WorkPos.y + 72.0f + offsetY),
@@ -117,13 +308,9 @@ namespace Kita {
 		{
 			ImRect closeButtonAnchorRect{};
 			if (window->DockIsActive && window->DockNode && window->DockNode->TabBar)
-			{
 				closeButtonAnchorRect = window->DockNode->TabBar->BarRect;
-			}
 			else
-			{
 				closeButtonAnchorRect = window->TitleBarRect();
-			}
 
 			if (DrawViewportCloseButton(closeButtonAnchorRect, window->GetID("#VIEWPORT_CLOSE")))
 			{
@@ -139,122 +326,33 @@ namespace Kita {
 
 		m_IsHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows);
 		m_IsFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
-		ImVec2 viewportSize = ImGui::GetContentRegionAvail();
-		m_ViewportSize = { viewportSize.x, viewportSize.y };
-		auto viewportRegionMin = ImGui::GetWindowContentRegionMin();
-		auto viewportRegionMax = ImGui::GetWindowContentRegionMax();
-		auto viewportOffset = ImGui::GetWindowPos();
+
+		const ImVec2 viewportSize = ImGui::GetContentRegionAvail();
+		if (viewportSize.x > 1.0f && viewportSize.y > 1.0f)
+		{
+			m_ViewportSize = { viewportSize.x, viewportSize.y };
+			m_ViewportCamera->SetViewport(m_ViewportSize.x, m_ViewportSize.y);
+		}
+
+		const auto viewportRegionMin = ImGui::GetWindowContentRegionMin();
+		const auto viewportRegionMax = ImGui::GetWindowContentRegionMax();
+		const auto viewportOffset = ImGui::GetWindowPos();
 		m_ViewportBounds[0] = { viewportRegionMin.x + viewportOffset.x, viewportRegionMin.y + viewportOffset.y };
 		m_ViewportBounds[1] = { viewportRegionMax.x + viewportOffset.x, viewportRegionMax.y + viewportOffset.y };
 
-		ImGui::Image((ImTextureID)(uint64_t)m_SceneTexID, ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2(0, 1), ImVec2(1, 0));
-		m_IsImageHovered = ImGui::IsItemHovered();
-
-		auto& selectedObj = m_SelectionContext->GetSelectedObject();
-		auto& selectedPoint = m_SelectionContext->GetSelectedPoint();
-
-		if (selectedObj && selectedPoint.id != -1 && m_IsActive)
+		if (m_SceneTextureID)
 		{
-			ImGuizmo::SetDrawlist();
-
-			ImGuizmo::SetGizmoSizeClipSpace(0.22f);
-			auto& gizmoStyle = ImGuizmo::GetStyle();
-			gizmoStyle.TranslationLineThickness = 2.0f;
-			gizmoStyle.TranslationLineArrowSize = 5.0f;
-			gizmoStyle.CenterCircleSize = 0.0f;
-
-			ImVec2 imageMin = ImGui::GetItemRectMin();
-			ImVec2 imageMax = ImGui::GetItemRectMax();
-
-			ImGuizmo::SetDrawlist();
-			ImGuizmo::SetRect(imageMin.x, imageMin.y, imageMax.x - imageMin.x, imageMax.y - imageMin.y);
-
-			glm::mat4 viewMatrix = m_ViewportCamera->GetViewMatrix();
-			glm::mat4 projectionMatrix = m_ViewportCamera->GetProjectionMatrix();
-
-			auto& transform = selectedObj.GetComponent<Transform>();
-			glm::mat4 ownerModel = transform.GetTransformMatrix();
-
-			glm::vec3 worldPointPos = glm::vec3(ownerModel * glm::vec4(selectedPoint.position, 1.0f));
-			glm::mat4 pointMatrix = glm::translate(glm::mat4(1.0f), worldPointPos);
-			bool enableSnapping = Input::IsKeyPressed(Key::LeftControl);
-			float snappingValue = 0.1f;
-			float snappingValues[3] = { snappingValue, snappingValue, snappingValue };
-
-			ImGuizmo::SetGizmoSizeClipSpace(0.18f);
-
-			ImGuizmo::Manipulate(
-				glm::value_ptr(viewMatrix),
-				glm::value_ptr(projectionMatrix),
-				ImGuizmo::TRANSLATE,
-				ImGuizmo::WORLD,
-				glm::value_ptr(pointMatrix),
-				nullptr,
-				enableSnapping ? snappingValues : nullptr
-			);
-
-			if (ImGuizmo::IsUsing())
-			{
-				glm::vec3 newWorldPos, rotate, scale;
-				Transform::DecomposeTransformMatrix(pointMatrix, newWorldPos, rotate, scale);
-
-				glm::vec3 newLocalPos = glm::vec3(glm::inverse(ownerModel) * glm::vec4(newWorldPos, 1.0f));
-
-				if (selectedObj.HasComponent<LineRenderer>())
-				{
-					auto& lineRenderer = selectedObj.GetComponent<LineRenderer>();
-
-					lineRenderer.MoveControlPoint(selectedPoint.id, newLocalPos);
-					selectedPoint = lineRenderer.GetControlPointByIndex(selectedPoint.id);
-				}
-			}
+			ImGui::Image(
+				m_SceneTextureID,
+				ImVec2(m_ViewportSize.x, m_ViewportSize.y),
+				ImVec2(0.0f, 1.0f),
+				ImVec2(1.0f, 0.0f));
+			m_IsImageHovered = ImGui::IsItemHovered();
 		}
-		else if (selectedObj && m_IsActive)
+		else
 		{
-			ImGuizmo::SetDrawlist();
-			ImVec2 imageMin = ImGui::GetItemRectMin();
-			ImVec2 imageMax = ImGui::GetItemRectMax();
-
-			ImGuizmo::SetDrawlist();
-			ImGuizmo::SetRect(imageMin.x, imageMin.y, imageMax.x - imageMin.x, imageMax.y - imageMin.y);
-
-			glm::mat4 viewMatrix = m_ViewportCamera->GetViewMatrix();
-			glm::mat4 projectionMatrix = m_ViewportCamera->GetProjectionMatrix();
-
-			auto& selectedObjTransform = selectedObj.GetComponent<Transform>();
-			glm::mat4 modelMatrix = selectedObjTransform.GetTransformMatrix();
-
-			bool enableSnapping = Input::IsKeyPressed(Key::LeftControl);
-			float snappingValue = 0.1f;
-			float snappingValues[3] = { snappingValue, snappingValue, snappingValue };
-
-			ImGuizmo::SetGizmoSizeClipSpace(0.22f);
-			auto& gizmoStyle = ImGuizmo::GetStyle();
-			gizmoStyle.TranslationLineThickness = 2.0f;
-			gizmoStyle.TranslationLineArrowSize = 5.0f;
-			gizmoStyle.CenterCircleSize = 3.0f;
-
-			ImGuizmo::Manipulate(
-				glm::value_ptr(viewMatrix),
-				glm::value_ptr(projectionMatrix),
-				ImGuizmo::OPERATION(m_GizmoControlType),
-				ImGuizmo::LOCAL,
-				glm::value_ptr(modelMatrix),
-				nullptr,
-				enableSnapping ? snappingValues : nullptr);
-
-			if (ImGuizmo::IsUsing())
-			{
-				glm::vec3 translate, rotate, scale;
-				Transform::DecomposeTransformMatrix(modelMatrix, translate, rotate, scale);
-				glm::vec3 currentRotate = glm::radians(selectedObjTransform.GetRotation());
-				glm::vec3 deltaRotate = rotate - currentRotate;
-				currentRotate += deltaRotate;
-
-				selectedObjTransform.SetPosition(translate);
-				selectedObjTransform.SetRotation(glm::degrees(currentRotate));
-				selectedObjTransform.SetScale(scale);
-			}
+			ImGui::TextUnformatted("Viewport texture unavailable.");
+			m_IsImageHovered = false;
 		}
 
 		ImGui::End();
@@ -285,108 +383,97 @@ namespace Kita {
 
 	void SceneViewportPanel::Render()
 	{
-		if (!m_SelectionContext || !m_SceneContext || !m_ViewportCamera)
+		if (!m_RenderTarget)
 			return;
 
-		if (!m_SceneMSAAFrameBuffer || !m_SceneResolveFrameBuffer || !m_PickingFrameBuffer)
-		{
-			InitFrameBuffer();
-			if (!m_SceneMSAAFrameBuffer || !m_SceneResolveFrameBuffer || !m_PickingFrameBuffer)
-				return;
-		}
+		EnsureDemoRenderResources();
+		ResizeRenderTargetIfNeeded();
 
-		if (m_ViewportSize.x <= 0.0f || m_ViewportSize.y <= 0.0f)
+		VkCommandBuffer commandBuffer = Application::Get().GetVulkanContext().GetCurrentCommandBuffer();
+		if (commandBuffer == VK_NULL_HANDLE)
 			return;
 
-		auto resolveDesc = m_SceneResolveFrameBuffer->GetDescriptor();
-		if (m_ViewportSize.x != resolveDesc.Width || m_ViewportSize.y != resolveDesc.Height)
-		{
-			const uint32_t width = (uint32_t)m_ViewportSize.x;
-			const uint32_t height = (uint32_t)m_ViewportSize.y;
-
-			m_SceneMSAAFrameBuffer->ReSize(width, height);
-			m_SceneResolveFrameBuffer->ReSize(width, height);
-			m_PickingFrameBuffer->ReSize(width, height);
-
-			m_ViewportCamera->SetViewport(m_ViewportSize.x, m_ViewportSize.y);
-			m_SceneTexID = m_SceneResolveFrameBuffer->GetColorAttachment(0);
-		}
-
-		DirectLightData lightData = m_SceneContext->GetMainDirectLightData();
-
-		m_PickingFrameBuffer->Bind();
-		Renderer::BeginScene(
-			m_ViewportCamera->GetViewMatrix(),
-			m_ViewportCamera->GetProjectionMatrix(),
-			m_ViewportCamera->GetPosition(),
-			lightData,
-			{ m_PickingFrameBuffer->GetSize() });
-
-		RenderCommand::SetClearColor(glm::vec4(0.12f, 0.12f, 0.13f, 1.0f));
-		RenderCommand::Clear();
-		m_PickingFrameBuffer->ClearIDBuffer(-1, 1);
-		m_PickingFrameBuffer->ClearIDBuffer(-1, 2);
-
-		m_SceneContext->RenderSceneEditor();
-
-		Renderer::EndScene();
-		m_PickingFrameBuffer->UnBind();
-
-		m_SceneMSAAFrameBuffer->Bind();
-		Renderer::BeginScene(
-			m_ViewportCamera->GetViewMatrix(),
-			m_ViewportCamera->GetProjectionMatrix(),
-			m_ViewportCamera->GetPosition(),
-			lightData,
-			{ m_SceneMSAAFrameBuffer->GetSize() });
-
-		RenderCommand::SetClearColor(glm::vec4(0.12f, 0.12f, 0.13f, 1.0f));
-		RenderCommand::Clear();
-
-		m_SceneContext->RenderSceneEditor();
-
-		Renderer::EndScene();
-		m_SceneMSAAFrameBuffer->UnBind();
-
-		m_SceneMSAAFrameBuffer->BlitColorTo(m_SceneResolveFrameBuffer, 0, 0);
+		RenderDemoMeshToTarget(commandBuffer);
 	}
 
-	void SceneViewportPanel::InitFrameBuffer()
+	void SceneViewportPanel::ResizeRenderTargetIfNeeded()
 	{
-		m_ViewportSize = { 1280, 720 };
-		FrameBufferDescriptor sceneMSAADesc;
-		sceneMSAADesc.AttachmentsDescription = {
-			FrameBufferTexFormat::RGBA16F,
-			FrameBufferTexFormat::DEPTH
-		};
-		sceneMSAADesc.Width = 1280;
-		sceneMSAADesc.Height = 720;
-		sceneMSAADesc.Samples = 4;
-		m_SceneMSAAFrameBuffer = FrameBuffer::Create(sceneMSAADesc);
+		if (!m_RenderTarget)
+			return;
 
-		FrameBufferDescriptor sceneResolveDesc;
-		sceneResolveDesc.AttachmentsDescription = {
-			FrameBufferTexFormat::RGBA16F,
-			FrameBufferTexFormat::DEPTH
-		};
-		sceneResolveDesc.Width = 1280;
-		sceneResolveDesc.Height = 720;
-		sceneResolveDesc.Samples = 1;
-		m_SceneResolveFrameBuffer = FrameBuffer::Create(sceneResolveDesc);
+		const uint32_t width = std::max(1u, static_cast<uint32_t>(m_ViewportSize.x));
+		const uint32_t height = std::max(1u, static_cast<uint32_t>(m_ViewportSize.y));
 
-		FrameBufferDescriptor pickingDesc;
-		pickingDesc.AttachmentsDescription = {
-			FrameBufferTexFormat::RGBA16F,
-			FrameBufferTexFormat::RED_INTEGER,
-			FrameBufferTexFormat::RED_INTEGER,
-			FrameBufferTexFormat::DEPTH
-		};
-		pickingDesc.Width = 1280;
-		pickingDesc.Height = 720;
-		pickingDesc.Samples = 1;
-		m_PickingFrameBuffer = FrameBuffer::Create(pickingDesc);
+		if (width == m_RenderTarget->GetWidth() && height == m_RenderTarget->GetHeight())
+			return;
 
-		m_SceneTexID = m_SceneResolveFrameBuffer->GetColorAttachment(0);
+		VulkanContext& context = Application::Get().GetVulkanContext();
+		context.WaitIdle();
+
+		if (m_SceneTextureID)
+		{
+			ImGui_ImplVulkan_RemoveTexture(reinterpret_cast<VkDescriptorSet>(static_cast<uint64_t>(m_SceneTextureID)));
+			m_SceneTextureID = 0;
+		}
+
+		m_RenderTarget->Resize(width, height);
+		RecreateViewportTexture();
+	}
+
+	void SceneViewportPanel::RecreateViewportTexture()
+	{
+		if (m_SceneTextureID)
+		{
+			ImGui_ImplVulkan_RemoveTexture(reinterpret_cast<VkDescriptorSet>(static_cast<uint64_t>(m_SceneTextureID)));
+			m_SceneTextureID = 0;
+		}
+
+		if (!m_RenderTarget)
+			return;
+
+		const VulkanImage& sampledImage = m_RenderTarget->GetSampledColorAttachment(0);
+		KITA_CORE_ASSERT(sampledImage.HasSampler(), "Viewport sampled image has no sampler");
+
+		m_SceneTextureID = static_cast<ImTextureID>(reinterpret_cast<uint64_t>(ImGui_ImplVulkan_AddTexture(
+			sampledImage.GetSampler(),
+			sampledImage.GetView(),
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)));
+	}
+
+	void SceneViewportPanel::RenderDemoMeshToTarget(VkCommandBuffer commandBuffer)
+	{
+		if (!m_RenderTarget || !m_Renderer || !m_ViewportCamera)
+			return;
+
+		VulkanRenderer::CameraUBO cameraData{};
+		cameraData.Matrix_V = m_ViewportCamera->GetViewMatrix();
+		cameraData.Matrix_P = m_ViewportCamera->GetProjectionMatrix();
+		cameraData.Matrix_VP = m_ViewportCamera->GetViewProjectionMatrix();
+		cameraData.Matrix_I_V = glm::inverse(cameraData.Matrix_V);
+		cameraData.Matrix_I_P = glm::inverse(cameraData.Matrix_P);
+		cameraData.Matrix_I_VP = glm::inverse(cameraData.Matrix_VP);
+		cameraData.CameraPosWS = glm::vec4(m_ViewportCamera->GetPosition(), 1.0f);
+
+		const glm::vec4 clearColor(0.03f, 0.032f, 0.034f, 1.0f);
+
+		m_Renderer->BeginScene(commandBuffer, *m_RenderTarget, cameraData, clearColor);
+
+		if (m_Pipeline && !m_DemoMeshes.empty())
+		{
+			for (const Ref<Mesh>& mesh : m_DemoMeshes)
+			{
+				if (!mesh || !mesh->GetVulkanGeometry())
+					continue;
+
+				VulkanRenderer::ObjectData objectData{};
+				objectData.Matrix_M = glm::mat4(1.0f);
+				objectData.Matrix_I_M = glm::inverse(objectData.Matrix_M);
+
+				m_Renderer->SubmitMesh(commandBuffer, *m_Pipeline, *mesh->GetVulkanGeometry(), objectData);
+			}
+		}
+
+		m_Renderer->EndScene(commandBuffer, *m_RenderTarget);
 	}
 
 	bool SceneViewportPanel::OnKeyPressed(KeyPressedEvent& event)
@@ -406,15 +493,15 @@ namespace Kita {
 			m_GizmoControlType = ImGuizmo::OPERATION::SCALE;
 			break;
 		}
+
 		return false;
 	}
 
 	bool SceneViewportPanel::OnMouseButtonPressed(MouseButtonPressedEvent& event)
 	{
 		if (m_IsActive && event.GetMouseButton() == Mouse::Button0 && IsMouseInsideImageBounds())
-		{
 			TryPickObject();
-		}
+
 		return false;
 	}
 
@@ -427,74 +514,8 @@ namespace Kita {
 
 	void SceneViewportPanel::TryPickObject()
 	{
-		if (!m_SelectionContext || !m_SceneContext)
-			return;
-
-		if (Input::IsKeyPressed(Key::LeftAlt))
-			return;
-
-		if (ImGuizmo::IsUsing())
-			return;
-
-		auto [mx, my] = ImGui::GetMousePos();
-		mx -= m_ViewportBounds[0].x;
-		my -= m_ViewportBounds[0].y;
-		glm::vec2 size = m_ViewportBounds[1] - m_ViewportBounds[0];
-
-		if (mx < 0.0f || my < 0.0f || mx >= size.x || my >= size.y)
-			return;
-
-		m_PickingFrameBuffer->Bind();
-
-		int mouseX = (int)mx;
-		int mouseY = (int)(size.y - my);
-		mouseX = std::clamp(mouseX, 0, (int)size.x - 1);
-		mouseY = std::clamp(mouseY, 0, (int)size.y - 1);
-
-		int pixelId = m_PickingFrameBuffer->GetIDBufferValue(mouseX, mouseY, 1);
-		int pixelIndex = m_PickingFrameBuffer->GetIDBufferValue(mouseX, mouseY, 2);
-
-		if (pixelId == -1)
-		{
-			pixelIndex = -1;
-		}
-
-		if (ImGuizmo::IsOver() && pixelIndex == -1)
-		{
-			m_PickingFrameBuffer->UnBind();
-			return;
-		}
-
-		if (pixelIndex != -1 && pixelId != -1)
-		{
-			Object selectedObject = Object{ (entt::entity)pixelId, m_SceneContext.get() };
-			if (selectedObject.HasComponent<LineRenderer>())
-			{
-				auto& lineRenderer = selectedObject.GetComponent<LineRenderer>();
-				m_SelectionContext->ClearSelectedPoint();
-				m_SelectionContext->SetSelection(selectedObject);
-				m_SelectionContext->SetSelectedPoint(lineRenderer.GetControlPointByIndex(pixelIndex));
-				lineRenderer.SetSelectedControlPoint(pixelIndex);
-
-				const glm::vec4 highlightColor = lineRenderer.IsAnchorControlPoint(pixelIndex)
-					? glm::vec4(0.95f, 0.90f, 0.22f, 1.0f)
-					: glm::vec4(0.55f, 0.85f, 1.0f, 1.0f);
-				lineRenderer.SetControlPointColorByIndex(highlightColor, pixelIndex);
-			}
-		}
-		else if (pixelId != -1)
-		{
-			Object selectedObject = Object{ (entt::entity)pixelId, m_SceneContext.get() };
-			m_SelectionContext->ClearSelectedPoint();
-			m_SelectionContext->SetSelection(selectedObject);
-			m_SelectionContext->SetSelectedPoint({});
-		}
-		else
-		{
-			m_SelectionContext->ClearSelection();
-		}
-
-		KITA_CLENT_INFO("pixel in viewport,id :{0},index :{1}", pixelId, pixelIndex);
-		m_PickingFrameBuffer->UnBind();
+		// Legacy picking depends on the removed framebuffer/id-buffer path.
+		// Keep selection untouched until a Vulkan picking pass is introduced.
 	}
+
 }

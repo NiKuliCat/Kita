@@ -2,78 +2,78 @@
 #include "Asset.h"
 #include "AssetManager.h"
 #include "core/Log.h"
-#include "render/Material.h"
+#include "render/VulkanMaterial.h"
+#include "render/ShaderCompiler.h"
+#include "render/VulkanTextureLoader.h"
+#include "core/Application.h"
+
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
 namespace Kita{
-
-
-	
-	Ref<Material> MaterialAsset::CreateRuntimeMaterial() const
+	Ref<VulkanMaterial> MaterialAsset::CreateRuntimeMaterial() const
 	{
-		Ref<Material> material = CreateRef<Material>();
+		Ref<VulkanMaterial> material = CreateRef<VulkanMaterial>();
 		ApplyToRuntimeMaterial(*material);
 		return material;
 	}
 
-	void MaterialAsset::ApplyToRuntimeMaterial(Material& material) const
+	void MaterialAsset::ApplyToRuntimeMaterial(VulkanMaterial& material) const
 	{
 		material.SetBaseColor(BaseColor);
-
-		if (Asset::IsValidHandle(ShaderHandle))
-		{
-			auto shaderAsset = AssetManager::GetInstance().GetShaderAsset(ShaderHandle);
-			if (shaderAsset && shaderAsset->GetRuntimeShader())
-			{
-				material.SetShader(shaderAsset->GetRuntimeShader());
-			}
-			else
-			{
-				material.ClearShader();
-			}
-		}
-		else
-		{
-			material.ClearShader();
-		}
-
-		if (Asset::IsValidHandle(AlbedoTextureHandle))
-		{
-			auto textureAsset = AssetManager::GetInstance().GetTextureAsset(AlbedoTextureHandle);
-			if (textureAsset && textureAsset->GetRuntimeTexture())
-			{
-				material.SetAlbedoTexture(textureAsset->GetRuntimeTexture());
-			}
-			else
-			{
-				material.ClearAlbedoTexture();
-			}
-		}
-		else
-		{
-			material.ClearAlbedoTexture();
-		}
 	}
 
 
 	void ShaderAsset::SetShaderPath(const std::filesystem::path& path)
 	{
-		m_ShaderPath = path;
-		m_RuntimeShader = Shader::Create(m_ShaderPath.string());
+		m_ShaderPath = path.lexically_normal();
+		Compile();
+	}
+
+	bool ShaderAsset::Compile()
+	{
+		ShaderCompiler compiler;
+
+		ShaderCompiler::CompileRequest vs{};
+		vs.SourcePath = m_ShaderPath;
+		vs.ModuleName = m_ShaderPath.stem().string() + "_vs";
+		vs.EntryPointName = "VSMain";
+		vs.ShaderStage = ShaderCompiler::Stage::Vertex;
+
+		ShaderCompiler::CompileRequest fs{};
+		fs.SourcePath = m_ShaderPath;
+		fs.ModuleName = m_ShaderPath.stem().string() + "_fs";
+		fs.EntryPointName = "PSMain";
+		fs.ShaderStage = ShaderCompiler::Stage::Fragment;
+
+		auto vsResult = compiler.CompileToSpirv(vs);
+		auto fsResult = compiler.CompileToSpirv(fs);
+
+		if (!vsResult.Success || !fsResult.Success)
+			return false;
+
+		m_VertexStage.Spirv = std::move(vsResult.Spirv);
+		m_FragmentStage.Spirv = std::move(fsResult.Spirv);
+		m_VertexStage.EntryPoint = "main";
+		m_FragmentStage.EntryPoint = "main";
+		return true;
 	}
 
 	void TextureAsset::SetTexturePath(const std::filesystem::path& path)
 	{
-		m_TexturePath = path;
+		m_TexturePath = path.lexically_normal();
 		if (m_TexturePath.empty())
 		{
 			m_RuntimeTexture = nullptr;
 			return;
 		}
 
-		TextureDescriptor desc{};
-		m_RuntimeTexture = Texture::Create(desc, m_TexturePath.string());
+		VulkanContext& context = Application::Get().GetVulkanContext();
+		m_RuntimeTexture = VulkanTextureLoader::LoadTexture2D(context, m_TexturePath);
+		if (!m_RuntimeTexture)
+		{
+			KITA_CORE_WARN("Failed to create runtime VulkanTexture for asset: {}", m_TexturePath.string());
+		}
 	}
 
 	bool MeshAsset::LoadFromFile(const std::filesystem::path& path)

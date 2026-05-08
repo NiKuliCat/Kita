@@ -161,6 +161,7 @@ ShaderCompiler::CompileResult ShaderCompiler::CompileToSpirvInternal(const Compi
 	sessionDesc.targetCount = 1;
 	sessionDesc.compilerOptionEntries = optionEntries.data();
 	sessionDesc.compilerOptionEntryCount = optionCount;
+	sessionDesc.defaultMatrixLayoutMode = SLANG_MATRIX_LAYOUT_COLUMN_MAJOR;
 
 	std::vector<slang::PreprocessorMacroDesc> macros;
 	macros.reserve(request.Defines.size());

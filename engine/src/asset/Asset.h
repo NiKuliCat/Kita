@@ -3,15 +3,14 @@
 #include <glm/glm.hpp>
 #include "core/UUID.h"
 #include "render/mesh/Mesh.h"
-#include "render/Shader.h"
-#include "render/Texture.h"
+#include "render/VulkanMaterial.h"
+#include "render/VulkanTexture.h"
 
 struct aiMesh;
 struct aiNode;
 struct aiScene;
 
 namespace Kita {
-	class Material;
 	using AssetHandle = uint64_t;
 	static constexpr AssetHandle InvalidAssetHandle = 0;
 	enum class AssetType
@@ -64,8 +63,8 @@ namespace Kita {
 		virtual ~MaterialAsset() = default;
 		virtual AssetType GetType() const override { return AssetType::Material; }
 
-		Ref<Material> CreateRuntimeMaterial() const;
-		void ApplyToRuntimeMaterial(Material& material) const;
+		Ref<VulkanMaterial> CreateRuntimeMaterial() const;
+		void ApplyToRuntimeMaterial(VulkanMaterial& material) const;
 
 		AssetHandle ShaderHandle = InvalidAssetHandle;
 		AssetHandle AlbedoTextureHandle = InvalidAssetHandle;
@@ -75,24 +74,34 @@ namespace Kita {
 	class ShaderAsset : public Asset
 	{
 	public:
+		struct StageBinary
+		{
+			std::vector<uint8_t> Spirv;
+			std::string EntryPoint = "main";
+			bool Valid() const { return !Spirv.empty(); }
+		};
+
+	public:
 		ShaderAsset() = default;
 		ShaderAsset(const std::filesystem::path& path)
 		{
 			SetShaderPath(path);
 		}
 
-		virtual ~ShaderAsset() = default;
 		virtual AssetType GetType() const override { return AssetType::Shader; }
 
+		void SetShaderPath(const std::filesystem::path& path);
+		bool Compile();
 
 		const std::filesystem::path& GetFilePath() const { return m_ShaderPath; }
-		void SetShaderPath(const std::filesystem::path& path);
 
-		const Ref<Shader>& GetRuntimeShader() const { return m_RuntimeShader; }
+		const StageBinary& GetVertexStage() const { return m_VertexStage; }
+		const StageBinary& GetFragmentStage() const { return m_FragmentStage; }
 
 	private:
 		std::filesystem::path m_ShaderPath;
-		Ref<Shader> m_RuntimeShader = nullptr;
+		StageBinary m_VertexStage;
+		StageBinary m_FragmentStage;
 	};
 
 
@@ -111,11 +120,11 @@ namespace Kita {
 		const std::filesystem::path& GetFilePath() const { return m_TexturePath; }
 		void SetTexturePath(const std::filesystem::path& path);
 
-		const Ref<Texture>& GetRuntimeTexture() const { return m_RuntimeTexture; }
+		const Ref<VulkanTexture>& GetRuntimeTexture() const { return m_RuntimeTexture; }
 
 	private:
 		std::filesystem::path m_TexturePath;
-		Ref<Texture> m_RuntimeTexture = nullptr;
+		Ref<VulkanTexture> m_RuntimeTexture = nullptr;
 	};
 
 	class MeshAsset : public Asset

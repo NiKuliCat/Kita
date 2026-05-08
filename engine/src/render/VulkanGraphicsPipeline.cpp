@@ -3,6 +3,7 @@
 #include "VulkanContext.h"
 #include "VulkanGeometry.h"
 #include "VulkanShader.h"
+#include "VulkanRenderer.h"
 #include "core/Log.h"
 namespace Kita {
 
@@ -192,10 +193,20 @@ namespace Kita {
 		colorBlending.attachmentCount = 1;
 		colorBlending.pAttachments = &colorBlendAttachment;
 
+
+		VkPushConstantRange pushConstantRange{};
+		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+		pushConstantRange.offset = 0;
+		pushConstantRange.size = VulkanRenderer::ObjectDataSize;
+
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-		pipelineLayoutInfo.setLayoutCount = 0;
-		pipelineLayoutInfo.pushConstantRangeCount = 0;
+
+		const bool hasDescriptorSet = (createInfo.DescriptorSetLayout != VK_NULL_HANDLE);
+		pipelineLayoutInfo.setLayoutCount = hasDescriptorSet ? 1u : 0u;
+		pipelineLayoutInfo.pSetLayouts    = hasDescriptorSet ? &createInfo.DescriptorSetLayout : nullptr;
+		pipelineLayoutInfo.pushConstantRangeCount = 1;
+		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
 
 		VKCheck(
 			vkCreatePipelineLayout(m_Context->GetDevice(), &pipelineLayoutInfo, nullptr, &m_PipelineLayout),
@@ -206,7 +217,7 @@ namespace Kita {
 		renderingInfo.colorAttachmentCount = 1;
 		renderingInfo.pColorAttachmentFormats = &createInfo.ColorFormat;
 		renderingInfo.depthAttachmentFormat = createInfo.DepthFormat;
-		renderingInfo.stencilAttachmentFormat = createInfo.DepthFormat;
+		renderingInfo.stencilAttachmentFormat = VK_FORMAT_UNDEFINED;
 
 		VkGraphicsPipelineCreateInfo pipelineInfo{};
 		pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;

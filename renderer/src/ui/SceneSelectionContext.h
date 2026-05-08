@@ -4,6 +4,24 @@
 
 namespace Kita {
 
+	struct SelectedPoint
+	{
+		int id = -1;
+	};
+
+	enum class CurveType : uint32_t
+	{
+		Polyline = 0,
+		BezierCubic
+	};
+
+	enum class BezierHandleMode : uint32_t
+	{
+		Free = 0,
+		Aligned,
+		Mirrored
+	};
+
 	class SceneSelectionContext
 	{
 	public:
@@ -16,7 +34,7 @@ namespace Kita {
 			m_SelectedObject = object;
 		}
 
-		void SetSelectedPoint(PointData point)
+		void SetSelectedPoint(SelectedPoint point)
 		{
 			m_SelectedPoint = point;
 		}
@@ -24,18 +42,11 @@ namespace Kita {
 		Object& GetSelectedObject() { return m_SelectedObject; }
 		const Object& GetSelectedObject() const { return m_SelectedObject; }
 
-		PointData& GetSelectedPoint() { return m_SelectedPoint; }
-		const PointData& GetSelectedPoint() const { return m_SelectedPoint; }
+		SelectedPoint& GetSelectedPoint() { return m_SelectedPoint; }
+		const SelectedPoint& GetSelectedPoint() const { return m_SelectedPoint; }
 
 		void ClearSelectedPoint()
 		{
-			if (m_SelectedObject && m_SelectedPoint.id != -1 && m_SelectedObject.HasComponent<LineRenderer>())
-			{
-				auto& lineRenderer = m_SelectedObject.GetComponent<LineRenderer>();
-				lineRenderer.ResetControlPointVisual(m_SelectedPoint.id);
-				lineRenderer.ClearSelectedControlPoint();
-			}
-
 			m_SelectedPoint = {};
 		}
 
@@ -47,6 +58,6 @@ namespace Kita {
 
 	private:
 		Object m_SelectedObject;
-		PointData m_SelectedPoint;
+		SelectedPoint m_SelectedPoint;
 	};
 }

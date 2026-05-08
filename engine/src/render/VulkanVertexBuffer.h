@@ -1,6 +1,6 @@
 #pragma once
 #include "VulkanBuffer.h"
-#include "render/Buffer.h"
+#include "render/BufferLayout.h"
 
 namespace Kita {
 

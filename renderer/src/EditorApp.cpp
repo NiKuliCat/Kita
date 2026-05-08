@@ -4,6 +4,7 @@
 
 #include "EditorLayer.h"         
 #include "file/Project.h"
+#include "utils/FileDialogs.h"
 namespace Kita {
 
 	const std::string applicationName = "Kita Engine";
@@ -41,6 +42,20 @@ namespace Kita {
 		return std::nullopt;
 	}
 
+	static bool TryOpenProject(const std::filesystem::path& projectPath, ApplicationDescriptor& createDescription)
+	{
+		if (!Project::Load(projectPath))
+		{
+			KITA_CORE_ERROR("Failed to load project: {0}", projectPath.string());
+			return false;
+		}
+
+		KITA_CORE_INFO("Project loaded successfully.");
+		std::filesystem::current_path(Project::GetActive()->GetProjectDirectory());
+		createDescription.name = Project::GetActive()->GetName() + " - " + applicationName;
+		return true;
+	}
+
 
 	class EditorApp : public Application
 	{
@@ -48,7 +63,7 @@ namespace Kita {
 		EditorApp(const ApplicationDescriptor& createApplication)
 			:Application(createApplication) {
 
-		//	PushLayer(new EditorLayer());
+			PushLayer(new EditorLayer());
 		}
 		~EditorApp() {}
 	};
@@ -63,20 +78,23 @@ namespace Kita {
 		const std::optional<std::filesystem::path> projectArg = ParseProjectPathFromArgs(argc, argv);
 		if (projectArg.has_value())
 		{
-			if (!Project::Load(projectArg.value()))
-			{
-				KITA_CORE_ERROR("Failed to load project: {0}", projectArg->string());
+			if (!TryOpenProject(projectArg.value(), createDescription))
 				return nullptr;
-			}
-
-			KITA_CORE_INFO("Project loaded successfully.");
-			std::filesystem::current_path(Project::GetActive()->GetProjectDirectory());
-
-			createDescription.name = Project::GetActive()->GetName() + " - " + applicationName;
 		}
 		else
 		{
-			KITA_CORE_INFO("No project file specified. Starting editor without project context.");
+			const std::filesystem::path selectedProjectPath =
+				FileDialogs::OpenFile(L"Kita Project (*.kitaproj)\0*.kitaproj\0All Files (*.*)\0*.*\0");
+
+			if (!selectedProjectPath.empty())
+			{
+				if (!TryOpenProject(selectedProjectPath, createDescription))
+					return nullptr;
+			}
+			else
+			{
+				KITA_CORE_INFO("No project file specified. Starting editor without project context.");
+			}
 		}
 
 		return new EditorApp(createDescription);

@@ -4,6 +4,7 @@
 #include "render/VulkanContext.h"
 #include "render/VulkanGeometry.h"
 #include "core/Log.h"
+#include <cstddef>
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
@@ -112,35 +113,6 @@ namespace Kita
     {
     }
 
-	std::vector<Ref<Mesh>> Mesh::LoadMeshesFromFile(const std::filesystem::path& path)
-	{
-		std::vector<Ref<Mesh>> meshes;
-
-		Assimp::Importer importer;
-		const aiScene* scene = importer.ReadFile(
-			path.string(),
-			aiProcess_Triangulate |
-			aiProcess_FlipUVs |
-			aiProcess_CalcTangentSpace |
-			aiProcess_GenSmoothNormals |
-			aiProcess_JoinIdenticalVertices);
-
-		if (!scene || (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) || !scene->mRootNode)
-		{
-			KITA_CORE_ERROR("Failed to import mesh '{0}': {1}", path.string(), importer.GetErrorString());
-			return meshes;
-		}
-
-		ProcessAssimpNode(scene->mRootNode, scene, meshes);
-
-		if (meshes.empty())
-		{
-			KITA_CORE_WARN("Imported mesh '{0}' but no submeshes were produced.", path.string());
-		}
-
-		return meshes;
-	}
-
 	void Mesh::CreateVulkanGeometry(VulkanContext& context)
 	{
 		BufferLayout meshLayout = {
@@ -152,6 +124,16 @@ namespace Kita
 		   {ShaderDataType::Float3, "bitangent"}
 		};
 
+		const auto& elements = meshLayout.GetElements();
+		KITA_CORE_ASSERT(elements.size() == 6, "Unexpected mesh vertex layout element count");
+		KITA_CORE_ASSERT(meshLayout.GetVertexStride() == sizeof(Vertex), "Mesh vertex stride does not match Vertex size");
+		KITA_CORE_ASSERT(elements[0].Offset == offsetof(Vertex, position), "Mesh vertex layout position offset mismatch");
+		KITA_CORE_ASSERT(elements[1].Offset == offsetof(Vertex, color), "Mesh vertex layout color offset mismatch");
+		KITA_CORE_ASSERT(elements[2].Offset == offsetof(Vertex, texcoords), "Mesh vertex layout texcoords offset mismatch");
+		KITA_CORE_ASSERT(elements[3].Offset == offsetof(Vertex, normal), "Mesh vertex layout normal offset mismatch");
+		KITA_CORE_ASSERT(elements[4].Offset == offsetof(Vertex, tangent), "Mesh vertex layout tangent offset mismatch");
+		KITA_CORE_ASSERT(elements[5].Offset == offsetof(Vertex, bitangent), "Mesh vertex layout bitangent offset mismatch");
+
 		VulkanGeometry::CreateInfo createInfo{};
 		createInfo.Name = "MeshGeometry";
 		createInfo.VertexData = m_Vertices.data();
@@ -162,6 +144,6 @@ namespace Kita
 		createInfo.IndexCount = static_cast<uint32_t>(m_Indices.size());
 		createInfo.Dynamic = false;
 
-		m_VulkanGeometry = CreateUnique<VulkanGeometry>(context, createInfo);
+		m_VulkanGeometry = CreateRef<VulkanGeometry>(context, createInfo);
 	}
 }

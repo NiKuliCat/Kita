@@ -1,9 +1,6 @@
 #pragma once
 #include "core/Core.h"
-#include "RendererAPI.h"
 namespace Kita {
-
-
 	enum class ShaderDataType
 	{
 		None = 0, Float, Float2, Float3, Float4, Int, Int2, Int3, Int4, Mat3, Mat4, Bool
@@ -95,43 +92,6 @@ namespace Kita {
 	private:
 		std::vector<BufferElement> m_Elements;
 		uint32_t m_Stride = 0;
-	};
-
-	class VertexBuffer
-	{
-	public:
-		virtual ~VertexBuffer() {}
-
-		virtual void Bind() const = 0;
-		virtual void UnBind() const = 0;
-
-		virtual void SetLayout(BufferLayout& layout)  = 0;
-		virtual const BufferLayout& GetLayout() const = 0;
-
-
-		virtual void SetData(const void* data, uint32_t size, uint32_t offset = 0) = 0;
-
-	public:
-		static Ref<VertexBuffer> Create(uint32_t size);
-		static Ref<VertexBuffer> Create(void* vertices, uint32_t size);
-	};
-
-
-	class IndexBuffer
-	{
-	public:
-		virtual ~IndexBuffer() {}
-
-		virtual void Bind() const = 0;
-		virtual void UnBind() const = 0;
-
-		virtual uint32_t GetCount() const = 0;
-
-
-
-	public:
-		static Ref<IndexBuffer> Create(uint32_t* indices,uint32_t count);
-
 	};
 
 }

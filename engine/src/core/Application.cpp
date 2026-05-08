@@ -7,134 +7,12 @@
 #include "Input.h"
 #include "event/KeyCode.h"
 
-#include "render/Buffer.h"
-#include "render/Renderer.h"
+#include "asset/AssetManager.h"
+#include "render/BufferLayout.h"
 #include "render/VulkanRenderCommand.h"
-
-#include <filesystem>
-#if __has_include("file/Project.h")
-#include "file/Project.h"
-#endif
+#include "render/VulkanRenderTarget.h"
+#include <backends/imgui_impl_vulkan.h>
 namespace Kita {
-
-	namespace
-	{
-		const std::string& GetDemoVertexShaderSource()
-		{
-			static const std::string source = R"(
-struct VSInput
-{
-    float3 position : ATTRIBUTE0;
-    float4 color : ATTRIBUTE1;
-    float2 texcoords : ATTRIBUTE2;
-    float3 normal : ATTRIBUTE3;
-    float3 tangent : ATTRIBUTE4;
-    float3 bitangent : ATTRIBUTE5;
-};
-
-struct VSOutput
-{
-    float4 position : SV_Position;
-    float4 color : COLOR0;
-};
-
-[shader("vertex")]
-VSOutput main(VSInput input)
-{
-    VSOutput output;
-    output.position = float4(input.position, 1.0);
-    output.color = input.color;
-    return output;
-}
-)";
-			return source;
-		}
-
-		const std::string& GetDemoFragmentShaderSource()
-		{
-			static const std::string source = R"(
-struct PSInput
-{
-    float4 position : SV_Position;
-    float4 color : COLOR0;
-};
-
-[shader("fragment")]
-float4 main(PSInput input) : SV_Target0
-{
-    return input.color;
-}
-)";
-			return source;
-		}
-
-		Ref<Mesh> CreateFallbackDemoMesh()
-		{
-			std::vector<Vertex> vertices(4);
-
-			vertices[0].position = { -0.55f, -0.45f, 0.0f };
-			vertices[0].color = { 0.96f, 0.32f, 0.29f, 1.0f };
-			vertices[1].position = {  0.55f, -0.45f, 0.0f };
-			vertices[1].color = { 0.20f, 0.78f, 0.49f, 1.0f };
-			vertices[2].position = {  0.55f,  0.45f, 0.0f };
-			vertices[2].color = { 0.18f, 0.53f, 0.95f, 1.0f };
-			vertices[3].position = { -0.55f,  0.45f, 0.0f };
-			vertices[3].color = { 0.98f, 0.78f, 0.20f, 1.0f };
-
-			for (auto& vertex : vertices)
-			{
-				vertex.texcoords = { 0.0f, 0.0f };
-				vertex.normal = { 0.0f, 0.0f, 1.0f };
-				vertex.tangent = { 1.0f, 0.0f, 0.0f };
-				vertex.bitangent = { 0.0f, 1.0f, 0.0f };
-			}
-
-			std::vector<uint32_t> indices = { 0, 1, 2, 2, 3, 0 };
-			return Mesh::Create(vertices, indices);
-		}
-
-		std::vector<std::filesystem::path> GetDemoMeshCandidatePaths()
-		{
-			std::vector<std::filesystem::path> candidates;
-
-			const std::filesystem::path current = std::filesystem::current_path();
-#if __has_include("file/Project.h")
-			if (const Ref<Project> project = Project::GetActive())
-			{
-				candidates.push_back(project->GetContentDirectory() / "models" / "Sphere.fbx");
-				candidates.push_back(project->GetContentDirectory() / "Sphere.fbx");
-				candidates.push_back(project->GetAssetRootDirectory() / "content" / "models" / "Sphere.fbx");
-			}
-#endif
-			candidates.push_back(current / "content" / "models" / "Sphere.fbx");
-			candidates.push_back(current / ".." / "content" / "models" / "Sphere.fbx");
-			candidates.push_back(current / ".." / ".." / "content" / "models" / "Sphere.fbx");
-			candidates.push_back(current / "assets" / "content" / "models" / "Sphere.fbx");
-			candidates.push_back(current / ".." / "assets" / "content" / "models" / "Sphere.fbx");
-
-			return candidates;
-		}
-
-		std::vector<Ref<Mesh>> TryLoadDemoMeshesFromFile()
-		{
-			for (const auto& candidate : GetDemoMeshCandidatePaths())
-			{
-				const std::filesystem::path normalized = candidate.lexically_normal();
-				if (!std::filesystem::exists(normalized))
-					continue;
-
-				std::vector<Ref<Mesh>> meshes = Mesh::LoadMeshesFromFile(normalized);
-				if (!meshes.empty())
-				{
-					KITA_CORE_INFO("Loaded demo mesh from: {0}", normalized.string());
-					return meshes;
-				}
-			}
-
-			KITA_CORE_WARN("Sphere.fbx not found in expected demo locations. Falling back to procedural quad.");
-			return {};
-		}
-	}
 
 	Application* Application::s_Instance = nullptr;
 	Application::Application(const ApplicationDescriptor& app_descriptor)
@@ -155,6 +33,7 @@ float4 main(PSInput input) : SV_Target0
 
 		InitImGuiLayer();
 		InitRenderer();
+		InitializePendingLayers();
 
 		MainLoop();
 		ShutDown();
@@ -189,78 +68,6 @@ float4 main(PSInput input) : SV_Target0
 
 	void Application::InitRenderer()
 	{
-		InitDemoMeshRendering();
-	}
-
-	void Application::InitDemoMeshRendering()
-	{
-		KITA_CORE_ASSERT(m_VulkanContext, "Vulkan context must be initialized before demo mesh rendering");
-
-		m_ShaderCompiler = CreateUnique<ShaderCompiler>();
-
-		ShaderCompiler::CompileRequest vertexRequest{};
-		vertexRequest.SourcePath = "VulkanDemoMesh.vert.slang";
-		vertexRequest.ModuleName = "VulkanDemoMeshVertex";
-		vertexRequest.EntryPointName = "main";
-		vertexRequest.ShaderStage = ShaderCompiler::Stage::Vertex;
-
-		const ShaderCompiler::CompileResult vertexResult =
-			m_ShaderCompiler->CompileToSpirvFromSource(vertexRequest, GetDemoVertexShaderSource());
-		KITA_CORE_ASSERT(vertexResult.Success, "Failed to compile demo vertex shader: {0}", vertexResult.Diagnostics);
-
-		ShaderCompiler::CompileRequest fragmentRequest{};
-		fragmentRequest.SourcePath = "VulkanDemoMesh.frag.slang";
-		fragmentRequest.ModuleName = "VulkanDemoMeshFragment";
-		fragmentRequest.EntryPointName = "main";
-		fragmentRequest.ShaderStage = ShaderCompiler::Stage::Fragment;
-
-		const ShaderCompiler::CompileResult fragmentResult =
-			m_ShaderCompiler->CompileToSpirvFromSource(fragmentRequest, GetDemoFragmentShaderSource());
-		KITA_CORE_ASSERT(fragmentResult.Success, "Failed to compile demo fragment shader: {0}", fragmentResult.Diagnostics);
-
-		VulkanShader::CreateInfo vertexShaderInfo{};
-		vertexShaderInfo.Name = "DemoMeshVertexShader";
-		vertexShaderInfo.Stage = VK_SHADER_STAGE_VERTEX_BIT;
-		vertexShaderInfo.EntryPoint = "main";
-		vertexShaderInfo.Spirv = vertexResult.Spirv;
-		m_DemoVertexShader = CreateUnique<VulkanShader>(m_VulkanContext.get(), vertexShaderInfo);
-
-		VulkanShader::CreateInfo fragmentShaderInfo{};
-		fragmentShaderInfo.Name = "DemoMeshFragmentShader";
-		fragmentShaderInfo.Stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-		fragmentShaderInfo.EntryPoint = "main";
-		fragmentShaderInfo.Spirv = fragmentResult.Spirv;
-		m_DemoFragmentShader = CreateUnique<VulkanShader>(m_VulkanContext.get(), fragmentShaderInfo);
-
-		m_DemoMeshes = TryLoadDemoMeshesFromFile();
-		if (m_DemoMeshes.empty())
-		{
-			m_DemoMeshes.push_back(CreateFallbackDemoMesh());
-		}
-
-		for (const Ref<Mesh>& mesh : m_DemoMeshes)
-		{
-			if (!mesh)
-				continue;
-
-			mesh->CreateVulkanGeometry(*m_VulkanContext);
-			KITA_CORE_ASSERT(mesh->GetVulkanGeometry(), "Failed to create demo Vulkan geometry");
-		}
-
-		VulkanGraphicsPipeline::CreateInfo pipelineInfo{};
-		pipelineInfo.Name = "DemoMeshPipeline";
-		pipelineInfo.VertexShader = m_DemoVertexShader.get();
-		pipelineInfo.FragmentShader = m_DemoFragmentShader.get();
-		pipelineInfo.Geometry = m_DemoMeshes.front()->GetVulkanGeometry();
-		pipelineInfo.ColorFormat = m_VulkanContext->GetSwapchainImageFormat();
-		pipelineInfo.DepthFormat = VK_FORMAT_UNDEFINED;
-		pipelineInfo.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-		pipelineInfo.CullMode = VK_CULL_MODE_NONE;
-		pipelineInfo.EnableDepthTest = false;
-		pipelineInfo.EnableDepthWrite = false;
-		pipelineInfo.EnableBlending = false;
-
-		m_DemoPipeline = CreateUnique<VulkanGraphicsPipeline>(*m_VulkanContext, pipelineInfo);
 	}
 
 	void Application::MainLoop()
@@ -286,7 +93,6 @@ float4 main(PSInput input) : SV_Target0
 					layer->OnImGuiRender();
 
 				VulkanRenderCommand::BeginSwapchainRendering(*m_VulkanContext, { 0.1f, 0.1f, 0.12f, 1.0f });
-				RenderDemoMesh();
 
 				m_ImGuiLayer->End();
 
@@ -299,31 +105,47 @@ float4 main(PSInput input) : SV_Target0
 
 	}
 
-	void Application::RenderDemoMesh()
-	{
-		if (!m_DemoPipeline || m_DemoMeshes.empty())
-			return;
-
-		VkCommandBuffer commandBuffer = m_VulkanContext->GetCurrentCommandBuffer();
-		VulkanRenderCommand::BindPipeline(commandBuffer, *m_DemoPipeline);
-
-		for (const Ref<Mesh>& mesh : m_DemoMeshes)
-		{
-			if (!mesh || !mesh->GetVulkanGeometry())
-				continue;
-
-			VulkanRenderCommand::BindGeometry(commandBuffer, *mesh->GetVulkanGeometry());
-			VulkanRenderCommand::DrawGeometry(commandBuffer, *mesh->GetVulkanGeometry());
-		}
-	}
-
 	void Application::ShutDown()
 	{
-		m_DemoPipeline.reset();
-		m_DemoFragmentShader.reset();
-		m_DemoVertexShader.reset();
-		m_DemoMeshes.clear();
-		m_ShaderCompiler.reset();
+		if (m_VulkanContext)
+			m_VulkanContext->WaitIdle();
+
+		m_LayerStack.DestroyAll();
+		m_ImGuiLayer = nullptr;
+		m_LayersInitialized = false;
+
+		AssetManager::GetInstance().Clear();
+
+		if (m_VulkanContext)
+		{
+			m_VulkanContext->WaitIdle();
+			m_VulkanContext.reset();
+		}
+
+		m_Window.reset();
+	}
+
+	void Application::InitializePendingLayers()
+	{
+		if (m_LayersInitialized)
+			return;
+
+		if (m_ImGuiLayer && !m_ImGuiLayer->m_IsCreated)
+		{
+			m_ImGuiLayer->OnCreate();
+			m_ImGuiLayer->m_IsCreated = true;
+		}
+
+		for (Layer* layer : m_LayerStack)
+		{
+			if (!layer || layer->m_IsCreated)
+				continue;
+
+			layer->OnCreate();
+			layer->m_IsCreated = true;
+		}
+
+		m_LayersInitialized = true;
 	}
 
 	void Application::OnEvent(Event& event)
@@ -344,12 +166,20 @@ float4 main(PSInput input) : SV_Target0
 	void Application::PushLayer(Layer* layer)
 	{
 		m_LayerStack.PushLayer(layer);
-		layer->OnCreate();
+		if (m_LayersInitialized && layer && !layer->m_IsCreated)
+		{
+			layer->OnCreate();
+			layer->m_IsCreated = true;
+		}
 	}
 	void Application::PushOverlay(Layer* overlay)
 	{
 		m_LayerStack.PushOverlay(overlay);
-		overlay->OnCreate();
+		if (m_LayersInitialized && overlay && !overlay->m_IsCreated)
+		{
+			overlay->OnCreate();
+			overlay->m_IsCreated = true;
+		}
 	}
 	bool Application::OnWindowClosed(WindowCloseEvent& event)
 	{

@@ -1,5 +1,6 @@
 #pragma once
 #include "core/Layer.h"
+#include <vulkan/vulkan.h>
 
 namespace Kita {
 
@@ -25,5 +26,6 @@ namespace Kita {
 
 	private:
 		float m_Time = 0.0f;
+		VkDescriptorPool m_DescriptorPool = VK_NULL_HANDLE;
 	};
 }

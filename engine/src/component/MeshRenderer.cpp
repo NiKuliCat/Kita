@@ -45,7 +45,6 @@ namespace Kita {
     }
     void MeshRenderer::LoadMeshs(const std::string& filepath)
     {
-        m_MeshFilePath.clear();
         m_MeshAssetHandle = InvalidAssetHandle;
         m_Meshs.clear();
         m_MaterialAssetHandles.clear();
@@ -53,24 +52,23 @@ namespace Kita {
 
         auto& assetManager = AssetManager::GetInstance();
         const std::filesystem::path assetPath = ResolveMeshAssetPath(filepath, assetManager.GetAssetRoot());
-        m_MeshAssetHandle = assetManager.ImportAsset(assetPath);
+        m_MeshAssetHandle = assetManager.GetHandleByPath(assetPath);
 
         if (!Asset::IsValidHandle(m_MeshAssetHandle))
         {
-            KITA_CORE_WARN("Failed to import mesh asset: {}", assetPath.string());
+            KITA_CORE_WARN("Mesh asset is not registered in AssetManager scan: {}", assetPath.string());
             return;
         }
 
-        if (const AssetMetadata* metadata = assetManager.GetMetadata(m_MeshAssetHandle))
+        Ref<MeshAsset> meshAsset = assetManager.GetMeshAsset(m_MeshAssetHandle);
+        if (!meshAsset)
         {
-            m_MeshFilePath = metadata->relativePath.generic_string();
-        }
-        else
-        {
-            m_MeshFilePath = assetPath.generic_string();
+            KITA_CORE_WARN("Failed to load mesh asset: {}", assetPath.string());
+            m_MeshAssetHandle = InvalidAssetHandle;
+            return;
         }
 
-        m_Meshs = Mesh::LoadMeshesFromFile(assetPath);
+        m_Meshs = meshAsset->GetSubMeshes();
         if (m_Meshs.empty())
         {
             KITA_CORE_WARN("Failed to load mesh geometry from file: {}", assetPath.string());
@@ -90,7 +88,7 @@ namespace Kita {
             m_RuntimeMaterials.resize(m_MaterialAssetHandles.size());
 
         if (!m_RuntimeMaterials[index])
-            m_RuntimeMaterials[index] = CreateRef<Material>();
+            m_RuntimeMaterials[index] = CreateRef<VulkanMaterial>();
 
         Ref<MaterialAsset> materialAsset = GetMaterialAsset(index);
         if (!materialAsset)
@@ -120,7 +118,7 @@ namespace Kita {
         for (size_t i = 0; i < slotCount; ++i)
         {
             m_MaterialAssetHandles.push_back(m_DefaultMaterialAssetHandle);
-            m_RuntimeMaterials.push_back(CreateRef<Material>());
+            m_RuntimeMaterials.push_back(CreateRef<VulkanMaterial>());
             SyncMaterial(i);
         }
     }

@@ -4,6 +4,9 @@
     <Filter Include="file">
       <UniqueIdentifier>{25CB967C-1102-980D-BAEE-7D10A604140F}</UniqueIdentifier>
     </Filter>
+    <Filter Include="project">
+      <UniqueIdentifier>{7CC43AC3-E8A3-B95E-F1BB-44355D1A20C0}</UniqueIdentifier>
+    </Filter>
     <Filter Include="scene">
       <UniqueIdentifier>{D3075810-3F1C-80C1-089E-232174717CF2}</UniqueIdentifier>
     </Filter>
@@ -18,6 +21,9 @@
     <ClInclude Include="src\EditorLayer.h" />
     <ClInclude Include="src\file\Project.h">
       <Filter>file</Filter>
+    </ClInclude>
+    <ClInclude Include="src\project\EditorProjectBootstrap.h">
+      <Filter>project</Filter>
     </ClInclude>
     <ClInclude Include="src\renderer_pch.h" />
     <ClInclude Include="src\scene\ViewportCamera.h">
@@ -50,6 +56,9 @@
     <ClCompile Include="src\EditorLayer.cpp" />
     <ClCompile Include="src\file\Project.cpp">
       <Filter>file</Filter>
+    </ClCompile>
+    <ClCompile Include="src\project\EditorProjectBootstrap.cpp">
+      <Filter>project</Filter>
     </ClCompile>
     <ClCompile Include="src\renderer_pch.cpp" />
     <ClCompile Include="src\scene\ViewportCamera.cpp">

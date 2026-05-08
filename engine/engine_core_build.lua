@@ -22,6 +22,14 @@ project "Engine"
         "third-party/imguizmo/ImGuizmo.cpp"
     }
 
+    removefiles
+    {
+        "src/component/LineRenderer.h",
+        "src/component/LineRenderer.cpp",
+        "src/render/scene/Gizmo.h",
+        "src/render/scene/Gizmo.cpp"
+    }
+
     defines
     {
         "_CRT_SECURE_NO_WARNINGS",
@@ -33,7 +41,6 @@ project "Engine"
     {
         "src",
         "%{IncludeDir.GLFW}",
-        "%{IncludeDir.glad}",
         "%{IncludeDir.ImGui}",
         "%{IncludeDir.spdlog}",
         "%{IncludeDir.glm}",
@@ -51,9 +58,7 @@ project "Engine"
     links
     {
         "GLFW",
-        "glad",
         "ImGui",
-        "opengl32.lib",
         "%{Library.Vulkan}",
         "%{Library.slang}"
     }

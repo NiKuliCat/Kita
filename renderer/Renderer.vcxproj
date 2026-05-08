@@ -80,7 +80,7 @@
       <PrecompiledHeaderFile>renderer_pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>PLATFORM_WINDOWS;VULKAN_HPP_NO_STRUCT_CONSTRUCTORS;KITA_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\engine\src;src;..\engine\third-party\glfw\include;..\engine\third-party\glad\include;..\engine\third-party\imgui;..\engine\third-party\spdlog\include;..\engine\third-party\glm;..\engine\third-party\assimp\include;..\engine\third-party\entt;..\engine\third-party\imguizmo;..\engine\third-party\nlohmann\include;C:\VulkanSDK\1.4.341.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\engine\src;src;..\engine\third-party\glfw\include;..\engine\third-party\imgui;..\engine\third-party\spdlog\include;..\engine\third-party\glm;..\engine\third-party\assimp\include;..\engine\third-party\entt;..\engine\third-party\imguizmo;..\engine\third-party\nlohmann\include;C:\VulkanSDK\1.4.341.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -108,7 +108,7 @@ IF EXIST "C:\VulkanSDK\1.4.341.1\Bin\slang.dll"\ (xcopy /Q /E /Y /I "C:\VulkanSD
       <PrecompiledHeaderFile>renderer_pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>PLATFORM_WINDOWS;VULKAN_HPP_NO_STRUCT_CONSTRUCTORS;KITA_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\engine\src;src;..\engine\third-party\glfw\include;..\engine\third-party\glad\include;..\engine\third-party\imgui;..\engine\third-party\spdlog\include;..\engine\third-party\glm;..\engine\third-party\assimp\include;..\engine\third-party\entt;..\engine\third-party\imguizmo;..\engine\third-party\nlohmann\include;C:\VulkanSDK\1.4.341.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\engine\src;src;..\engine\third-party\glfw\include;..\engine\third-party\imgui;..\engine\third-party\spdlog\include;..\engine\third-party\glm;..\engine\third-party\assimp\include;..\engine\third-party\entt;..\engine\third-party\imguizmo;..\engine\third-party\nlohmann\include;C:\VulkanSDK\1.4.341.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -141,7 +141,7 @@ IF EXIST "C:\VulkanSDK\1.4.341.1\Bin\slang.dll"\ (xcopy /Q /E /Y /I "C:\VulkanSD
       <PrecompiledHeaderFile>renderer_pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>PLATFORM_WINDOWS;VULKAN_HPP_NO_STRUCT_CONSTRUCTORS;KITA_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\engine\src;src;..\engine\third-party\glfw\include;..\engine\third-party\glad\include;..\engine\third-party\imgui;..\engine\third-party\spdlog\include;..\engine\third-party\glm;..\engine\third-party\assimp\include;..\engine\third-party\entt;..\engine\third-party\imguizmo;..\engine\third-party\nlohmann\include;C:\VulkanSDK\1.4.341.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\engine\src;src;..\engine\third-party\glfw\include;..\engine\third-party\imgui;..\engine\third-party\spdlog\include;..\engine\third-party\glm;..\engine\third-party\assimp\include;..\engine\third-party\entt;..\engine\third-party\imguizmo;..\engine\third-party\nlohmann\include;C:\VulkanSDK\1.4.341.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>None</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -170,6 +170,7 @@ IF EXIST "C:\VulkanSDK\1.4.341.1\Bin\slang.dll"\ (xcopy /Q /E /Y /I "C:\VulkanSD
   <ItemGroup>
     <ClInclude Include="src\EditorLayer.h" />
     <ClInclude Include="src\file\Project.h" />
+    <ClInclude Include="src\project\EditorProjectBootstrap.h" />
     <ClInclude Include="src\renderer_pch.h" />
     <ClInclude Include="src\scene\ViewportCamera.h" />
     <ClInclude Include="src\ui\ContentBrowserPanel.h" />
@@ -184,6 +185,7 @@ IF EXIST "C:\VulkanSDK\1.4.341.1\Bin\slang.dll"\ (xcopy /Q /E /Y /I "C:\VulkanSD
     <ClCompile Include="src\EditorApp.cpp" />
     <ClCompile Include="src\EditorLayer.cpp" />
     <ClCompile Include="src\file\Project.cpp" />
+    <ClCompile Include="src\project\EditorProjectBootstrap.cpp" />
     <ClCompile Include="src\renderer_pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>

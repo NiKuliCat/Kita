@@ -2,8 +2,7 @@
 #include "LineRenderer.h"
 
 #include <core/Core.h>
-#include "render/Renderer.h"
-#include "render/RenderAssetUtils.h"
+// TODO: Vulkan port — Renderer/RenderAssetUtils/Shader deleted
 namespace Kita {
 
 	LineRenderer::LineRenderer()
@@ -19,8 +18,7 @@ namespace Kita {
 
 		ResizeHandleModesToMatchAnchors();
 		ResetAllControlPointVisuals();
-		InitBuffer();
-		InitEditorHelperBuffers();
+		// TODO: Vulkan port — GPU buffer init deferred
 	}
 
 	LineRenderer::~LineRenderer()
@@ -222,14 +220,12 @@ namespace Kita {
 
 		m_CurveVertexCount = static_cast<uint32_t>(m_CurveVertices.size());
 
-		if (m_CurveVertexCount > 0)
-		{
-			ReCreateBuffer(m_CurveVertexCount);
-			m_Curve_VBO->SetData(
-				m_CurveVertices.data(),
-				m_CurveVertexCount * static_cast<uint32_t>(sizeof(glm::vec3)),
-				0);
-		}
+		// TODO: Vulkan port — GPU buffer upload deferred
+	// if (m_CurveVertexCount > 0)
+	// {
+	// 	ReCreateBuffer(m_CurveVertexCount);
+	// 	m_Curve_VBO->SetData(...);
+	// }
 
 		m_Dirty = false;
 	}
@@ -278,36 +274,9 @@ namespace Kita {
 
 	void LineRenderer::RenderEditorHelpers(const glm::mat4& model, uint32_t objectId)
 	{
-		RebuildEditorHelpersIfNeeded();
-
-		if (m_HelperLineVertices.size() >= 2)
-		{
-			auto lineShader = RenderAssetUtils::GetRuntimeShader("packages/render/shaders/EditorLineShader.glsl");
-			if (!lineShader)
-			{
-				return;
-			}
-			lineShader->SetMat4("Model", model);
-			lineShader->SetInt("id", objectId);
-			lineShader->SetColor("Color", glm::vec4(0.92f, 0.94f, 0.98f, 0.28f));
-			for (uint32_t offset = 0; offset + 1 < static_cast<uint32_t>(m_HelperLineVertices.size()); offset += 2)
-			{
-				m_HelperLineVBO->SetData(&m_HelperLineVertices[offset], static_cast<uint32_t>(sizeof(glm::vec3) * 2), 0);
-				Renderer::SubmitAsLine(m_HelperLineVAO, lineShader, 2, 1.5f);
-			}
-		}
-
-		if (!m_HandlePointVertices.empty())
-		{
-			auto handleShader = RenderAssetUtils::GetRuntimeShader("packages/render/shaders/GizmoDiamond.glsl");
-			if (!handleShader)
-			{
-				return;
-			}
-			handleShader->SetMat4("Matrix_M", model);
-			handleShader->SetInt("id", objectId);
-			Renderer::DrawGizmoPoints(m_HandlePointVAO, handleShader, static_cast<uint32_t>(m_HandlePointVertices.size()));
-		}
+		// TODO: Vulkan port — GPU rendering deferred
+		(void)model;
+		(void)objectId;
 	}
 
 	glm::vec3 LineRenderer::EvaluateBezierCubic(
@@ -351,18 +320,14 @@ namespace Kita {
 
 	void LineRenderer::InitBuffer()
 	{
+		// TODO: Vulkan port — use VulkanVertexBuffer + VulkanGeometry
 		m_CurveVertexCapacity = static_cast<uint32_t>(m_SegmentCountPerBezier + 1);
 		m_CurveVertexLayout = { { ShaderDataType::Float3, "PositionOS" } };
-
-		m_Curve_VAO = VertexArray::Create();
-		m_Curve_VBO = VertexBuffer::Create(m_CurveVertexCapacity * static_cast<uint32_t>(sizeof(glm::vec3)));
-
-		m_Curve_VBO->SetLayout(m_CurveVertexLayout);
-		m_Curve_VAO->AddVertexBuffer(m_Curve_VBO);
 	}
 
 	void LineRenderer::InitEditorHelperBuffers()
 	{
+		// TODO: Vulkan port — use VulkanVertexBuffer + VulkanGeometry
 		m_HelperLineLayout = { { ShaderDataType::Float3, "PositionOS" } };
 		m_HandlePointLayout = {
 			{ ShaderDataType::Float3, "position" },
@@ -370,51 +335,26 @@ namespace Kita {
 			{ ShaderDataType::Float, "radius" },
 			{ ShaderDataType::Int, "index" }
 		};
-
-		ReCreateHelperLineBuffer(2);
-		ReCreateHandlePointBuffer(1);
 	}
 
 	void LineRenderer::ReCreateBuffer(const uint32_t size)
 	{
+		// TODO: Vulkan port — use VulkanVertexBuffer + VulkanGeometry
 		auto count = std::max(1u, size);
-
-		if (m_Curve_VAO && m_Curve_VBO && count <= m_CurveVertexCapacity)
-			return;
-
 		m_CurveVertexCapacity = count;
-
-		m_Curve_VAO = VertexArray::Create();
-		m_Curve_VBO = VertexBuffer::Create(m_CurveVertexCapacity * static_cast<uint32_t>(sizeof(glm::vec3)));
-
-		m_Curve_VBO->SetLayout(m_CurveVertexLayout);
-		m_Curve_VAO->AddVertexBuffer(m_Curve_VBO);
 	}
 
 	void LineRenderer::ReCreateHelperLineBuffer(uint32_t vertexCount)
 	{
-		const uint32_t requiredCount = std::max(2u, vertexCount);
-		if (m_HelperLineVAO && m_HelperLineVBO && requiredCount <= m_HelperLineCapacity)
-			return;
-
-		m_HelperLineCapacity = requiredCount;
-		m_HelperLineVAO = VertexArray::Create();
-		m_HelperLineVBO = VertexBuffer::Create(m_HelperLineCapacity * static_cast<uint32_t>(sizeof(glm::vec3)));
-		m_HelperLineVBO->SetLayout(m_HelperLineLayout);
-		m_HelperLineVAO->AddVertexBuffer(m_HelperLineVBO);
+		// TODO: Vulkan port — use VulkanVertexBuffer + VulkanGeometry
+		m_HelperLineCapacity = std::max(2u, vertexCount);
 	}
 
 	void LineRenderer::ReCreateHandlePointBuffer(uint32_t pointCount)
 	{
+		// TODO: Vulkan port — use VulkanVertexBuffer + VulkanGeometry
 		const uint32_t requiredBytes = std::max(1u, pointCount) * static_cast<uint32_t>(sizeof(EditorHandlePointData));
-		if (m_HandlePointVAO && m_HandlePointVBO && requiredBytes <= m_HandlePointCapacityBytes)
-			return;
-
 		m_HandlePointCapacityBytes = std::max(requiredBytes, 1024u);
-		m_HandlePointVAO = VertexArray::Create();
-		m_HandlePointVBO = VertexBuffer::Create(m_HandlePointCapacityBytes);
-		m_HandlePointVBO->SetLayout(m_HandlePointLayout);
-		m_HandlePointVAO->AddVertexBuffer(m_HandlePointVBO);
 	}
 
 	void LineRenderer::RebuildEditorHelpersIfNeeded()
@@ -425,23 +365,18 @@ namespace Kita {
 		ValidateSelectedControlPoint();
 		BuildSelectedHelperGeometry();
 
-		ReCreateHelperLineBuffer(static_cast<uint32_t>(m_HelperLineVertices.size()));
-		if (!m_HelperLineVertices.empty())
-		{
-			m_HelperLineVBO->SetData(
-				m_HelperLineVertices.data(),
-				static_cast<uint32_t>(m_HelperLineVertices.size() * sizeof(glm::vec3)),
-				0);
-		}
+		// TODO: Vulkan port — GPU buffer upload deferred
+		// ReCreateHelperLineBuffer(static_cast<uint32_t>(m_HelperLineVertices.size()));
+		// if (!m_HelperLineVertices.empty())
+		// {
+		// 	m_HelperLineVBO->SetData(...);
+		// }
 
-		ReCreateHandlePointBuffer(static_cast<uint32_t>(m_HandlePointVertices.size()));
-		if (!m_HandlePointVertices.empty())
-		{
-			m_HandlePointVBO->SetData(
-				m_HandlePointVertices.data(),
-				static_cast<uint32_t>(m_HandlePointVertices.size() * sizeof(EditorHandlePointData)),
-				0);
-		}
+		// ReCreateHandlePointBuffer(static_cast<uint32_t>(m_HandlePointVertices.size()));
+		// if (!m_HandlePointVertices.empty())
+		// {
+		// 	m_HandlePointVBO->SetData(...);
+		// }
 
 		m_HelperDirty = false;
 	}

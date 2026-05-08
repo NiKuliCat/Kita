@@ -11,21 +11,10 @@
 #include "event/MouseEvent.h"
 
 #include "core/Input.h"
-
-#include "render/Shader.h"
-#include "render/Buffer.h"
-#include "render/VertexArray.h"
-#include "render/Texture.h"
 #include "render/scene/OrthographicCamera.h"	
 #include "render/scene/PerspectiveCamera.h"
 #include "render/Light.h"
 
-#include "render/FrameBuffer.h"
-#include "render/UniformBuffer.h"
-
-#include "render/RenderCommand.h"
-#include "render/Renderer.h"
-#include "render/scene/Gizmo.h"
 
 #include "render/font/FontManager.h"
 
@@ -37,7 +26,6 @@
 #include "component/TagComponent.h"
 #include "component/Transform.h"
 #include "component/MeshRenderer.h"
-#include "component/LineRenderer.h"
 #include "component/LightComponent.h"
 
 #include "serialize/SceneSerializer.h"

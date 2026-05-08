@@ -1,9 +1,6 @@
 #pragma once
-#include "render/Renderer.h"
-#include "render/Buffer.h"
+#include "render/BufferLayout.h"
 namespace Kita {
-
-
 	struct GizmoPointUBOData
 	{
 		glm::vec3 position;
@@ -11,9 +8,6 @@ namespace Kita {
 		float radius;
 		int index;
 	};
-
-
-	
 
 	class Gizmo
 	{
@@ -29,9 +23,6 @@ namespace Kita {
 			};
 
 			std::vector<GizmoPointUBOData> m_PointsData;
-
-			Ref<VertexArray> m_Points_VAO = nullptr;
-			Ref<VertexBuffer> m_Points_VBO = nullptr;
 			uint32_t m_PointCapacityBytes = 0;
 		};
 

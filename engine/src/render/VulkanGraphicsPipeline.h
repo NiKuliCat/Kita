@@ -30,6 +30,8 @@ namespace Kita {
 			bool EnableDepthTest = true;
 			bool EnableDepthWrite = true;
 			bool EnableBlending = false;
+
+			VkDescriptorSetLayout DescriptorSetLayout = VK_NULL_HANDLE;
 		};
 
 	public:

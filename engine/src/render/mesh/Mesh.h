@@ -2,8 +2,7 @@
 #include <filesystem>
 #include <glm/glm.hpp>
 #include "core/Core.h"
-#include "render/Buffer.h"
-#include "render/VertexArray.h"
+#include "render/BufferLayout.h"
 namespace Kita {
 
 	class VulkanContext;
@@ -18,6 +17,8 @@ namespace Kita {
 		glm::vec3 tangent;
 		glm::vec3 bitangent;
 	};
+
+	static_assert(std::is_standard_layout_v<Vertex>, "Mesh::Vertex must remain standard-layout");
 
 
 
@@ -35,25 +36,16 @@ namespace Kita {
 		std::vector<uint32_t>& GetIndices() { return m_Indices; }
 
 		static Ref<Mesh> Create(const std::vector<Vertex>& vertex, const std::vector<uint32_t> indices) { return CreateRef<Mesh>(vertex, indices); }
-		static std::vector<Ref<Mesh>> LoadMeshesFromFile(const std::filesystem::path& path);
 
 		void CreateVulkanGeometry(VulkanContext& context);
-		VulkanGeometry* GetVulkanGeometry() { return m_VulkanGeometry.get(); }
-		const VulkanGeometry* GetVulkanGeometry() const { return m_VulkanGeometry.get(); }
+		Ref<VulkanGeometry>& GetVulkanGeometry() { return m_VulkanGeometry; }
+		const Ref<VulkanGeometry>& GetVulkanGeometry() const { return m_VulkanGeometry; }
 
-		const Ref<VertexArray>& GetVAO() const { return m_VAO; }
 	private:
 
 	private:
 		std::vector<Vertex> m_Vertices;
 		std::vector<uint32_t> m_Indices;
-		Unique<VulkanGeometry> m_VulkanGeometry = nullptr;
-
-		Ref<VertexBuffer>	m_VBO = nullptr;
-		Ref<IndexBuffer>	m_IBO = nullptr;
-		Ref<VertexArray>	m_VAO = nullptr;
-
-
-
+		Ref<VulkanGeometry> m_VulkanGeometry = nullptr;
 	};
 }

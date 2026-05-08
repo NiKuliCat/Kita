@@ -19,12 +19,6 @@
     <Filter Include="src\platform">
       <UniqueIdentifier>{41663D6D-2DC9-CC11-D64E-05C8C2909894}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\platform\opengl">
-      <UniqueIdentifier>{B57427EB-21D6-04F9-AA43-4BAB16A43BB8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\platform\vulkan">
-      <UniqueIdentifier>{C1D4D9FB-2D36-B709-B6A3-FDBB2204EEC8}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\platform\windows">
       <UniqueIdentifier>{9B5931A8-87E8-BA71-3007-CF6C1C75CB17}</UniqueIdentifier>
     </Filter>
@@ -93,9 +87,6 @@
     <ClInclude Include="src\component\LightComponent.h">
       <Filter>src\component</Filter>
     </ClInclude>
-    <ClInclude Include="src\component\LineRenderer.h">
-      <Filter>src\component</Filter>
-    </ClInclude>
     <ClInclude Include="src\component\MeshRenderer.h">
       <Filter>src\component</Filter>
     </ClInclude>
@@ -153,73 +144,16 @@
     <ClInclude Include="src\kita_pch.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\platform\opengl\OpenGLBuffer.h">
-      <Filter>src\platform\opengl</Filter>
-    </ClInclude>
-    <ClInclude Include="src\platform\opengl\OpenGLContext.h">
-      <Filter>src\platform\opengl</Filter>
-    </ClInclude>
-    <ClInclude Include="src\platform\opengl\OpenGLFrameBuffer.h">
-      <Filter>src\platform\opengl</Filter>
-    </ClInclude>
-    <ClInclude Include="src\platform\opengl\OpenGLRendererAPI.h">
-      <Filter>src\platform\opengl</Filter>
-    </ClInclude>
-    <ClInclude Include="src\platform\opengl\OpenGLShader.h">
-      <Filter>src\platform\opengl</Filter>
-    </ClInclude>
-    <ClInclude Include="src\platform\opengl\OpenGLTexture.h">
-      <Filter>src\platform\opengl</Filter>
-    </ClInclude>
-    <ClInclude Include="src\platform\opengl\OpenGLUniformBuffer.h">
-      <Filter>src\platform\opengl</Filter>
-    </ClInclude>
-    <ClInclude Include="src\platform\opengl\OpenGLUtil.h">
-      <Filter>src\platform\opengl</Filter>
-    </ClInclude>
-    <ClInclude Include="src\platform\opengl\OpenGLVertexArray.h">
-      <Filter>src\platform\opengl</Filter>
-    </ClInclude>
-    <ClInclude Include="src\platform\vulkan\VulkanDivces.h">
-      <Filter>src\platform\vulkan</Filter>
-    </ClInclude>
     <ClInclude Include="src\platform\windows\WindowsWindow.h">
       <Filter>src\platform\windows</Filter>
     </ClInclude>
-    <ClInclude Include="src\render\Buffer.h">
-      <Filter>src\render</Filter>
-    </ClInclude>
-    <ClInclude Include="src\render\FrameBuffer.h">
+    <ClInclude Include="src\render\BufferLayout.h">
       <Filter>src\render</Filter>
     </ClInclude>
     <ClInclude Include="src\render\Light.h">
       <Filter>src\render</Filter>
     </ClInclude>
-    <ClInclude Include="src\render\Material.h">
-      <Filter>src\render</Filter>
-    </ClInclude>
-    <ClInclude Include="src\render\RenderAssetUtils.h">
-      <Filter>src\render</Filter>
-    </ClInclude>
-    <ClInclude Include="src\render\RenderCommand.h">
-      <Filter>src\render</Filter>
-    </ClInclude>
-    <ClInclude Include="src\render\Renderer.h">
-      <Filter>src\render</Filter>
-    </ClInclude>
-    <ClInclude Include="src\render\Shader.h">
-      <Filter>src\render</Filter>
-    </ClInclude>
     <ClInclude Include="src\render\ShaderCompiler.h">
-      <Filter>src\render</Filter>
-    </ClInclude>
-    <ClInclude Include="src\render\Texture.h">
-      <Filter>src\render</Filter>
-    </ClInclude>
-    <ClInclude Include="src\render\UniformBuffer.h">
-      <Filter>src\render</Filter>
-    </ClInclude>
-    <ClInclude Include="src\render\VertexArray.h">
       <Filter>src\render</Filter>
     </ClInclude>
     <ClInclude Include="src\render\VulkanBuffer.h">
@@ -228,19 +162,43 @@
     <ClInclude Include="src\render\VulkanContext.h">
       <Filter>src\render</Filter>
     </ClInclude>
+    <ClInclude Include="src\render\VulkanDescriptorSet.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
     <ClInclude Include="src\render\VulkanGeometry.h">
       <Filter>src\render</Filter>
     </ClInclude>
     <ClInclude Include="src\render\VulkanGraphicsPipeline.h">
       <Filter>src\render</Filter>
     </ClInclude>
+    <ClInclude Include="src\render\VulkanImage.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
     <ClInclude Include="src\render\VulkanIndexBuffer.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\VulkanMaterial.h">
       <Filter>src\render</Filter>
     </ClInclude>
     <ClInclude Include="src\render\VulkanRenderCommand.h">
       <Filter>src\render</Filter>
     </ClInclude>
+    <ClInclude Include="src\render\VulkanRenderTarget.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\VulkanRenderer.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
     <ClInclude Include="src\render\VulkanShader.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\VulkanTexture.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\VulkanTextureLoader.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\VulkanUniformBuffer.h">
       <Filter>src\render</Filter>
     </ClInclude>
     <ClInclude Include="src\render\VulkanVertexBuffer.h">
@@ -253,9 +211,6 @@
       <Filter>src\render\mesh</Filter>
     </ClInclude>
     <ClInclude Include="src\render\scene\Camera.h">
-      <Filter>src\render\scene</Filter>
-    </ClInclude>
-    <ClInclude Include="src\render\scene\Gizmo.h">
       <Filter>src\render\scene</Filter>
     </ClInclude>
     <ClInclude Include="src\render\scene\OrthographicCamera.h">
@@ -1550,9 +1505,6 @@
     <ClCompile Include="src\component\LightComponent.cpp">
       <Filter>src\component</Filter>
     </ClCompile>
-    <ClCompile Include="src\component\LineRenderer.cpp">
-      <Filter>src\component</Filter>
-    </ClCompile>
     <ClCompile Include="src\component\MeshRenderer.cpp">
       <Filter>src\component</Filter>
     </ClCompile>
@@ -1583,67 +1535,16 @@
     <ClCompile Include="src\kita_pch.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\platform\opengl\OpenGLBuffer.cpp">
-      <Filter>src\platform\opengl</Filter>
-    </ClCompile>
-    <ClCompile Include="src\platform\opengl\OpenGLContext.cpp">
-      <Filter>src\platform\opengl</Filter>
-    </ClCompile>
-    <ClCompile Include="src\platform\opengl\OpenGLFrameBuffer.cpp">
-      <Filter>src\platform\opengl</Filter>
-    </ClCompile>
-    <ClCompile Include="src\platform\opengl\OpenGLRendererAPI.cpp">
-      <Filter>src\platform\opengl</Filter>
-    </ClCompile>
-    <ClCompile Include="src\platform\opengl\OpenGLShader.cpp">
-      <Filter>src\platform\opengl</Filter>
-    </ClCompile>
-    <ClCompile Include="src\platform\opengl\OpenGLTexture.cpp">
-      <Filter>src\platform\opengl</Filter>
-    </ClCompile>
-    <ClCompile Include="src\platform\opengl\OpenGLUniformBuffer.cpp">
-      <Filter>src\platform\opengl</Filter>
-    </ClCompile>
-    <ClCompile Include="src\platform\opengl\OpenGLUtil.cpp">
-      <Filter>src\platform\opengl</Filter>
-    </ClCompile>
-    <ClCompile Include="src\platform\opengl\OpenGLVertexArray.cpp">
-      <Filter>src\platform\opengl</Filter>
-    </ClCompile>
     <ClCompile Include="src\platform\windows\WindowsInput.cpp">
       <Filter>src\platform\windows</Filter>
     </ClCompile>
     <ClCompile Include="src\platform\windows\WindowsWindow.cpp">
       <Filter>src\platform\windows</Filter>
     </ClCompile>
-    <ClCompile Include="src\render\Buffer.cpp">
-      <Filter>src\render</Filter>
-    </ClCompile>
-    <ClCompile Include="src\render\FrameBuffer.cpp">
-      <Filter>src\render</Filter>
-    </ClCompile>
-    <ClCompile Include="src\render\Material.cpp">
-      <Filter>src\render</Filter>
-    </ClCompile>
-    <ClCompile Include="src\render\RenderCommand.cpp">
-      <Filter>src\render</Filter>
-    </ClCompile>
-    <ClCompile Include="src\render\Renderer.cpp">
-      <Filter>src\render</Filter>
-    </ClCompile>
-    <ClCompile Include="src\render\Shader.cpp">
+    <ClCompile Include="src\render\BufferLayout.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
     <ClCompile Include="src\render\ShaderCompiler.cpp">
-      <Filter>src\render</Filter>
-    </ClCompile>
-    <ClCompile Include="src\render\Texture.cpp">
-      <Filter>src\render</Filter>
-    </ClCompile>
-    <ClCompile Include="src\render\UniformBuffer.cpp">
-      <Filter>src\render</Filter>
-    </ClCompile>
-    <ClCompile Include="src\render\VertexArray.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
     <ClCompile Include="src\render\VulkanBuffer.cpp">
@@ -1652,19 +1553,43 @@
     <ClCompile Include="src\render\VulkanContext.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
+    <ClCompile Include="src\render\VulkanDescriptorSet.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
     <ClCompile Include="src\render\VulkanGeometry.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
     <ClCompile Include="src\render\VulkanGraphicsPipeline.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
+    <ClCompile Include="src\render\VulkanImage.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
     <ClCompile Include="src\render\VulkanIndexBuffer.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\VulkanMaterial.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
     <ClCompile Include="src\render\VulkanRenderCommand.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
+    <ClCompile Include="src\render\VulkanRenderTarget.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\VulkanRenderer.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
     <ClCompile Include="src\render\VulkanShader.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\VulkanTexture.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\VulkanTextureLoader.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\VulkanUniformBuffer.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
     <ClCompile Include="src\render\VulkanVertexBuffer.cpp">
@@ -1675,9 +1600,6 @@
     </ClCompile>
     <ClCompile Include="src\render\mesh\Mesh.cpp">
       <Filter>src\render\mesh</Filter>
-    </ClCompile>
-    <ClCompile Include="src\render\scene\Gizmo.cpp">
-      <Filter>src\render\scene</Filter>
     </ClCompile>
     <ClCompile Include="src\render\scene\OrthographicCamera.cpp">
       <Filter>src\render\scene</Filter>

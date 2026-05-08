@@ -16,6 +16,18 @@
 #include "render/font/FontManager.h"
 
 namespace Kita {
+	namespace
+	{
+		void VKCheck(VkResult result, const char* message)
+		{
+			if (result != VK_SUCCESS)
+			{
+				KITA_CORE_ERROR("{0}, VkResult = {1}", message, static_cast<int32_t>(result));
+				throw std::runtime_error(message);
+			}
+		}
+	}
+
 	ImGuiLayer::ImGuiLayer()
 		:Layer("ImGui Layer")
 	{
@@ -63,6 +75,24 @@ namespace Kita {
 
 		ImGui_ImplGlfw_InitForVulkan(window, true);
 
+		if (m_DescriptorPool == VK_NULL_HANDLE)
+		{
+			std::array<VkDescriptorPoolSize, 1> poolSizes{};
+			poolSizes[0].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			poolSizes[0].descriptorCount = 1024;
+
+			VkDescriptorPoolCreateInfo poolInfo{};
+			poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+			poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+			poolInfo.maxSets = 1024;
+			poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+			poolInfo.pPoolSizes = poolSizes.data();
+
+			VKCheck(
+				vkCreateDescriptorPool(context.GetDevice(), &poolInfo, nullptr, &m_DescriptorPool),
+				"Failed to create ImGui Vulkan descriptor pool");
+		}
+
 		ImGui_ImplVulkan_InitInfo initInfo{};
 		initInfo.ApiVersion = VK_API_VERSION_1_3;
 		initInfo.Instance = context.GetInstance();
@@ -71,7 +101,7 @@ namespace Kita {
 		initInfo.QueueFamily = context.GetGraphicsQueueFamilyIndex();
 		initInfo.Queue = context.GetGraphicsQueue();
 		initInfo.PipelineCache = VK_NULL_HANDLE;
-		initInfo.DescriptorPool = VK_NULL_HANDLE;
+		initInfo.DescriptorPool = m_DescriptorPool;
 		initInfo.Subpass = 0;
 		initInfo.MinImageCount = 2;
 		initInfo.ImageCount = static_cast<uint32_t>(context.GetSwapchainImages().size());
@@ -80,8 +110,6 @@ namespace Kita {
 		initInfo.CheckVkResultFn = nullptr;
 
 		// 让 backend 自己创建 descriptor pool，省掉第一版额外管理
-		initInfo.DescriptorPoolSize = 1000;
-
 		initInfo.UseDynamicRendering = true;
 
 		VkFormat colorFormat = context.GetSwapchainImageFormat();
@@ -112,6 +140,13 @@ namespace Kita {
 		FontManager::Shutdown();
 		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
+
+		if (m_DescriptorPool != VK_NULL_HANDLE)
+		{
+			vkDestroyDescriptorPool(context.GetDevice(), m_DescriptorPool, nullptr);
+			m_DescriptorPool = VK_NULL_HANDLE;
+		}
+
 		ImGui::DestroyContext();
 	}
 	void ImGuiLayer::OnUpdate(float daltaTime)
@@ -120,11 +155,7 @@ namespace Kita {
 	}
 	void ImGuiLayer::OnImGuiRender()
 	{
-		ImGui::Begin("Vulkan Smoke Test");
-		ImGui::Text("Hello from ImGui Vulkan backend.");
-		ImGui::Separator();
-		ImGui::Text("Window + Vulkan + ImGui are running.");
-		ImGui::End();
+		
 	}
 
 	void ImGuiLayer::SetDarkThemeSpace()
