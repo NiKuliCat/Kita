@@ -13,6 +13,7 @@ namespace Kita {
 		, m_RenderTarget(&rt)
 		, m_SceneContext(scene)
 		, m_ViewportCamera(&camera)
+		, m_PipelineFactory(context)
 	{
 		Init();
 		m_SceneBindings.Init(context, context.GetFramesInFlight());
@@ -26,7 +27,7 @@ namespace Kita {
 
 	void EditorRenderer::OnDestroy()
 	{
-		m_OpaquePipeline.reset();
+		m_PipelineFactory.Clear();
 		m_VulkanResFactory.Clear();
 	}
 
@@ -51,35 +52,37 @@ namespace Kita {
 		sceneData.BeginInfo.TransitionSampledDepth = false;
 	}
 
-	void EditorRenderer::EnsureDefaultPipeline(VulkanRenderTarget& rt, VulkanGeometry& geometry, VulkanMaterial& material)
+	VulkanGraphicsPipeline* EditorRenderer::GetPipeline(VulkanRenderTarget& rt, Ref<VulkanGeometry>& geometry, Ref<VulkanMaterial>& material)
 	{
-		if (m_OpaquePipeline)
-			return;
+		PipelineRequest request{};
+		request.Pass = PassType::ForwardOpaque;
+		request.Geometry = geometry.get();
+		request.VertexShader = material->GetVertexShader().get();
+		request.FragmentShader = material->GetFragmentShader().get();
+		request.ColorFormat = rt.GetColorFormat(0);
+		request.DepthFormat = rt.GetDepthFormat();
+		request.Samples = VK_SAMPLE_COUNT_1_BIT;
 
-		if (!material.GetVertexShader() || !material.GetFragmentShader())
-		{
-			KITA_CORE_WARN("EditorRenderer: material shader is invalid, cannot create pipeline.");
-			return;
-		}
-
-		VulkanGraphicsPipeline::CreateInfo pipelineInfo{};
-		pipelineInfo.Name = "EditorRenderer_OpaquePipeline";
-		pipelineInfo.VertexShader = material.GetVertexShader().get();
-		pipelineInfo.FragmentShader = material.GetFragmentShader().get();
-		pipelineInfo.Geometry = &geometry;
-		pipelineInfo.ColorFormat = rt.GetColorFormat(0);
-		pipelineInfo.DepthFormat = rt.GetDepthFormat();
-		pipelineInfo.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-		pipelineInfo.CullMode = VK_CULL_MODE_NONE;
-		pipelineInfo.EnableDepthTest = true;
-		pipelineInfo.EnableDepthWrite = true;
-		pipelineInfo.EnableBlending = false;
-		pipelineInfo.DescriptorSetLayouts = {
+		request.DescriptorSetLayouts = {
 			m_SceneBindings.GetDescriptorSet(0).GetLayout(),
-			material.GetDescriptorSet(0).GetLayout()
+			material->GetDescriptorSet(0).GetLayout()
 		};
 
-		m_OpaquePipeline = CreateUnique<VulkanGraphicsPipeline>(*m_Context, pipelineInfo);
+		request.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+		request.PolygonMode = VK_POLYGON_MODE_FILL;
+		request.CullMode = VK_CULL_MODE_NONE;
+		request.FrontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+
+		request.EnableDepthTest = true;
+		request.EnableDepthWrite = true;
+		request.EnableBlending = false;
+
+		request.PushConstantStages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+		request.PushConstantSize = ObjectDataSize;
+
+		VulkanGraphicsPipeline* pipeline = m_PipelineFactory.GetOrCreate(request);
+
+		return pipeline;
 	}
 
 	void EditorRenderer::Render(VulkanRenderTarget& rt)
@@ -134,12 +137,12 @@ namespace Kita {
 					continue;
 				}
 
-				EnsureDefaultPipeline(rt, *geometry, *material);
-				if (!m_OpaquePipeline)
+				VulkanGraphicsPipeline* pipeline = GetPipeline(rt, geometry, material);
+				if (!pipeline)
 					continue;
 
 				ForwardOpaqueDrawItem item{};
-				item.Pipeline = m_OpaquePipeline.get();
+				item.Pipeline = pipeline;
 				item.Geometry = geometry.get();
 				item.Material = material.get();
 				item.PerObject = objectData;

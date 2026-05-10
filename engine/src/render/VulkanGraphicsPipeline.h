@@ -19,6 +19,9 @@ namespace Kita {
 
 			VkExtent2D Extent{};
 
+			VkShaderStageFlags PushConstantStages = 0;
+			uint32_t PushConstantSize = 0;
+
 			VkFormat ColorFormat = VK_FORMAT_UNDEFINED;
 			VkFormat DepthFormat = VK_FORMAT_UNDEFINED;
 

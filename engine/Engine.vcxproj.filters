@@ -1505,6 +1505,7 @@
     <ClInclude Include="src\render\pass\RenderContext.h" />
     <ClInclude Include="src\render\pass\SceneBindings.h" />
     <ClInclude Include="src\render\pass\ForwardOpaquePass.h" />
+    <ClInclude Include="src\render\pipeline\PipelineFactory.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\asset\Asset.cpp">
@@ -1649,5 +1650,6 @@
     <ClCompile Include="src\render\pass\SceneBindings.cpp" />
     <ClCompile Include="src\render\pass\RenderPass.cpp" />
     <ClCompile Include="src\render\pass\ForwardOpaquePass.cpp" />
+    <ClCompile Include="src\render\pipeline\PipelineFactory.cpp" />
   </ItemGroup>
 </Project>

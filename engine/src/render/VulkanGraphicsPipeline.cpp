@@ -3,7 +3,6 @@
 #include "VulkanContext.h"
 #include "VulkanGeometry.h"
 #include "VulkanShader.h"
-#include "VulkanRenderer.h"
 #include "core/Log.h"
 namespace Kita {
 
@@ -194,18 +193,27 @@ namespace Kita {
 		colorBlending.pAttachments = &colorBlendAttachment;
 
 
-		VkPushConstantRange pushConstantRange{};
-		pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
-		pushConstantRange.offset = 0;
-		pushConstantRange.size = VulkanRenderer::ObjectDataSize;
 
 		VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
 		pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-
 		pipelineLayoutInfo.setLayoutCount = static_cast<uint32_t>(createInfo.DescriptorSetLayouts.size());
-		pipelineLayoutInfo.pSetLayouts    = createInfo.DescriptorSetLayouts.empty() ? nullptr : createInfo.DescriptorSetLayouts.data();
-		pipelineLayoutInfo.pushConstantRangeCount = 1;
-		pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+		pipelineLayoutInfo.pSetLayouts = createInfo.DescriptorSetLayouts.empty() ? nullptr : createInfo.DescriptorSetLayouts.data();
+
+		VkPushConstantRange pushConstantRange{};
+		if (createInfo.PushConstantSize > 0)
+		{
+			pushConstantRange.stageFlags = createInfo.PushConstantStages;
+			pushConstantRange.offset = 0;
+			pushConstantRange.size = createInfo.PushConstantSize;
+
+			pipelineLayoutInfo.pushConstantRangeCount = 1;
+			pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+		}
+		else
+		{
+			pipelineLayoutInfo.pushConstantRangeCount = 0;
+			pipelineLayoutInfo.pPushConstantRanges = nullptr;
+		}
 
 		VKCheck(
 			vkCreatePipelineLayout(m_Context->GetDevice(), &pipelineLayoutInfo, nullptr, &m_PipelineLayout),
