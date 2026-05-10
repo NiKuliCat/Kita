@@ -1,10 +1,9 @@
 #pragma once
 
-#include "Engine.h"
+#include <EngineCore.h>
+#include <EngineRender.h>
 #include "SceneSelectionContext.h"
 #include "scene/ViewportCamera.h"
-
-#include "render/VulkanRenderTarget.h"
 
 namespace Kita {
 

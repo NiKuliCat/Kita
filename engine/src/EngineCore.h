@@ -11,11 +11,6 @@
 #include "event/MouseEvent.h"
 
 #include "core/Input.h"
-#include "render/scene/OrthographicCamera.h"	
-#include "render/scene/PerspectiveCamera.h"
-#include "render/Light.h"
-
-
 #include "render/font/FontManager.h"
 
 #include "asset/Asset.h"
@@ -29,6 +24,5 @@
 #include "component/LightComponent.h"
 
 #include "serialize/SceneSerializer.h"
-
 
 #include "third_party/imgui/imgui_layer.h"

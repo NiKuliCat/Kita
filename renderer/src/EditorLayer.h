@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include <Engine.h>
+#include <EngineCore.h>
 #include "scene/EditorRenderer.h"
 #include "ui/InspectorPanel.h"
 #include "ui/SceneHierarchyPanel.h"

@@ -1,7 +1,5 @@
 #pragma once
-#include <Engine.h>
-
-#include <array>
+#include <EngineCore.h>
 
 namespace Kita {
 

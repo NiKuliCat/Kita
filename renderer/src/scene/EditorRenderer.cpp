@@ -5,6 +5,7 @@
 #include "component/MeshRenderer.h"
 #include "component/Transform.h"
 
+
 namespace Kita {
 
 	EditorRenderer::EditorRenderer(VulkanContext& context, VulkanRenderTarget& rt, const Ref<Scene>& scene, ViewportCamera& camera)

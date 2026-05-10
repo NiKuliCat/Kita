@@ -1,14 +1,7 @@
 #pragma once
-#include "Engine.h"
-#include "render/VulkanGraphicsPipeline.h"
-#include "render/VulkanRenderTarget.h"
-#include "render/VulkanRenderer.h"
-#include "render/VulkanResourceFactory.h"
-#include "scene/ViewportCamera.h"
-#include "render/pass/SceneBindings.h"
-#include "render/pipeline/PipelineFactory.h"
-#include "render/pass/ForwardOpaquePass.h"
-#include "core/Core.h"
+#include <EngineCore.h>
+#include <EngineRender.h>
+#include "ViewportCamera.h"
 namespace Kita {
 
 	class EditorRenderer

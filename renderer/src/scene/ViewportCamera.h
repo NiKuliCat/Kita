@@ -1,7 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
-#include <event/Event.h>
-#include <event/MouseEvent.h>
+#include <EngineCore.h>
 namespace Kita {
 
 

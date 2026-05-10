@@ -156,7 +156,7 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="src\Engine.h" />
+    <ClInclude Include="src\EngineCore.h" />
     <ClInclude Include="src\asset\Asset.h" />
     <ClInclude Include="src\asset\AssetFactory.h" />
     <ClInclude Include="src\asset\AssetManager.h" />
@@ -174,6 +174,7 @@
     <ClInclude Include="src\core\Log.h" />
     <ClInclude Include="src\core\UUID.h" />
     <ClInclude Include="src\core\Window.h" />
+    <ClInclude Include="src\EngineRender.h" />
     <ClInclude Include="src\event\ApplicationEvent.h" />
     <ClInclude Include="src\event\Event.h" />
     <ClInclude Include="src\event\KeyBoardEvent.h" />
