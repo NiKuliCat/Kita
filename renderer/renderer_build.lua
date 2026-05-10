@@ -32,7 +32,7 @@ project "Renderer"
         "%{IncludeDir.ImGuizmo}",
         "%{IncludeDir.nlohmann_json}",
         "%{IncludeDir.VulkanSDK}"
-        
+
     }
     
     buildoptions

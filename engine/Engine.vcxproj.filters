@@ -31,6 +31,12 @@
     <Filter Include="src\render\mesh">
       <UniqueIdentifier>{78BC1DC2-E447-8B86-ED58-0E7B5963E786}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\render\pass">
+      <UniqueIdentifier>{A2501FC2-0EDC-8C86-17ED-0F7B83F7E886}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\render\pipeline">
+      <UniqueIdentifier>{E1ECCCCC-4D4E-AADA-D6BB-F08C421CE199}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\render\scene">
       <UniqueIdentifier>{598B4006-4584-5F58-6EB6-44DD5A0E3F64}</UniqueIdentifier>
     </Filter>
@@ -73,6 +79,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\EngineCore.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\EngineRender.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\asset\Asset.h">
@@ -215,6 +224,24 @@
     </ClInclude>
     <ClInclude Include="src\render\mesh\Mesh.h">
       <Filter>src\render\mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\pass\ForwardOpaquePass.h">
+      <Filter>src\render\pass</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\pass\RenderContext.h">
+      <Filter>src\render\pass</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\pass\RenderDataStruct.h">
+      <Filter>src\render\pass</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\pass\RenderPass.h">
+      <Filter>src\render\pass</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\pass\SceneBindings.h">
+      <Filter>src\render\pass</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\pipeline\PipelineFactory.h">
+      <Filter>src\render\pipeline</Filter>
     </ClInclude>
     <ClInclude Include="src\render\scene\Camera.h">
       <Filter>src\render\scene</Filter>
@@ -1500,13 +1527,6 @@
     <ClInclude Include="third-party\imguizmo\ImGuizmo.h">
       <Filter>third-party\imguizmo</Filter>
     </ClInclude>
-    <ClInclude Include="src\render\pass\RenderPass.h" />
-    <ClInclude Include="src\render\pass\RenderDataStruct.h" />
-    <ClInclude Include="src\render\pass\RenderContext.h" />
-    <ClInclude Include="src\render\pass\SceneBindings.h" />
-    <ClInclude Include="src\render\pass\ForwardOpaquePass.h" />
-    <ClInclude Include="src\render\pipeline\PipelineFactory.h" />
-    <ClInclude Include="src\EngineRender.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\asset\Asset.cpp">
@@ -1623,6 +1643,21 @@
     <ClCompile Include="src\render\mesh\Mesh.cpp">
       <Filter>src\render\mesh</Filter>
     </ClCompile>
+    <ClCompile Include="src\render\pass\ForwardOpaquePass.cpp">
+      <Filter>src\render\pass</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\pass\RenderContext.cpp">
+      <Filter>src\render\pass</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\pass\RenderPass.cpp">
+      <Filter>src\render\pass</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\pass\SceneBindings.cpp">
+      <Filter>src\render\pass</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\pipeline\PipelineFactory.cpp">
+      <Filter>src\render\pipeline</Filter>
+    </ClCompile>
     <ClCompile Include="src\render\scene\OrthographicCamera.cpp">
       <Filter>src\render\scene</Filter>
     </ClCompile>
@@ -1647,10 +1682,5 @@
     <ClCompile Include="third-party\imguizmo\ImGuizmo.cpp">
       <Filter>third-party\imguizmo</Filter>
     </ClCompile>
-    <ClCompile Include="src\render\pass\RenderContext.cpp" />
-    <ClCompile Include="src\render\pass\SceneBindings.cpp" />
-    <ClCompile Include="src\render\pass\RenderPass.cpp" />
-    <ClCompile Include="src\render\pass\ForwardOpaquePass.cpp" />
-    <ClCompile Include="src\render\pipeline\PipelineFactory.cpp" />
   </ItemGroup>
 </Project>

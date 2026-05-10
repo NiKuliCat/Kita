@@ -157,6 +157,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\EngineCore.h" />
+    <ClInclude Include="src\EngineRender.h" />
     <ClInclude Include="src\asset\Asset.h" />
     <ClInclude Include="src\asset\AssetFactory.h" />
     <ClInclude Include="src\asset\AssetManager.h" />
@@ -174,7 +175,6 @@
     <ClInclude Include="src\core\Log.h" />
     <ClInclude Include="src\core\UUID.h" />
     <ClInclude Include="src\core\Window.h" />
-    <ClInclude Include="src\EngineRender.h" />
     <ClInclude Include="src\event\ApplicationEvent.h" />
     <ClInclude Include="src\event\Event.h" />
     <ClInclude Include="src\event\KeyBoardEvent.h" />
@@ -184,12 +184,6 @@
     <ClInclude Include="src\platform\windows\WindowsWindow.h" />
     <ClInclude Include="src\render\BufferLayout.h" />
     <ClInclude Include="src\render\Light.h" />
-    <ClInclude Include="src\render\pass\ForwardOpaquePass.h" />
-    <ClInclude Include="src\render\pass\RenderContext.h" />
-    <ClInclude Include="src\render\pass\RenderDataStruct.h" />
-    <ClInclude Include="src\render\pass\RenderPass.h" />
-    <ClInclude Include="src\render\pass\SceneBindings.h" />
-    <ClInclude Include="src\render\pipeline\PipelineFactory.h" />
     <ClInclude Include="src\render\ShaderCompiler.h" />
     <ClInclude Include="src\render\VulkanBuffer.h" />
     <ClInclude Include="src\render\VulkanContext.h" />
@@ -211,6 +205,12 @@
     <ClInclude Include="src\render\VulkanVertexBuffer.h" />
     <ClInclude Include="src\render\font\FontManager.h" />
     <ClInclude Include="src\render\mesh\Mesh.h" />
+    <ClInclude Include="src\render\pass\ForwardOpaquePass.h" />
+    <ClInclude Include="src\render\pass\RenderContext.h" />
+    <ClInclude Include="src\render\pass\RenderDataStruct.h" />
+    <ClInclude Include="src\render\pass\RenderPass.h" />
+    <ClInclude Include="src\render\pass\SceneBindings.h" />
+    <ClInclude Include="src\render\pipeline\PipelineFactory.h" />
     <ClInclude Include="src\render\scene\Camera.h" />
     <ClInclude Include="src\render\scene\OrthographicCamera.h" />
     <ClInclude Include="src\render\scene\PerspectiveCamera.h" />
@@ -660,11 +660,6 @@
     <ClCompile Include="src\platform\windows\WindowsInput.cpp" />
     <ClCompile Include="src\platform\windows\WindowsWindow.cpp" />
     <ClCompile Include="src\render\BufferLayout.cpp" />
-    <ClCompile Include="src\render\pass\ForwardOpaquePass.cpp" />
-    <ClCompile Include="src\render\pass\RenderContext.cpp" />
-    <ClCompile Include="src\render\pass\RenderPass.cpp" />
-    <ClCompile Include="src\render\pass\SceneBindings.cpp" />
-    <ClCompile Include="src\render\pipeline\PipelineFactory.cpp" />
     <ClCompile Include="src\render\ShaderCompiler.cpp" />
     <ClCompile Include="src\render\VulkanBuffer.cpp" />
     <ClCompile Include="src\render\VulkanContext.cpp" />
@@ -686,6 +681,11 @@
     <ClCompile Include="src\render\VulkanVertexBuffer.cpp" />
     <ClCompile Include="src\render\font\FontManager.cpp" />
     <ClCompile Include="src\render\mesh\Mesh.cpp" />
+    <ClCompile Include="src\render\pass\ForwardOpaquePass.cpp" />
+    <ClCompile Include="src\render\pass\RenderContext.cpp" />
+    <ClCompile Include="src\render\pass\RenderPass.cpp" />
+    <ClCompile Include="src\render\pass\SceneBindings.cpp" />
+    <ClCompile Include="src\render\pipeline\PipelineFactory.cpp" />
     <ClCompile Include="src\render\scene\OrthographicCamera.cpp" />
     <ClCompile Include="src\render\scene\PerspectiveCamera.cpp" />
     <ClCompile Include="src\serialize\JsonUtils.cpp" />

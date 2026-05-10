@@ -6,6 +6,8 @@
 #include "ui/SceneSelectionContext.h"
 #include "ui/SceneViewportPanel.h"
 #include "ui/ContentBrowserPanel.h"
+#include "ui/SvgIconAtlas.h"
+#include "ui/ThumbnailCache.h"
 #include "ui/UIColorPanel.h"
 namespace Kita {
 
@@ -52,5 +54,8 @@ namespace Kita {
 		uint32_t m_NextViewportSerial = 1;
 
 		Ref<SceneSelectionContext> m_SceneSelectionContext = nullptr;
+		Unique<VulkanResourceFactory> m_ContentBrowserResourceFactory = nullptr;
+		Unique<ThumbnailCache> m_ContentBrowserThumbnailCache = nullptr;
+		Unique<SvgIconAtlas> m_ContentBrowserIconAtlas = nullptr;
 	};
 }

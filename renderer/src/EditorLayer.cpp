@@ -1,4 +1,4 @@
-#include "renderer_pch.h"
+О╩©#include "renderer_pch.h"
 #include "EditorLayer.h"
 
 #include "file/Project.h"
@@ -22,8 +22,6 @@ namespace Kita {
 	{
 		EditorProjectBootstrap::Initialize();
 
-
-
 		m_Scene = CreateRef<Scene>("example scene");
 		m_SceneSerializer = SceneSerializer(m_Scene);
 
@@ -37,8 +35,22 @@ namespace Kita {
 
 		const auto project = Project::GetActive();
 		if (project)
+		{
 			m_ContentBrowserPanel = ContentBrowserPanel(project->GetAssetRootDirectory());
+			m_ContentBrowserResourceFactory = CreateUnique<VulkanResourceFactory>(
+				Application::Get().GetVulkanContext(),
+				AssetManager::GetInstance());
+			m_ContentBrowserThumbnailCache = CreateUnique<ThumbnailCache>(*m_ContentBrowserResourceFactory);
+			m_ContentBrowserPanel.SetThumbnailCache(m_ContentBrowserThumbnailCache.get());
 
+			m_ContentBrowserIconAtlas = CreateUnique<SvgIconAtlas>();
+			const std::filesystem::path atlasJsonPath =
+				project->GetPackagesDirectory() / "editor" / "icons" / "svg" / "editor_icons_64.json";
+			if (m_ContentBrowserIconAtlas->Load(atlasJsonPath))
+			{
+				m_ContentBrowserPanel.SetIconAtlas(m_ContentBrowserIconAtlas.get());
+			}
+		}
 
 		{
 			auto obj = m_Scene->CreateObject("sphere");
@@ -55,19 +67,24 @@ namespace Kita {
 		RemoveClosedViewportPanels();
 		for (auto& viewport : m_SceneViewportPanels)
 			viewport.Panel->Simulate(daltaTime);
-
-		
 	}
 
 	void EditorLayer::OnDestroy()
 	{
+		m_ContentBrowserPanel.SetIconAtlas(nullptr);
+		m_ContentBrowserPanel.SetThumbnailCache(nullptr);
+		m_ContentBrowserIconAtlas.reset();
+		m_ContentBrowserThumbnailCache.reset();
+		if (m_ContentBrowserResourceFactory)
+			m_ContentBrowserResourceFactory->Clear();
+		m_ContentBrowserResourceFactory.reset();
 	}
 
 	void EditorLayer::OnRender()
 	{
 		for (auto& viewport : m_SceneViewportPanels)
 		{
-			viewport.Panel->Render(); // ох resize target
+			viewport.Panel->Render();
 			if (viewport.Renderer && viewport.Panel->GetRenderTarget())
 				viewport.Renderer->Render(*viewport.Panel->GetRenderTarget());
 		}
