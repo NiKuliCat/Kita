@@ -5,7 +5,8 @@
 #include "render/VulkanRenderer.h"
 #include "render/VulkanResourceFactory.h"
 #include "scene/ViewportCamera.h"
-
+#include "render/pass/SceneBindings.h"
+#include <render/pass/ForwardOpaquePass.h>
 namespace Kita {
 
 	class EditorRenderer
@@ -18,13 +19,15 @@ namespace Kita {
 		void Render(VulkanRenderTarget& rt);
 
 	private:
-		void InitRenderSceneData(VulkanRenderer::CameraUBO& cameraData, VulkanRenderer::DirectionLightUBO& mainLightData);
+		void InitRenderSceneData(ScenePassData& sceneData);
 		void EnsureDefaultPipeline(VulkanRenderTarget& rt, VulkanGeometry& geometry, VulkanMaterial& material);
 
 	private:
 		VulkanContext* m_Context = nullptr;
-		VulkanRenderer m_Renderer;
+		SceneBindings m_SceneBindings;
 		VulkanResourceFactory m_VulkanResFactory;
+		Unique<ForwardOpaquePass> m_ForwardOpaquePass;
+
 		VulkanRenderTarget* m_RenderTarget = nullptr;
 		Ref<Scene> m_SceneContext = nullptr;
 		Unique<VulkanGraphicsPipeline> m_OpaquePipeline = nullptr;

@@ -1500,6 +1500,11 @@
     <ClInclude Include="third-party\imguizmo\ImGuizmo.h">
       <Filter>third-party\imguizmo</Filter>
     </ClInclude>
+    <ClInclude Include="src\render\pass\RenderPass.h" />
+    <ClInclude Include="src\render\pass\RenderDataStruct.h" />
+    <ClInclude Include="src\render\pass\RenderContext.h" />
+    <ClInclude Include="src\render\pass\SceneBindings.h" />
+    <ClInclude Include="src\render\pass\ForwardOpaquePass.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\asset\Asset.cpp">
@@ -1640,5 +1645,9 @@
     <ClCompile Include="third-party\imguizmo\ImGuizmo.cpp">
       <Filter>third-party\imguizmo</Filter>
     </ClCompile>
+    <ClCompile Include="src\render\pass\RenderContext.cpp" />
+    <ClCompile Include="src\render\pass\SceneBindings.cpp" />
+    <ClCompile Include="src\render\pass\RenderPass.cpp" />
+    <ClCompile Include="src\render\pass\ForwardOpaquePass.cpp" />
   </ItemGroup>
 </Project>

@@ -183,6 +183,11 @@
     <ClInclude Include="src\platform\windows\WindowsWindow.h" />
     <ClInclude Include="src\render\BufferLayout.h" />
     <ClInclude Include="src\render\Light.h" />
+    <ClInclude Include="src\render\pass\ForwardOpaquePass.h" />
+    <ClInclude Include="src\render\pass\RenderContext.h" />
+    <ClInclude Include="src\render\pass\RenderDataStruct.h" />
+    <ClInclude Include="src\render\pass\RenderPass.h" />
+    <ClInclude Include="src\render\pass\SceneBindings.h" />
     <ClInclude Include="src\render\ShaderCompiler.h" />
     <ClInclude Include="src\render\VulkanBuffer.h" />
     <ClInclude Include="src\render\VulkanContext.h" />
@@ -653,6 +658,10 @@
     <ClCompile Include="src\platform\windows\WindowsInput.cpp" />
     <ClCompile Include="src\platform\windows\WindowsWindow.cpp" />
     <ClCompile Include="src\render\BufferLayout.cpp" />
+    <ClCompile Include="src\render\pass\ForwardOpaquePass.cpp" />
+    <ClCompile Include="src\render\pass\RenderContext.cpp" />
+    <ClCompile Include="src\render\pass\RenderPass.cpp" />
+    <ClCompile Include="src\render\pass\SceneBindings.cpp" />
     <ClCompile Include="src\render\ShaderCompiler.cpp" />
     <ClCompile Include="src\render\VulkanBuffer.cpp" />
     <ClCompile Include="src\render\VulkanContext.cpp" />
