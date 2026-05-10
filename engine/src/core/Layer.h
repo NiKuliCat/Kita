@@ -15,6 +15,7 @@ namespace Kita {
 
 		virtual void OnCreate() {}
 		virtual void OnUpdate(float daltaTime) {}
+		virtual void OnRender() {}
 		virtual void OnDestroy() {}
 
 		virtual void OnImGuiRender() {}

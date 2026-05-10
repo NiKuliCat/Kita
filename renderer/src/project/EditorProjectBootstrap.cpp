@@ -8,6 +8,7 @@
 namespace Kita {
 
 	std::unordered_map<std::string, std::string> EditorProjectBootstrap::m_PreLoadShaderPath{};
+	std::unordered_map<std::string, std::string> EditorProjectBootstrap::m_PreLoadMaterialPath{};
 	std::unordered_map<std::string, std::string> EditorProjectBootstrap::m_PreLoadMeshPath{};
 	std::unordered_map<std::string, std::string> EditorProjectBootstrap::m_PreLoadTexturePath{};
 
@@ -98,6 +99,7 @@ namespace Kita {
 			return;
 
 		PreloadConfiguredAssets(m_PreLoadShaderPath);
+		PreloadConfiguredAssets(m_PreLoadMaterialPath);
 		PreloadConfiguredAssets(m_PreLoadMeshPath);
 		PreloadConfiguredAssets(m_PreLoadTexturePath);
 	}
@@ -106,6 +108,11 @@ namespace Kita {
 	Ref<ShaderAsset> EditorProjectBootstrap::GetPreLoadShader(const std::string& name)
 	{
 		return LoadTypedAssetByPath<ShaderAsset>(GetPreLoadShaderPath(name));
+	}
+
+	Ref<MaterialAsset> EditorProjectBootstrap::GetPreLoadMaterial(const std::string& name)
+	{
+		return LoadTypedAssetByPath<MaterialAsset>(GetPreLoadMaterialPath(name));
 	}
 
 	Ref<MeshAsset> EditorProjectBootstrap::GetPreLoadMesh(const std::string& name)
@@ -121,6 +128,15 @@ namespace Kita {
 	AssetHandle EditorProjectBootstrap::GetPreLoadShaderHandle(const std::string& name)
 	{
 		const std::filesystem::path path = GetPreLoadShaderPath(name);
+		if (path.empty())
+			return InvalidAssetHandle;
+
+		return AssetManager::GetInstance().GetHandleByPath(path);
+	}
+
+	AssetHandle EditorProjectBootstrap::GetPreLoadMaterialHandle(const std::string& name)
+	{
+		const std::filesystem::path path = GetPreLoadMaterialPath(name);
 		if (path.empty())
 			return InvalidAssetHandle;
 
@@ -151,6 +167,12 @@ namespace Kita {
 		return path ? std::filesystem::path(*path) : std::filesystem::path{};
 	}
 
+	std::filesystem::path EditorProjectBootstrap::GetPreLoadMaterialPath(const std::string& name)
+	{
+		const std::string* path = FindMappedPath(m_PreLoadMaterialPath, name);
+		return path ? std::filesystem::path(*path) : std::filesystem::path{};
+	}
+
 	std::filesystem::path EditorProjectBootstrap::GetPreLoadMeshPath(const std::string& name)
 	{
 		const std::string* path = FindMappedPath(m_PreLoadMeshPath, name);
@@ -166,6 +188,7 @@ namespace Kita {
 	bool EditorProjectBootstrap::ReadConfigFile(const std::filesystem::path& configPath)
 	{
 		m_PreLoadShaderPath.clear();
+		m_PreLoadMaterialPath.clear();
 		m_PreLoadMeshPath.clear();
 		m_PreLoadTexturePath.clear();
 
@@ -202,6 +225,7 @@ namespace Kita {
 		const nlohmann::json& assetNode = root["asset"];
 
 		ReadStringMapNode(assetNode, "shader", m_PreLoadShaderPath);
+		ReadStringMapNode(assetNode, "material", m_PreLoadMaterialPath);
 		ReadStringMapNode(assetNode, "mesh", m_PreLoadMeshPath);
 		ReadStringMapNode(assetNode, "texture", m_PreLoadTexturePath);
 

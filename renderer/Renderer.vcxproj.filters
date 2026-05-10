@@ -26,6 +26,9 @@
       <Filter>project</Filter>
     </ClInclude>
     <ClInclude Include="src\renderer_pch.h" />
+    <ClInclude Include="src\scene\EditorRenderer.h">
+      <Filter>scene</Filter>
+    </ClInclude>
     <ClInclude Include="src\scene\ViewportCamera.h">
       <Filter>scene</Filter>
     </ClInclude>
@@ -50,7 +53,6 @@
     <ClInclude Include="src\utils\FileDialogs.h">
       <Filter>utils</Filter>
     </ClInclude>
-    <ClInclude Include="src\scene\EditorRenderer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\EditorApp.cpp" />
@@ -62,6 +64,9 @@
       <Filter>project</Filter>
     </ClCompile>
     <ClCompile Include="src\renderer_pch.cpp" />
+    <ClCompile Include="src\scene\EditorRenderer.cpp">
+      <Filter>scene</Filter>
+    </ClCompile>
     <ClCompile Include="src\scene\ViewportCamera.cpp">
       <Filter>scene</Filter>
     </ClCompile>
@@ -83,6 +88,5 @@
     <ClCompile Include="src\utils\FileDialogs.cpp">
       <Filter>utils</Filter>
     </ClCompile>
-    <ClCompile Include="src\scene\EditorRenderer.cpp" />
   </ItemGroup>
 </Project>

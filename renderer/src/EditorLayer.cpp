@@ -38,6 +38,15 @@ namespace Kita {
 		const auto project = Project::GetActive();
 		if (project)
 			m_ContentBrowserPanel = ContentBrowserPanel(project->GetAssetRootDirectory());
+
+
+		{
+			auto obj = m_Scene->CreateObject("sphere");
+			auto& meshrenderer = obj.AddComponent<MeshRenderer>();
+			meshrenderer.MeshAssetHandle = EditorProjectBootstrap::GetPreLoadMeshHandle("sphere");
+			meshrenderer.DefaultMaterialAssetHandle = EditorProjectBootstrap::GetPreLoadMaterialHandle("default");
+			meshrenderer.MaterialAssetHandles.clear();
+		}
 	}
 
 	void EditorLayer::OnUpdate(float daltaTime)
@@ -45,11 +54,23 @@ namespace Kita {
 		m_Scene->SimulateSceneEditor();
 		RemoveClosedViewportPanels();
 		for (auto& viewport : m_SceneViewportPanels)
-			viewport->Simulate(daltaTime);
+			viewport.Panel->Simulate(daltaTime);
+
+		
 	}
 
 	void EditorLayer::OnDestroy()
 	{
+	}
+
+	void EditorLayer::OnRender()
+	{
+		for (auto& viewport : m_SceneViewportPanels)
+		{
+			viewport.Panel->Render(); // ох resize target
+			if (viewport.Renderer && viewport.Panel->GetRenderTarget())
+				viewport.Renderer->Render(*viewport.Panel->GetRenderTarget());
+		}
 	}
 
 	void EditorLayer::OnImGuiRender()
@@ -177,15 +198,9 @@ namespace Kita {
 		m_InspectorPanel.OnImGuiRender();
 		m_ContentBrowserPanel.OnImGuiRender();
 
-		for (size_t i = 0; i < m_SceneViewportPanels.size(); ++i)
+		for (auto& viewport : m_SceneViewportPanels)
 		{
-			auto& viewport = m_SceneViewportPanels[i];
-			viewport->SetActive(static_cast<int32_t>(i) == m_ActiveViewportIndex);
-			viewport->Render();
-			viewport->OnImGuiRender();
-
-			if (viewport->IsImageHovered())
-				m_ActiveViewportIndex = static_cast<int32_t>(i);
+			viewport.Panel->OnImGuiRender();
 		}
 
 		ImGui::End();
@@ -201,7 +216,7 @@ namespace Kita {
 		{
 			for (size_t i = 0; i < m_SceneViewportPanels.size(); ++i)
 			{
-				if (m_SceneViewportPanels[i]->IsImageHovered())
+				if (m_SceneViewportPanels[i].Panel->IsImageHovered())
 				{
 					m_ActiveViewportIndex = static_cast<int32_t>(i);
 					break;
@@ -212,8 +227,8 @@ namespace Kita {
 		for (size_t i = 0; i < m_SceneViewportPanels.size(); ++i)
 		{
 			auto& viewport = m_SceneViewportPanels[i];
-			viewport->SetActive(static_cast<int32_t>(i) == m_ActiveViewportIndex);
-			viewport->OnEvent(event);
+			viewport.Panel->SetActive(static_cast<int32_t>(i) == m_ActiveViewportIndex);
+			viewport.Panel->OnEvent(event);
 		}
 	}
 
@@ -229,7 +244,17 @@ namespace Kita {
 
 	void EditorLayer::AddViewportPanel(std::string windowName)
 	{
-		m_SceneViewportPanels.emplace_back(CreateUnique<SceneViewportPanel>(m_Scene, m_SceneSelectionContext, std::move(windowName)));
+		ViewportInstance viewport{};
+		viewport.Panel = CreateUnique<SceneViewportPanel>(m_SceneSelectionContext, std::move(windowName));
+		if (viewport.Panel && viewport.Panel->GetRenderTarget() && viewport.Panel->GetViewportCamera())
+		{
+			viewport.Renderer = CreateUnique<EditorRenderer>(
+				Application::Get().GetVulkanContext(),
+				*viewport.Panel->GetRenderTarget(),
+				m_Scene,
+				*viewport.Panel->GetViewportCamera());
+		}
+		m_SceneViewportPanels.emplace_back(std::move(viewport));
 		m_ActiveViewportIndex = static_cast<int32_t>(m_SceneViewportPanels.size()) - 1;
 	}
 
@@ -237,7 +262,7 @@ namespace Kita {
 	{
 		for (size_t i = 0; i < m_SceneViewportPanels.size();)
 		{
-			if (m_SceneViewportPanels[i]->IsOpen())
+			if (m_SceneViewportPanels[i].Panel->IsOpen())
 			{
 				++i;
 				continue;

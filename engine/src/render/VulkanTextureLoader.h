@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/Core.h"
-
+#include "asset/Asset.h"
 #include <filesystem>
 
 namespace Kita {
@@ -14,7 +14,7 @@ namespace Kita {
 	public:
 		static Ref<VulkanTexture> LoadTexture2D(
 			VulkanContext& context,
-			const std::filesystem::path& path);
+			const TextureAsset& texAsset);
 	};
 
 }

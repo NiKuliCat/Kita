@@ -195,6 +195,7 @@
     <ClInclude Include="src\render\VulkanRenderCommand.h" />
     <ClInclude Include="src\render\VulkanRenderTarget.h" />
     <ClInclude Include="src\render\VulkanRenderer.h" />
+    <ClInclude Include="src\render\VulkanResourceFactory.h" />
     <ClInclude Include="src\render\VulkanShader.h" />
     <ClInclude Include="src\render\VulkanStorageBuffer.h" />
     <ClInclude Include="src\render\VulkanTexture.h" />
@@ -634,6 +635,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\asset\Asset.cpp" />
+    <ClCompile Include="src\asset\AssetFactory.cpp" />
     <ClCompile Include="src\asset\AssetManager.cpp" />
     <ClCompile Include="src\component\LightComponent.cpp" />
     <ClCompile Include="src\component\MeshRenderer.cpp" />
@@ -663,6 +665,7 @@
     <ClCompile Include="src\render\VulkanRenderCommand.cpp" />
     <ClCompile Include="src\render\VulkanRenderTarget.cpp" />
     <ClCompile Include="src\render\VulkanRenderer.cpp" />
+    <ClCompile Include="src\render\VulkanResourceFactory.cpp" />
     <ClCompile Include="src\render\VulkanShader.cpp" />
     <ClCompile Include="src\render\VulkanStorageBuffer.cpp" />
     <ClCompile Include="src\render\VulkanTexture.cpp" />

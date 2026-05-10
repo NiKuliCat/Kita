@@ -153,6 +153,11 @@ namespace Kita {
 	{
 
 	}
+	void ImGuiLayer::OnRender()
+	{
+
+	}
+
 	void ImGuiLayer::OnImGuiRender()
 	{
 		

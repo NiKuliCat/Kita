@@ -375,24 +375,30 @@ namespace Kita {
 			auto& assetManager = AssetManager::GetInstance();
 
 			std::string meshSource = "None";
-			if (Asset::IsValidHandle(meshRenderer.GetMeshAssetHandle()))
+			size_t subMeshCount = 0;
+			if (Asset::IsValidHandle(meshRenderer.MeshAssetHandle))
 			{
-				if (const AssetMetadata* metadata = assetManager.GetMetadata(meshRenderer.GetMeshAssetHandle()))
+				if (const AssetMetadata* metadata = assetManager.GetMetadata(meshRenderer.MeshAssetHandle))
 				{
 					meshSource = metadata->relativePath.generic_string();
+				}
+
+				if (Ref<MeshAsset> meshAsset = assetManager.GetMeshAsset(meshRenderer.MeshAssetHandle))
+				{
+					subMeshCount = meshAsset->MeshRawData.size();
 				}
 			}
 
 			DrawInfoRow("Mesh Source", meshSource, isHighlight);
-			DrawInfoRow("SubMesh Count", std::to_string(meshRenderer.GetSubMeshCount()), isHighlight);
+			DrawInfoRow("SubMesh Count", std::to_string(subMeshCount), isHighlight);
 
-			auto& materialHandles = meshRenderer.GetMaterialAssetHandles();
-			auto& runtimeMaterials = meshRenderer.GetRuntimeMaterials();
+			auto& materialHandles = meshRenderer.MaterialAssetHandles;
 			const auto shaderAssets = assetManager.GetAssetsByType(AssetType::Shader);
 			const auto textureAssets = assetManager.GetAssetsByType(AssetType::Texture);
 			for (size_t i = 0; i < materialHandles.size(); ++i)
 			{
-				Ref<MaterialAsset> materialAsset = meshRenderer.GetMaterialAsset(i);
+				const AssetHandle materialHandle = materialHandles[i];
+				Ref<MaterialAsset> materialAsset = assetManager.GetMaterialAsset(materialHandle);
 				if (!materialAsset)
 				{
 					DrawInfoRow(("Material " + std::to_string(i)).c_str(), "None", isHighlight);
@@ -406,7 +412,7 @@ namespace Kita {
 				{
 					if (auto shaderAsset = assetManager.GetShaderAsset(materialAsset->ShaderHandle))
 					{
-						shaderPath = shaderAsset->GetFilePath().string();
+						shaderPath = shaderAsset->SourcePath.string();
 					}
 				}
 
@@ -426,7 +432,6 @@ namespace Kita {
 					if (ImGui::Selectable("None", isNoneSelected))
 					{
 						materialAsset->ShaderHandle = InvalidAssetHandle;
-						meshRenderer.SyncMaterial(i);
 						shaderPath = "None";
 					}
 
@@ -442,7 +447,6 @@ namespace Kita {
 						if (ImGui::Selectable(label.c_str(), isSelected))
 						{
 							materialAsset->ShaderHandle = metadata.handle;
-							meshRenderer.SyncMaterial(i);
 							shaderPath = label;
 						}
 
@@ -461,7 +465,7 @@ namespace Kita {
 				{
 					if (auto textureAsset = assetManager.GetTextureAsset(materialAsset->AlbedoTextureHandle))
 					{
-						texturePath = textureAsset->GetFilePath().string();
+						texturePath = textureAsset->SourcePath.string();
 					}
 				}
 
@@ -484,7 +488,6 @@ namespace Kita {
 					if (ImGui::Selectable("None", isNoneSelected))
 					{
 						materialAsset->AlbedoTextureHandle = InvalidAssetHandle;
-						meshRenderer.SyncMaterial(i);
 						texturePath = "None";
 					}
 
@@ -500,7 +503,6 @@ namespace Kita {
 						if (ImGui::Selectable(label.c_str(), isSelected))
 						{
 							materialAsset->AlbedoTextureHandle = metadata.handle;
-							meshRenderer.SyncMaterial(i);
 							texturePath = label;
 						}
 
@@ -522,15 +524,7 @@ namespace Kita {
 				if (baseColor != materialAsset->BaseColor)
 				{
 					materialAsset->BaseColor = baseColor;
-					meshRenderer.SyncMaterial(i);
 				}
-
-				std::string runtimeState = "Ready";
-				if (i >= runtimeMaterials.size() || !runtimeMaterials[i])
-				{
-					runtimeState = "Invalid Runtime Material";
-				}
-				DrawInfoRow(("Runtime " + std::to_string(i)).c_str(), runtimeState, isHighlight);
 			}
 
 			EndPropertyTable();

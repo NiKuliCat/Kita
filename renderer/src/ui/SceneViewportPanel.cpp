@@ -3,35 +3,15 @@
 
 #include "imgui.h"
 #include "ImGuizmo.h"
-#include "project/EditorProjectBootstrap.h"
 #include "render/font/FontManager.h"
-#include "render/VulkanDescriptorSet.h"
-#include "render/VulkanRenderCommand.h"
-#include "render/VulkanRenderer.h"
 #include <imgui_internal.h>
 
 #include <backends/imgui_impl_vulkan.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_inverse.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
 namespace Kita {
 
 	namespace
 	{
-		struct DemoShaderData
-		{
-			std::vector<uint8_t> VertexSpirv;
-			std::vector<uint8_t> FragmentSpirv;
-			std::string VertexEntryPoint = "VSMain";
-			std::string FragmentEntryPoint = "PSMain";
-
-			bool IsValid() const
-			{
-				return !VertexSpirv.empty() && !FragmentSpirv.empty();
-			}
-		};
-
 		bool DrawViewportCloseButton(const ImRect& anchorRect, ImGuiID id)
 		{
 			(void)id;
@@ -78,62 +58,13 @@ namespace Kita {
 
 			return pressed;
 		}
-
-		AssetHandle GetRequiredAssetHandle(const std::filesystem::path& assetPath)
-		{
-			if (assetPath.empty())
-				return InvalidAssetHandle;
-
-			return AssetManager::GetInstance().GetHandleByPath(assetPath.lexically_normal());
-		}
-
-		DemoShaderData TryLoadDemoShaderAsset()
-		{
-			DemoShaderData data{};
-			Ref<ShaderAsset> shaderAsset = EditorProjectBootstrap::GetPreLoadShader("default");
-			if (!shaderAsset)
-				return data;
-
-			if (!shaderAsset->GetVertexStage().Valid() || !shaderAsset->GetFragmentStage().Valid())
-				return data;
-
-			data.VertexSpirv = shaderAsset->GetVertexStage().Spirv;
-			data.FragmentSpirv = shaderAsset->GetFragmentStage().Spirv;
-			data.VertexEntryPoint = shaderAsset->GetVertexStage().EntryPoint;
-			data.FragmentEntryPoint = shaderAsset->GetFragmentStage().EntryPoint;
-			return data;
-		}
-
-		std::vector<Ref<Mesh>> TryLoadDemoMeshesFromAsset()
-		{
-			Ref<MeshAsset> meshAsset = EditorProjectBootstrap::GetPreLoadMesh("sphere");
-			if (!meshAsset)
-				return {};
-
-			const auto& subMeshes = meshAsset->GetSubMeshes();
-			if (!subMeshes.empty())
-				return subMeshes;
-
-			return {};
-		}
-
-		Ref<VulkanTexture> TryLoadDemoTexture()
-		{
-			Ref<TextureAsset> textureAsset = EditorProjectBootstrap::GetPreLoadTexture("test");
-			if (!textureAsset)
-				return nullptr;
-
-			return textureAsset->GetRuntimeTexture();
-		}
 	}
 
 	SceneViewportPanel::SceneViewportPanel(
-		const Ref<Scene>& scene,
 		const Ref<SceneSelectionContext>& selectionContext,
 		std::string windowName)
 		: m_WindowName(std::move(windowName)),
 		m_ViewportCamera(CreateUnique<ViewportCamera>()),
-		m_SceneContext(scene),
 		m_SelectionContext(selectionContext)
 	{
 		m_GizmoControlType = ImGuizmo::OPERATION::TRANSLATE;
@@ -174,94 +105,8 @@ namespace Kita {
 		renderTargetInfo.DepthAttachment.Format = VK_FORMAT_D32_SFLOAT;
 		renderTargetInfo.DepthAttachment.CreateSampler = false;
 
-		m_Renderer = CreateUnique<VulkanRenderer>(context);
 		m_RenderTarget = CreateUnique<VulkanRenderTarget>(context, renderTargetInfo);
 		RecreateViewportTexture();
-	}
-
-	bool SceneViewportPanel::EnsureDemoRenderResources()
-	{
-		if (m_Pipeline && !m_DemoMeshes.empty())
-			return true;
-
-		VulkanContext& context = Application::Get().GetVulkanContext();
-
-		if (m_DemoMeshes.empty())
-		{
-			m_DemoMeshes = TryLoadDemoMeshesFromAsset();
-			if (m_DemoMeshes.empty())
-			{
-				if (!m_DemoMeshWarningIssued)
-				{
-					KITA_CORE_WARN(
-						"SceneViewportPanel missing required mesh asset with key '{}'. Viewport will render clear color only.",
-						"sphere");
-					m_DemoMeshWarningIssued = true;
-				}
-				return false;
-			}
-
-			for (const Ref<Mesh>& mesh : m_DemoMeshes)
-			{
-				if (!mesh)
-					continue;
-
-				mesh->CreateVulkanGeometry(context);
-				KITA_CORE_ASSERT(mesh->GetVulkanGeometry(), "Failed to create editor viewport Vulkan geometry");
-			}
-		}
-
-		if (!m_VertexShader || !m_FragmentShader)
-		{
-			DemoShaderData shaderData = TryLoadDemoShaderAsset();
-			if (!shaderData.IsValid())
-			{
-				if (!m_DemoShaderWarningIssued)
-				{
-					KITA_CORE_WARN(
-						"SceneViewportPanel missing required shader asset with key '{}'. Viewport will render clear color only.",
-						"default");
-					m_DemoShaderWarningIssued = true;
-				}
-				return false;
-			}
-
-			VulkanShader::CreateInfo vertexShaderInfo{};
-			vertexShaderInfo.Name = m_WindowName + "_VertexShader";
-			vertexShaderInfo.Stage = VK_SHADER_STAGE_VERTEX_BIT;
-			vertexShaderInfo.EntryPoint = shaderData.VertexEntryPoint;
-			vertexShaderInfo.Spirv = shaderData.VertexSpirv;
-			m_VertexShader = CreateUnique<VulkanShader>(&context, vertexShaderInfo);
-
-			VulkanShader::CreateInfo fragmentShaderInfo{};
-			fragmentShaderInfo.Name = m_WindowName + "_FragmentShader";
-			fragmentShaderInfo.Stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-			fragmentShaderInfo.EntryPoint = shaderData.FragmentEntryPoint;
-			fragmentShaderInfo.Spirv = shaderData.FragmentSpirv;
-			m_FragmentShader = CreateUnique<VulkanShader>(&context, fragmentShaderInfo);
-		}
-
-		if (!m_VertexShader || !m_FragmentShader)
-			return false;
-
-		m_Renderer->SetSceneTexture(TryLoadDemoTexture());
-
-		VulkanGraphicsPipeline::CreateInfo pipelineInfo{};
-		pipelineInfo.Name = m_WindowName + "_Pipeline";
-		pipelineInfo.VertexShader = m_VertexShader.get();
-		pipelineInfo.FragmentShader = m_FragmentShader.get();
-		pipelineInfo.Geometry = m_DemoMeshes.front()->GetVulkanGeometry().get();
-		pipelineInfo.ColorFormat = m_RenderTarget->GetColorFormat(0);
-		pipelineInfo.DepthFormat = m_RenderTarget->GetDepthFormat();
-		pipelineInfo.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-		pipelineInfo.CullMode = VK_CULL_MODE_NONE;
-		pipelineInfo.EnableDepthTest = true;
-		pipelineInfo.EnableDepthWrite = true;
-		pipelineInfo.EnableBlending = false;
-		pipelineInfo.DescriptorSetLayouts = { m_Renderer->GetSceneUniformDescriptorSet().GetLayout() };
-
-		m_Pipeline = CreateUnique<VulkanGraphicsPipeline>(context, pipelineInfo);
-		return m_Pipeline != nullptr;
 	}
 
 	void SceneViewportPanel::Simulate(float daltaTime)
@@ -274,7 +119,7 @@ namespace Kita {
 
 	void SceneViewportPanel::OnImGuiRender()
 	{
-		if (!m_SelectionContext || !m_SceneContext || !m_IsOpen)
+		if (!m_SelectionContext || !m_IsOpen)
 			return;
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
@@ -387,14 +232,7 @@ namespace Kita {
 		if (!m_RenderTarget)
 			return;
 
-		EnsureDemoRenderResources();
 		ResizeRenderTargetIfNeeded();
-
-		VkCommandBuffer commandBuffer = Application::Get().GetVulkanContext().GetCurrentCommandBuffer();
-		if (commandBuffer == VK_NULL_HANDLE)
-			return;
-
-		RenderDemoMeshToTarget(commandBuffer);
 	}
 
 	void SceneViewportPanel::ResizeRenderTargetIfNeeded()
@@ -439,46 +277,6 @@ namespace Kita {
 			sampledImage.GetSampler(),
 			sampledImage.GetView(),
 			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)));
-	}
-
-	void SceneViewportPanel::RenderDemoMeshToTarget(VkCommandBuffer commandBuffer)
-	{
-		if (!m_RenderTarget || !m_Renderer || !m_ViewportCamera)
-			return;
-
-		VulkanRenderer::CameraUBO cameraData{};
-		cameraData.Matrix_V = m_ViewportCamera->GetViewMatrix();
-		cameraData.Matrix_P = m_ViewportCamera->GetProjectionMatrix();
-		cameraData.Matrix_VP = m_ViewportCamera->GetViewProjectionMatrix();
-		cameraData.Matrix_I_V = glm::inverse(cameraData.Matrix_V);
-		cameraData.Matrix_I_P = glm::inverse(cameraData.Matrix_P);
-		cameraData.Matrix_I_VP = glm::inverse(cameraData.Matrix_VP);
-		cameraData.CameraPosWS = glm::vec4(m_ViewportCamera->GetPosition(), 1.0f);
-
-		const glm::vec4 clearColor(0.03f, 0.032f, 0.034f, 1.0f);
-		
-		VulkanRenderer::DirectionLightUBO light{};
-		light.Color = glm::vec4(1.0, 0.0, 1.0, 1.0);
-		light.Direction = glm::vec4(0.4, -0.3, 0.0, 0.0);
-
-		m_Renderer->BeginScene(commandBuffer, *m_RenderTarget, cameraData, light, clearColor);
-
-		if (m_Pipeline && !m_DemoMeshes.empty())
-		{
-			for (const Ref<Mesh>& mesh : m_DemoMeshes)
-			{
-				if (!mesh || !mesh->GetVulkanGeometry())
-					continue;
-
-				VulkanRenderer::ObjectData objectData{};
-				objectData.Matrix_M = glm::mat4(1.0f);
-				objectData.Matrix_I_M = glm::inverse(objectData.Matrix_M);
-
-				m_Renderer->SubmitMesh(commandBuffer, *m_Pipeline, *mesh->GetVulkanGeometry(), objectData);
-			}
-		}
-
-		m_Renderer->EndScene(commandBuffer, *m_RenderTarget);
 	}
 
 	bool SceneViewportPanel::OnKeyPressed(KeyPressedEvent& event)

@@ -35,6 +35,7 @@ namespace Kita {
 
 		void SimulateSceneEditor();
 		void RenderSceneEditor();
+
 		DirectLightData GetMainDirectLightData() const;
 	private:
 		std::string m_Name = "New Scene";

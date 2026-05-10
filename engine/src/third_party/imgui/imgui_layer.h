@@ -15,6 +15,9 @@ namespace Kita {
 		virtual void OnDestroy() override;
 		virtual void OnUpdate(float daltaTime) override;
 
+
+		virtual void OnRender() override;
+
 		virtual void OnImGuiRender() override;
 
 

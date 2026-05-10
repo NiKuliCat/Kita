@@ -132,15 +132,13 @@ namespace Kita {
 	json ComponentSerializer::SerializeMeshRenderer(const MeshRenderer& meshRenderer)
 	{
 		json meshRendererJson;
-		meshRendererJson["meshAsset"] =
-			JsonUtils::SerializeAssetHandle(meshRenderer.GetMeshAssetHandle());
+		meshRendererJson["meshAsset"] = JsonUtils::SerializeAssetHandle(meshRenderer.MeshAssetHandle);
 
+		meshRendererJson["defaultMaterialAsset"] = JsonUtils::SerializeAssetHandle(meshRenderer.DefaultMaterialAssetHandle);
 		meshRendererJson["materialAssets"] = json::array();
-		const auto& materialHandles = meshRenderer.GetMaterialAssetHandles();
-		for (const AssetHandle materialHandle : materialHandles)
+		for (const AssetHandle materialHandle : meshRenderer.MaterialAssetHandles)
 		{
-			meshRendererJson["materialAssets"].push_back(
-				JsonUtils::SerializeAssetHandle(materialHandle));
+			meshRendererJson["materialAssets"].push_back( JsonUtils::SerializeAssetHandle(materialHandle));
 		}
 
 		return meshRendererJson;
@@ -148,7 +146,7 @@ namespace Kita {
 
 	MeshRenderer ComponentSerializer::DeserializeMeshRenderer(const json& meshRendererJson)
 	{
-		MeshRenderer meshRenderer;
+		MeshRenderer meshRenderer{};
 		if (!meshRendererJson.is_object())
 		{
 			return meshRenderer;
@@ -156,45 +154,43 @@ namespace Kita {
 
 		auto& assetManager = AssetManager::GetInstance();
 
-		AssetHandle meshAssetHandle = InvalidAssetHandle;
 		if (meshRendererJson.contains("meshAsset"))
 		{
-			meshAssetHandle = JsonUtils::DeserializeAssetHandle(meshRendererJson.at("meshAsset"));
-		}
+			meshRenderer.MeshAssetHandle =
+				JsonUtils::DeserializeAssetHandle(meshRendererJson.at("meshAsset"));
 
-		if (!Asset::IsValidHandle(meshAssetHandle))
-		{
-			return meshRenderer;
-		}
-
-		const AssetMetadata* meshMetadata = assetManager.GetMetadata(meshAssetHandle);
-		if (!meshMetadata)
-		{
-			KITA_CORE_WARN("DeserializeMeshRenderer failed, mesh asset metadata not found: {}", meshAssetHandle);
-			return meshRenderer;
-		}
-
-		meshRenderer.LoadMeshs(meshMetadata->relativePath.generic_string());
-
-		if (!meshRendererJson.contains("materialAssets") || !meshRendererJson.at("materialAssets").is_array())
-		{
-			return meshRenderer;
-		}
-
-		const auto& materialArray = meshRendererJson.at("materialAssets");
-		auto& materialHandles = meshRenderer.GetMaterialAssetHandles();
-
-		const size_t count = std::min(materialHandles.size(), materialArray.size());
-		for (size_t i = 0; i < count; ++i)
-		{
-			AssetHandle materialHandle = JsonUtils::DeserializeAssetHandle(materialArray[i]);
-			if (!Asset::IsValidHandle(materialHandle) || !assetManager.HasHandle(materialHandle))
+			if (!Asset::IsValidHandle(meshRenderer.MeshAssetHandle) ||
+				!assetManager.HasHandle(meshRenderer.MeshAssetHandle))
 			{
-				materialHandle = InvalidAssetHandle;
+				meshRenderer.MeshAssetHandle = InvalidAssetHandle;
 			}
+		}
 
-			meshRenderer.SetMaterialAssetHandle(i, materialHandle);
-			meshRenderer.SyncMaterial(i);
+		if (meshRendererJson.contains("defaultMaterialAsset"))
+		{
+			meshRenderer.DefaultMaterialAssetHandle =
+				JsonUtils::DeserializeAssetHandle(meshRendererJson.at("defaultMaterialAsset"));
+
+			if (!Asset::IsValidHandle(meshRenderer.DefaultMaterialAssetHandle) ||
+				!assetManager.HasHandle(meshRenderer.DefaultMaterialAssetHandle))
+			{
+				meshRenderer.DefaultMaterialAssetHandle = InvalidAssetHandle;
+			}
+		}
+
+		if (meshRendererJson.contains("materialAssets") &&
+			meshRendererJson.at("materialAssets").is_array())
+		{
+			for (const auto& item : meshRendererJson.at("materialAssets"))
+			{
+				AssetHandle materialHandle = JsonUtils::DeserializeAssetHandle(item);
+				if (!Asset::IsValidHandle(materialHandle) || !assetManager.HasHandle(materialHandle))
+				{
+					materialHandle = InvalidAssetHandle;
+				}
+
+				meshRenderer.MaterialAssetHandles.push_back(materialHandle);
+			}
 		}
 
 		return meshRenderer;

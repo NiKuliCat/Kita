@@ -45,6 +45,7 @@ namespace Kita {
 
 		uint32_t GetCurrentFrameIndex() const { return m_CurrentFrame; }
 		uint32_t GetCurrentImageIndex() const { return m_CurrentImageIndex; }
+		uint32_t GetFramesInFlight() const { return m_Config.FramesInFlight; }
 
 		const std::vector<VkImage>& GetSwapchainImages() const { return m_SwapchainImages; }
 		const std::vector<VkImageView>& GetSwapchainImageViews() const { return m_SwapchainImageViews; }

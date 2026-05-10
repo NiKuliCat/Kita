@@ -87,6 +87,10 @@ namespace Kita {
 
 			if (m_VulkanContext->BeginFrame())
 			{
+
+				for (Layer* layer : m_LayerStack)
+					layer->OnRender();
+
 				m_ImGuiLayer->Begin();
 
 				for (Layer* layer : m_LayerStack)

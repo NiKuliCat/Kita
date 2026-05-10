@@ -92,9 +92,7 @@ namespace Kita {
 
         void Init(VulkanContext& context);
         void OnDestroy();
-        void SetSceneTexture(const Ref<VulkanTexture>& texture);
-
-        const VulkanDescriptorSet& GetSceneUniformDescriptorSet() const { return m_SceneUniformDescriptorSet; }
+        const VulkanDescriptorSet& GetSceneUniformDescriptorSet() const;
 
         void BeginScene(
             VkCommandBuffer        cmd,
@@ -130,18 +128,14 @@ namespace Kita {
         bool m_Initialized = false;
         VulkanContext* m_Context = nullptr;
         CameraUBO  m_CameraUBO{};
-        VulkanUniformBuffer m_DirLightUniformBuffer;
-        VulkanUniformBuffer m_CameraUniformBuffer;
-        VulkanDescriptorSet m_SceneUniformDescriptorSet;
+        std::vector<VulkanUniformBuffer> m_DirLightUniformBuffers;
+        std::vector<VulkanUniformBuffer> m_CameraUniformBuffers;
+        std::vector<VulkanDescriptorSet> m_SceneUniformDescriptorSets;
 
         glm::vec4  m_CurrentClearColor{};
         float      m_CurrentClearDepth   = 1.0f;
         uint32_t   m_CurrentClearStencil = 0;
         bool       m_InScene = false;
-
-
-        //test 
-        Ref<VulkanTexture> m_TestTexture = nullptr;
     };
 
 }

@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include <Engine.h>
-#include "scene/ViewportCamera.h"
+#include "scene/EditorRenderer.h"
 #include "ui/InspectorPanel.h"
 #include "ui/SceneHierarchyPanel.h"
 #include "ui/SceneSelectionContext.h"
@@ -22,6 +22,7 @@ namespace Kita {
 		virtual void OnUpdate(float daltaTime)  override;
 		virtual void OnDestroy()  override;
 
+		virtual void OnRender()  override;
 		virtual void OnImGuiRender()  override;
 		virtual void OnEvent(Event& event)  override;
 
@@ -32,6 +33,12 @@ namespace Kita {
 		void RemoveClosedViewportPanels();
 	private:
 
+		struct ViewportInstance
+		{
+			Unique<SceneViewportPanel> Panel = nullptr;
+			Unique<EditorRenderer> Renderer = nullptr;
+		};
+
 		Ref<Scene> m_Scene = nullptr;
 		SceneSerializer  m_SceneSerializer;
 
@@ -40,7 +47,7 @@ namespace Kita {
 		InspectorPanel m_InspectorPanel;
 		ContentBrowserPanel m_ContentBrowserPanel;
 		UIColorPanel m_UIColorPanel;
-		std::vector<Unique<SceneViewportPanel>> m_SceneViewportPanels{};
+		std::vector<ViewportInstance> m_SceneViewportPanels{};
 		int32_t m_ActiveViewportIndex = -1;
 		uint32_t m_NextViewportSerial = 1;
 

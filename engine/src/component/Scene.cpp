@@ -36,24 +36,7 @@ namespace Kita {
 
 	void Scene::RenderSceneEditor()
 	{
-		// 渲染实体
-		auto mesh = m_Registry.group<Transform, MeshRenderer>();
-
-		for (auto entity : mesh)
-		{
-			auto [transform, meshRenderer] = mesh.get<Transform, MeshRenderer>(entity);
-
-			glm::mat4 model = transform.GetTransformMatrix();
-
-
-			const auto& meshs = meshRenderer.GetMeshs();
-			const auto& mats = meshRenderer.GetRuntimeMaterials();
-		}
-
-
-		//gizmo
-		
-
+		// Scene editor rendering is handled by renderer-side systems.
 	}
 
 	DirectLightData Scene::GetMainDirectLightData() const
@@ -74,4 +57,3 @@ namespace Kita {
 		return lightData;
 	}
 }
-

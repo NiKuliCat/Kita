@@ -189,7 +189,13 @@
     <ClInclude Include="src\render\VulkanRenderer.h">
       <Filter>src\render</Filter>
     </ClInclude>
+    <ClInclude Include="src\render\VulkanResourceFactory.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
     <ClInclude Include="src\render\VulkanShader.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\VulkanStorageBuffer.h">
       <Filter>src\render</Filter>
     </ClInclude>
     <ClInclude Include="src\render\VulkanTexture.h">
@@ -1494,10 +1500,12 @@
     <ClInclude Include="third-party\imguizmo\ImGuizmo.h">
       <Filter>third-party\imguizmo</Filter>
     </ClInclude>
-    <ClInclude Include="src\render\VulkanStorageBuffer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\asset\Asset.cpp">
+      <Filter>src\asset</Filter>
+    </ClCompile>
+    <ClCompile Include="src\asset\AssetFactory.cpp">
       <Filter>src\asset</Filter>
     </ClCompile>
     <ClCompile Include="src\asset\AssetManager.cpp">
@@ -1581,7 +1589,13 @@
     <ClCompile Include="src\render\VulkanRenderer.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
+    <ClCompile Include="src\render\VulkanResourceFactory.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
     <ClCompile Include="src\render\VulkanShader.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\VulkanStorageBuffer.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
     <ClCompile Include="src\render\VulkanTexture.cpp">
@@ -1626,6 +1640,5 @@
     <ClCompile Include="third-party\imguizmo\ImGuizmo.cpp">
       <Filter>third-party\imguizmo</Filter>
     </ClCompile>
-    <ClCompile Include="src\render\VulkanStorageBuffer.cpp" />
   </ItemGroup>
 </Project>

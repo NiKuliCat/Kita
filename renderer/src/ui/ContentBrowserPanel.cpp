@@ -16,6 +16,7 @@ namespace Kita {
 
 			return extension == ".mat"
 				|| extension == ".glsl"
+				|| extension == ".slang"
 				|| extension == ".vert"
 				|| extension == ".frag"
 				|| extension == ".png"
