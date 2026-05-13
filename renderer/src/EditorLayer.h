@@ -31,6 +31,7 @@ namespace Kita {
 	private:
 		bool OnKeyPressed(KeyPressedEvent& event);
 		bool OnMouseButtonPressed(MouseButtonPressedEvent& event);
+		std::string BuildNextViewportWindowName();
 		void AddViewportPanel(std::string windowName);
 		void RemoveClosedViewportPanels();
 		void RenderTimeSystemPanel();

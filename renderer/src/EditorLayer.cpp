@@ -170,7 +170,7 @@ namespace Kita {
 			if (ImGui::BeginMenu("Window"))
 			{
 				if (ImGui::MenuItem("Viewport"))
-					AddViewportPanel("Viewport " + std::to_string(m_NextViewportSerial++));
+					AddViewportPanel(BuildNextViewportWindowName());
 
 				if (ImGui::MenuItem("UI Color Panel"))
 					m_UIColorPanel.SetOpen(true);
@@ -257,6 +257,14 @@ namespace Kita {
 		return false;
 	}
 
+	std::string EditorLayer::BuildNextViewportWindowName()
+	{
+		if (m_SceneViewportPanels.empty())
+			return "Viewport";
+
+		return "Viewport " + std::to_string(m_NextViewportSerial++);
+	}
+
 	void EditorLayer::AddViewportPanel(std::string windowName)
 	{
 		m_SceneViewportPanels.emplace_back(
@@ -285,7 +293,10 @@ namespace Kita {
 			}
 
 			if (m_SceneViewportPanels.empty())
+			{
 				m_ActiveViewportIndex = -1;
+				m_NextViewportSerial = 1;
+			}
 			else if (m_ActiveViewportIndex >= static_cast<int32_t>(m_SceneViewportPanels.size()))
 				m_ActiveViewportIndex = static_cast<int32_t>(m_SceneViewportPanels.size()) - 1;
 		}

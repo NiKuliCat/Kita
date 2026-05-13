@@ -228,9 +228,6 @@ namespace Kita {
             EndSingleTimeCommands(*m_Context, cmd);
             m_CurrentLayout = finalLayout;
         }
-
-        KITA_CORE_INFO("Created VulkanImage '{0}' ({1}x{2})",
-            m_Name, m_Extent.width, m_Extent.height);
     }
 
     void VulkanImage::Destroy()

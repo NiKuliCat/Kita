@@ -77,13 +77,6 @@ namespace Kita {
 
 		CreateAttachments();
 
-		KITA_CORE_INFO(
-			"Created VulkanRenderTarget '{0}' ({1}x{2}, colors={3}, samples={4})",
-			m_CreateInfo.Name,
-			m_CreateInfo.Width,
-			m_CreateInfo.Height,
-			static_cast<uint32_t>(m_ColorAttachments.size()),
-			static_cast<uint32_t>(m_CreateInfo.Samples));
 	}
 
 	void VulkanRenderTarget::Destroy()

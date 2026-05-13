@@ -4,6 +4,7 @@
 namespace Kita {
 
 	ViewportInstance::ViewportInstance(VulkanContext& context, const Ref<Scene>& scene, std::string windowName)
+		: m_Context(&context)
 	{
 		m_Panel = CreateUnique<EditorViewportPanel>(std::move(windowName));
 
@@ -20,9 +21,20 @@ namespace Kita {
 				m_Surface->GetRenderTarget(),
 				scene,
 				*m_Panel->GetViewportCamera());
-
-			m_Panel->SetDisplayTexture(m_Surface->GetTextureID());
 		}
+	}
+
+	ViewportInstance::~ViewportInstance()
+	{
+		if (m_Context)
+			m_Context->WaitIdle();
+
+		if (m_Renderer)
+			m_Renderer->OnDestroy();
+
+		m_Renderer.reset();
+		m_Surface.reset();
+		m_Panel.reset();
 	}
 
 	void ViewportInstance::OnUpdate(Timestep ts)
@@ -41,17 +53,14 @@ namespace Kita {
 			static_cast<uint32_t>(std::max(1.0f, desiredSize.x)),
 			static_cast<uint32_t>(std::max(1.0f, desiredSize.y)));
 
-		m_Panel->SetDisplayTexture(m_Surface->GetTextureID());
 		m_Renderer->Render(m_Surface->GetRenderTarget());
+		m_Panel->SetDisplayTexture(m_Surface->GetTextureID());
 	}
 
 	void ViewportInstance::OnImGuiRender()
 	{
 		if (!m_Panel)
 			return;
-
-		if (m_Surface)
-			m_Panel->SetDisplayTexture(m_Surface->GetTextureID());
 
 		m_Panel->OnImGuiRender();
 	}

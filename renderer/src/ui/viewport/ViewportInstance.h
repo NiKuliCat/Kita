@@ -19,7 +19,7 @@ namespace Kita {
 		ViewportInstance(ViewportInstance&&) noexcept = default;
 		ViewportInstance& operator=(ViewportInstance&&) noexcept = default;
 
-		~ViewportInstance() = default;
+		~ViewportInstance();
 
 		void OnUpdate(Timestep ts);
 		void OnRender();
@@ -37,6 +37,7 @@ namespace Kita {
 		EditorRenderer* GetRenderer() const { return m_Renderer.get(); }
 
 	private:
+		VulkanContext* m_Context = nullptr;
 		Unique<EditorViewportPanel> m_Panel = nullptr;
 		Unique<EditorViewportSurface> m_Surface = nullptr;
 		Unique<EditorRenderer> m_Renderer = nullptr;
