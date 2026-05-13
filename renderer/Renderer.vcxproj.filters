@@ -13,6 +13,9 @@
     <Filter Include="ui">
       <UniqueIdentifier>{C3795900-AF05-880B-18B4-880B045F880B}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ui\viewport">
+      <UniqueIdentifier>{72AC3357-DE61-AC4C-6756-A623D30AA350}</UniqueIdentifier>
+    </Filter>
     <Filter Include="utils">
       <UniqueIdentifier>{169C8510-82B0-ADC1-4B32-5121B705AAF2}</UniqueIdentifier>
     </Filter>
@@ -47,9 +50,6 @@
     <ClInclude Include="src\ui\SceneSelectionContext.h">
       <Filter>ui</Filter>
     </ClInclude>
-    <ClInclude Include="src\ui\SceneViewportPanel.h">
-      <Filter>ui</Filter>
-    </ClInclude>
     <ClInclude Include="src\ui\SvgIconAtlas.h">
       <Filter>ui</Filter>
     </ClInclude>
@@ -58,6 +58,15 @@
     </ClInclude>
     <ClInclude Include="src\ui\UIColorPanel.h">
       <Filter>ui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ui\viewport\EditorViewportPanel.h">
+      <Filter>ui\viewport</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ui\viewport\EditorViewportSurface.h">
+      <Filter>ui\viewport</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ui\viewport\ViewportInstance.h">
+      <Filter>ui\viewport</Filter>
     </ClInclude>
     <ClInclude Include="src\utils\FileDialogs.h">
       <Filter>utils</Filter>
@@ -91,9 +100,6 @@
     <ClCompile Include="src\ui\SceneHierarchyPanel.cpp">
       <Filter>ui</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\SceneViewportPanel.cpp">
-      <Filter>ui</Filter>
-    </ClCompile>
     <ClCompile Include="src\ui\SvgIconAtlas.cpp">
       <Filter>ui</Filter>
     </ClCompile>
@@ -102,6 +108,15 @@
     </ClCompile>
     <ClCompile Include="src\ui\UIColorPanel.cpp">
       <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\viewport\EditorViewportPanel.cpp">
+      <Filter>ui\viewport</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\viewport\EditorViewportSurface.cpp">
+      <Filter>ui\viewport</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\viewport\ViewportInstance.cpp">
+      <Filter>ui\viewport</Filter>
     </ClCompile>
     <ClCompile Include="src\utils\FileDialogs.cpp">
       <Filter>utils</Filter>

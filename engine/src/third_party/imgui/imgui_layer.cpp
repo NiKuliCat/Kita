@@ -46,7 +46,7 @@ namespace Kita {
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
 		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
 		// Vulkan path first stabilizes the main viewport before enabling ImGui platform windows.
-		// io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+		 io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
 		ImGui::StyleColorsDark();
 

@@ -106,6 +106,13 @@ namespace Kita {
 				VulkanRenderCommand::EndRendering(*m_VulkanContext);
 				m_VulkanContext->EndFrame();
 			}
+
+			ImGuiIO& io = ImGui::GetIO();
+			if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+			{
+				ImGui::UpdatePlatformWindows();
+				ImGui::RenderPlatformWindowsDefault();
+			}
 			
 			m_Window->OnUpdate();
 		}

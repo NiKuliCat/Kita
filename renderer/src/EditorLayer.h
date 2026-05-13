@@ -4,11 +4,11 @@
 #include "ui/InspectorPanel.h"
 #include "ui/SceneHierarchyPanel.h"
 #include "ui/EditorSelectionContext.h"
-#include "ui/SceneViewportPanel.h"
 #include "ui/ContentBrowserPanel.h"
 #include "ui/SvgIconAtlas.h"
 #include "ui/ThumbnailCache.h"
 #include "ui/UIColorPanel.h"
+#include "ui/viewport/ViewportInstance.h"
 namespace Kita {
 
 	class EditorLayer :public Layer{
@@ -35,12 +35,6 @@ namespace Kita {
 		void RemoveClosedViewportPanels();
 		void RenderTimeSystemPanel();
 	private:
-
-		struct ViewportInstance
-		{
-			Unique<SceneViewportPanel> Panel = nullptr;
-			Unique<EditorRenderer> Renderer = nullptr;
-		};
 
 		Ref<Scene> m_Scene = nullptr;
 		SceneSerializer  m_SceneSerializer;
