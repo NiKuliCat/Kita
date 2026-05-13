@@ -4,7 +4,6 @@
 #include "JsonUtils.h"
 #include "component/MeshRenderer.h"
 #include "component/LightComponent.h"
-#include "component/LineRenderer.h"
 namespace Kita {
 
 	class SceneSerializer
@@ -35,8 +34,5 @@ namespace Kita {
 
 		static json  SerializeLightComponent(const LightComponent& lightComponent);
 		static LightComponent  DeserializeLightComponent(const json& lightComponentJson);
-
-		static json  SerializeLineRenderer(const LineRenderer& lineRenderer);
-		static LineRenderer  DeserializeLineRenderer(const json& lineRendererJson);
 	};
 }

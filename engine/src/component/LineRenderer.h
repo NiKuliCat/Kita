@@ -2,8 +2,7 @@
 #include <algorithm>
 #include <vector>
 #include <glm/glm.hpp>
-#include "render/Buffer.h"
-#include "render/VertexArray.h"
+#include "render/BufferLayout.h"
 namespace Kita {
 
 	enum class CurveType
@@ -69,7 +68,7 @@ namespace Kita {
 		float GetControlPointRadius(int index) const;
 		void ResetControlPointVisual(int index);
 
-		const Ref<VertexArray>& GetCurveVAO() const { return m_Curve_VAO; }
+		// TODO: Vulkan port — GetCurveVAO() removed (VertexArray deleted)
 		uint32_t GetCurveVertexCount() const { return m_CurveVertexCount; }
 
 		void RebuildIfNeeded();
@@ -121,14 +120,15 @@ namespace Kita {
 
 		CurveType m_CurveType = CurveType::BezierCubic;
 
-		Ref<VertexArray> m_Curve_VAO = nullptr;
-		Ref<VertexBuffer> m_Curve_VBO = nullptr;
+		// TODO: Vulkan port — VAO/VBO replaced with VulkanGeometry/VulkanVertexBuffer
+		// Ref<VertexArray> m_Curve_VAO = nullptr;
+		// Ref<VertexBuffer> m_Curve_VBO = nullptr;
 		BufferLayout m_CurveVertexLayout;
-		Ref<VertexArray> m_HelperLineVAO = nullptr;
-		Ref<VertexBuffer> m_HelperLineVBO = nullptr;
+		// Ref<VertexArray> m_HelperLineVAO = nullptr;
+		// Ref<VertexBuffer> m_HelperLineVBO = nullptr;
 		BufferLayout m_HelperLineLayout;
-		Ref<VertexArray> m_HandlePointVAO = nullptr;
-		Ref<VertexBuffer> m_HandlePointVBO = nullptr;
+		// Ref<VertexArray> m_HandlePointVAO = nullptr;
+		// Ref<VertexBuffer> m_HandlePointVBO = nullptr;
 		BufferLayout m_HandlePointLayout;
 
 		int m_SegmentCountPerBezier = 128;

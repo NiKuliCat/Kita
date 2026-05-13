@@ -1,169 +1,29 @@
 ﻿#include "renderer_pch.h"
 #include "EditorLayer.h"
+
+#include "file/Project.h"
+#include "project/EditorProjectBootstrap.h"
+#include "utils/FileDialogs.h"
+
 #include "imgui.h"
 #include "ImGuizmo.h"
-#include "utils/FileDialogs.h"
-#include "file/Project.h"
-
 #include <glm/glm.hpp>
-#include <imgui_internal.h>
 #include <glm/gtc/type_ptr.hpp>
-#include "serialize/MaterialSerializer.h"
-
-namespace
-{
-	bool HasPathPrefix(const std::filesystem::path& path, const std::string& prefix)
-	{
-		const std::string pathString = path.generic_string();
-		return pathString.size() >= prefix.size()
-			&& pathString.compare(0, prefix.size(), prefix) == 0;
-	}
-
-	void PreloadRenderPackageAssets()
-	{
-		auto& assetManager = Kita::AssetManager::GetInstance();
-
-		const auto shaderAssets = assetManager.GetAssetsByType(Kita::AssetType::Shader);
-		for (const auto& metadata : shaderAssets)
-		{
-			if (HasPathPrefix(metadata.relativePath, "packages/render/"))
-			{
-				assetManager.LoadAsset(metadata.handle);
-			}
-		}
-
-		const auto textureAssets = assetManager.GetAssetsByType(Kita::AssetType::Texture);
-		for (const auto& metadata : textureAssets)
-		{
-			if (HasPathPrefix(metadata.relativePath, "packages/render/"))
-			{
-				assetManager.LoadAsset(metadata.handle);
-			}
-		}
-	}
-
-	Kita::AssetHandle EnsureDefaultMaterialAsset()
-	{
-		auto& assetManager = Kita::AssetManager::GetInstance();
-		const auto project = Kita::Project::GetActive();
-		if (!project)
-		{
-			KITA_CORE_WARN("Default material initialization skipped because project is not active.");
-			return Kita::InvalidAssetHandle;
-		}
-
-		const std::filesystem::path contentRoot = project->GetContentDirectory();
-		const std::filesystem::path packagesRoot = project->GetPackagesDirectory();
-
-		const std::filesystem::path shaderPath =
-			(packagesRoot / "render" / "shaders" / "EditorDefaultShader.glsl").lexically_normal();
-		const std::filesystem::path texturePath =
-			(contentRoot / "textures" / "test.jpg").lexically_normal();
-		const std::filesystem::path materialDirectory =
-			(contentRoot / "materials").lexically_normal();
-		const std::filesystem::path materialPath =
-			(materialDirectory / "Default.mat").lexically_normal();
-
-		Kita::AssetHandle shaderHandle = Kita::InvalidAssetHandle;
-		if (std::filesystem::exists(shaderPath))
-		{
-			shaderHandle = assetManager.ImportAsset(shaderPath);
-		}
-		else
-		{
-			KITA_CORE_WARN("Default shader file not found: {}", shaderPath.string());
-		}
-
-		Kita::AssetHandle textureHandle = Kita::InvalidAssetHandle;
-		if (std::filesystem::exists(texturePath))
-		{
-			textureHandle = assetManager.ImportAsset(texturePath);
-		}
-		else
-		{
-			KITA_CORE_WARN("Default texture file not found: {}", texturePath.string());
-		}
-
-		if (!std::filesystem::exists(materialPath))
-		{
-			std::error_code ec;
-			std::filesystem::create_directories(materialDirectory, ec);
-			if (ec)
-			{
-				KITA_CORE_WARN("Failed to create material directory: {}", materialDirectory.string());
-				return Kita::InvalidAssetHandle;
-			}
-
-			Kita::MaterialAsset defaultMaterialAsset;
-			defaultMaterialAsset.ShaderHandle = shaderHandle;
-			defaultMaterialAsset.AlbedoTextureHandle = textureHandle;
-			defaultMaterialAsset.BaseColor = glm::vec4(1.0f);
-
-			if (!Kita::MaterialSerializer::Serialize(materialPath, defaultMaterialAsset))
-			{
-				KITA_CORE_WARN("Failed to create default material file: {}", materialPath.string());
-				return Kita::InvalidAssetHandle;
-			}
-		}
-
-		return assetManager.ImportAsset(materialPath);
-	}
-}
+#include <imgui_internal.h>
 
 namespace Kita {
 
 	EditorLayer::EditorLayer()
-		:Layer("EditorLayer")
+		: Layer("EditorLayer")
 	{
-		
 	}
+
 	void EditorLayer::OnCreate()
 	{
-		m_Scene = CreateRef<Scene>( "example scene");
-		const auto project = Project::GetActive();
-		if (project)
-		{
-			PreloadRenderPackageAssets();
-		}
+		EditorProjectBootstrap::Initialize();
 
-		const AssetHandle defaultMaterialHandle = EnsureDefaultMaterialAsset();
-
-		{
-			auto obj = m_Scene->CreateObject("sphere");
-			auto& meshrenderer = obj.AddComponent<MeshRenderer>();
-			meshrenderer.SetDefaultMaterialAssetHandle(defaultMaterialHandle);
-			meshrenderer.LoadMeshs("content/models/Sphere.fbx");
-
-			auto curveObj1 = m_Scene->CreateObject("curve 1");
-			auto& lineRenderer1 = curveObj1.AddComponent<LineRenderer>();
-			lineRenderer1.SetLineWidth(4.0f);
-			lineRenderer1.SetLineColor({ 1,1,0,1 });
-
-			auto curveObj2 = m_Scene->CreateObject("curve 2");
-			auto& transform2 = curveObj2.GetComponent<Transform>();
-			transform2.SetPosition({2,2,2});
-			auto& lineRenderer2 = curveObj2.AddComponent<LineRenderer>();
-			lineRenderer2.SetLineWidth(4.0f);
-			lineRenderer2.SetLineColor({ 1,0,1,1 });
-
-			auto light = m_Scene->CreateObject("light");
-			auto& lightcomponent = light.AddComponent<LightComponent>();
-			auto& lightTransform = light.GetComponent<Transform>();
-			lightTransform.SetRotation({ 135.0f, 60.0f, 0.0f });
-		}
-
+		m_Scene = CreateRef<Scene>("example scene");
 		m_SceneSerializer = SceneSerializer(m_Scene);
-
-		CubemapFacePaths faces = {
-			"packages/render/skybox/right.jpg",  // +X
-			"packages/render/skybox/left.jpg",   // -X
-			"packages/render/skybox/top.jpg",    // +Y
-			"packages/render/skybox/bottom.jpg", // -Y
-			"packages/render/skybox/front.jpg",  // +Z
-			"packages/render/skybox/back.jpg"    // -Z
-		};
-
-		m_Scene->LoadSkyCubemap(faces);
 
 		m_SceneSelectionContext = CreateRef<SceneSelectionContext>();
 		m_SceneHierarchyPanel = SceneHierarchyPanel(m_Scene, m_SceneSelectionContext);
@@ -173,25 +33,61 @@ namespace Kita {
 		m_NextViewportSerial = 1;
 		AddViewportPanel("Viewport");
 
+		const auto project = Project::GetActive();
 		if (project)
 		{
 			m_ContentBrowserPanel = ContentBrowserPanel(project->GetAssetRootDirectory());
+			m_ContentBrowserResourceFactory = CreateUnique<VulkanResourceFactory>(
+				Application::Get().GetVulkanContext(),
+				AssetManager::GetInstance());
+			m_ContentBrowserThumbnailCache = CreateUnique<ThumbnailCache>(*m_ContentBrowserResourceFactory);
+			m_ContentBrowserPanel.SetThumbnailCache(m_ContentBrowserThumbnailCache.get());
+
+			m_ContentBrowserIconAtlas = CreateUnique<SvgIconAtlas>();
+			const std::filesystem::path atlasJsonPath =
+				project->GetPackagesDirectory() / "editor" / "icons" / "svg" / "editor_icons_64.json";
+			if (m_ContentBrowserIconAtlas->Load(atlasJsonPath))
+			{
+				m_ContentBrowserPanel.SetIconAtlas(m_ContentBrowserIconAtlas.get());
+			}
+		}
+
+		{
+			auto obj = m_Scene->CreateObject("sphere");
+			auto& meshrenderer = obj.AddComponent<MeshRenderer>();
+			meshrenderer.MeshAssetHandle = EditorProjectBootstrap::GetPreLoadMeshHandle("sphere");
+			meshrenderer.DefaultMaterialAssetHandle = EditorProjectBootstrap::GetPreLoadMaterialHandle("default");
+			meshrenderer.MaterialAssetHandles.clear();
 		}
 	}
 
-	void EditorLayer::OnUpdate(float daltaTime)
+	void EditorLayer::OnUpdate(Timestep ts)
 	{
 		m_Scene->SimulateSceneEditor();
 		RemoveClosedViewportPanels();
 		for (auto& viewport : m_SceneViewportPanels)
-		{
-			viewport->Simulate(daltaTime);
-			viewport->Render();
-		}
+			viewport.Panel->Simulate(ts.GetSecondsF());
 	}
 
 	void EditorLayer::OnDestroy()
 	{
+		m_ContentBrowserPanel.SetIconAtlas(nullptr);
+		m_ContentBrowserPanel.SetThumbnailCache(nullptr);
+		m_ContentBrowserIconAtlas.reset();
+		m_ContentBrowserThumbnailCache.reset();
+		if (m_ContentBrowserResourceFactory)
+			m_ContentBrowserResourceFactory->Clear();
+		m_ContentBrowserResourceFactory.reset();
+	}
+
+	void EditorLayer::OnRender()
+	{
+		for (auto& viewport : m_SceneViewportPanels)
+		{
+			viewport.Panel->Render();
+			if (viewport.Renderer && viewport.Panel->GetRenderTarget())
+				viewport.Renderer->Render(*viewport.Panel->GetRenderTarget());
+		}
 	}
 
 	void EditorLayer::OnImGuiRender()
@@ -244,10 +140,8 @@ namespace Kita {
 		}
 		style.WindowMinSize = minWindowSize;
 
-
 		if (ImGui::BeginMenuBar())
 		{
-
 			if (ImGui::BeginMenu("File"))
 			{
 				if (ImGui::MenuItem("Save Scene"))
@@ -260,9 +154,7 @@ namespace Kita {
 					{
 						auto path = FileDialogs::SaveFile(L"Kita Scene (*.sce)\0*.sce\0All Files (*.*)\0*.*\0", L"sce");
 						if (!path.empty())
-						{
 							m_SceneSerializer.Serialize(path);
-						}
 					}
 				}
 
@@ -278,17 +170,16 @@ namespace Kita {
 
 				ImGui::EndMenu();
 			}
+
 			if (ImGui::BeginMenu("Window"))
 			{
 				if (ImGui::MenuItem("Viewport"))
-				{
 					AddViewportPanel("Viewport " + std::to_string(m_NextViewportSerial++));
-				}
 
 				if (ImGui::MenuItem("UI Color Panel"))
-				{
 					m_UIColorPanel.SetOpen(true);
-				}
+
+				ImGui::MenuItem("Time System", nullptr, &m_ShowTimeSystemPanel);
 
 				ImGui::EndMenu();
 			}
@@ -297,9 +188,7 @@ namespace Kita {
 			{
 				if (ImGui::MenuItem("New"))
 				{
-
 				}
-
 				ImGui::EndMenu();
 			}
 
@@ -307,26 +196,19 @@ namespace Kita {
 			{
 				if (ImGui::MenuItem("New"))
 				{
-
 				}
-
 				ImGui::EndMenu();
 			}
 
 			const std::string sceneName = m_Scene->GetName().c_str();
-
 			ImVec2 textSize = ImGui::CalcTextSize(sceneName.c_str());
-
 			float leftBound = ImGui::GetCursorPosX();
 			float centerPosX = (ImGui::GetWindowWidth() - textSize.x) * 0.5f;
 			float finalPosX = (centerPosX > leftBound) ? centerPosX : leftBound + 10.0f;
-
 			float cursorY = ImGui::GetCursorPosY();
 			ImGui::SetCursorPosX(finalPosX);
 			ImGui::SetCursorPosY(cursorY);
-
 			ImGui::TextColored(ImVec4(0.75f, 0.85f, 0.30f, 1.0f), sceneName.c_str());
-
 
 			ImGui::EndMenuBar();
 		}
@@ -334,23 +216,15 @@ namespace Kita {
 		m_SceneHierarchyPanel.OnImGuiRender();
 		m_InspectorPanel.OnImGuiRender();
 		m_ContentBrowserPanel.OnImGuiRender();
-		m_UIColorPanel.OnImGuiRender();
 
-		for (size_t i = 0; i < m_SceneViewportPanels.size(); ++i)
+		for (auto& viewport : m_SceneViewportPanels)
 		{
-			auto& viewport = m_SceneViewportPanels[i];
-			viewport->SetActive(static_cast<int32_t>(i) == m_ActiveViewportIndex);
-			viewport->OnImGuiRender();
-
-			if (viewport->IsImageHovered())
-				m_ActiveViewportIndex = static_cast<int32_t>(i);
+			viewport.Panel->OnImGuiRender();
 		}
 
-
+		RenderTimeSystemPanel();
 
 		ImGui::End();
-
-
 	}
 
 	void EditorLayer::OnEvent(Event& event)
@@ -363,7 +237,7 @@ namespace Kita {
 		{
 			for (size_t i = 0; i < m_SceneViewportPanels.size(); ++i)
 			{
-				if (m_SceneViewportPanels[i]->IsImageHovered())
+				if (m_SceneViewportPanels[i].Panel->IsImageHovered())
 				{
 					m_ActiveViewportIndex = static_cast<int32_t>(i);
 					break;
@@ -374,10 +248,9 @@ namespace Kita {
 		for (size_t i = 0; i < m_SceneViewportPanels.size(); ++i)
 		{
 			auto& viewport = m_SceneViewportPanels[i];
-			viewport->SetActive(static_cast<int32_t>(i) == m_ActiveViewportIndex);
-			viewport->OnEvent(event);
+			viewport.Panel->SetActive(static_cast<int32_t>(i) == m_ActiveViewportIndex);
+			viewport.Panel->OnEvent(event);
 		}
-
 	}
 
 	bool EditorLayer::OnKeyPressed(KeyPressedEvent& event)
@@ -392,7 +265,17 @@ namespace Kita {
 
 	void EditorLayer::AddViewportPanel(std::string windowName)
 	{
-		m_SceneViewportPanels.emplace_back(CreateUnique<SceneViewportPanel>(m_Scene, m_SceneSelectionContext, std::move(windowName)));
+		ViewportInstance viewport{};
+		viewport.Panel = CreateUnique<SceneViewportPanel>(m_SceneSelectionContext, std::move(windowName));
+		if (viewport.Panel && viewport.Panel->GetRenderTarget() && viewport.Panel->GetViewportCamera())
+		{
+			viewport.Renderer = CreateUnique<EditorRenderer>(
+				Application::Get().GetVulkanContext(),
+				*viewport.Panel->GetRenderTarget(),
+				m_Scene,
+				*viewport.Panel->GetViewportCamera());
+		}
+		m_SceneViewportPanels.emplace_back(std::move(viewport));
 		m_ActiveViewportIndex = static_cast<int32_t>(m_SceneViewportPanels.size()) - 1;
 	}
 
@@ -400,7 +283,7 @@ namespace Kita {
 	{
 		for (size_t i = 0; i < m_SceneViewportPanels.size();)
 		{
-			if (m_SceneViewportPanels[i]->IsOpen())
+			if (m_SceneViewportPanels[i].Panel->IsOpen())
 			{
 				++i;
 				continue;
@@ -421,5 +304,76 @@ namespace Kita {
 		}
 	}
 
-}
+	void EditorLayer::RenderTimeSystemPanel()
+	{
+		if (!m_ShowTimeSystemPanel)
+			return;
 
+		if (!ImGui::Begin("Time System", &m_ShowTimeSystemPanel))
+		{
+			ImGui::End();
+			return;
+		}
+
+		TimeSystem& timeSystem = Application::Get().GetTimeSystem();
+		const TimeSystemStatistics& stats = timeSystem.GetStatistics();
+		const Timestep& timestep = timeSystem.GetTimestep();
+
+		ImGui::Text("Frame Index: %llu", static_cast<unsigned long long>(stats.FrameIndex));
+		ImGui::Separator();
+
+		ImGui::Text("Raw Delta: %.6f s", stats.RawDeltaSeconds);
+		ImGui::Text("Raw Delta: %.3f ms", stats.RawDeltaSeconds * 1000.0);
+		ImGui::Text("Unscaled Delta: %.6f s", stats.UnscaleDeltaSeconds);
+		ImGui::Text("Scaled Delta: %.6f s", stats.ScaledDeltaSeconds);
+		ImGui::Text("Timestep Seconds: %.6f s", timestep.GetSeconds());
+		ImGui::Text("Timestep Unscaled: %.6f s", timestep.GetUnscaledSeconds());
+		ImGui::Separator();
+
+		ImGui::Text("Display FPS: %.2f", stats.DisplayFPS);
+		ImGui::Text("Display Delta: %.3f ms", stats.DisplayDeltaSeconds * 1000.0);
+		ImGui::Text("Instant FPS: %.2f", stats.InstantFPS);
+		ImGui::Text("Smooth FPS: %.2f", stats.SmoothFPS);
+		ImGui::Text("Smooth Unscaled Delta: %.3f ms", stats.SmoothUnscaleDeltaSeconds * 1000.0);
+		ImGui::Separator();
+
+		ImGui::Text("Real Time: %.3f s", stats.RealTimeSeconds);
+		ImGui::Text("Unscaled Time: %.3f s", stats.UnscaledTimeSeconds);
+		ImGui::Text("Scaled Time: %.3f s", stats.ScaledTimeSeconds);
+		ImGui::Separator();
+
+		double timeScale = timeSystem.GetTimeScale();
+		const double minTimeScale = 0.0;
+		const double maxTimeScale = 4.0;
+		if (ImGui::SliderScalar("Time Scale", ImGuiDataType_Double, &timeScale, &minTimeScale, &maxTimeScale, "%.2f"))
+		{
+			timeSystem.SetTimeScale(timeScale);
+		}
+
+		bool paused = timeSystem.IsPaused();
+		if (ImGui::Checkbox("Paused", &paused))
+		{
+			timeSystem.SetPaused(paused);
+		}
+
+		double maxDeltaSeconds = timeSystem.GetMaxDeltaSeconds();
+		const double minMaxDeltaSeconds = 0.001;
+		const double maxMaxDeltaSeconds = 0.250;
+		if (ImGui::SliderScalar("Max Delta (s)", ImGuiDataType_Double, &maxDeltaSeconds, &minMaxDeltaSeconds, &maxMaxDeltaSeconds, "%.3f"))
+		{
+			timeSystem.SetMaxDeltaSeconds(maxDeltaSeconds);
+		}
+
+		int smoothingWindowSize = static_cast<int>(timeSystem.GetSmoothingWindowSize());
+		if (ImGui::SliderInt("Smoothing Window", &smoothingWindowSize, 1, 240))
+		{
+			timeSystem.SetSmoothingWindowSize(static_cast<std::size_t>(smoothingWindowSize));
+		}
+
+		ImGui::Text("Applied Time Scale: %.2f", stats.AppliedTimeScale);
+		ImGui::Text("Paused State: %s", stats.Paused ? "true" : "false");
+
+		ImGui::End();
+	}
+
+}

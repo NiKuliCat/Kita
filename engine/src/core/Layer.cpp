@@ -13,10 +13,22 @@ namespace Kita {
 
 	LayerStack::~LayerStack()
 	{
+		DestroyAll();
+	}
+
+	void LayerStack::DestroyAll()
+	{
 		for (Layer* layer : m_Layer)
 		{
+			if (!layer)
+				continue;
+
+			layer->OnDestroy();
 			delete layer;
 		}
+
+		m_Layer.clear();
+		m_LayerInsertIndex = 0;
 	}
 
 	void LayerStack::PushLayer(Layer* layer)

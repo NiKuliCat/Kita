@@ -1,12 +1,12 @@
-﻿#include "renderer_pch.h"
+#include "renderer_pch.h"
 #include "SceneViewportPanel.h"
+
 #include "imgui.h"
 #include "ImGuizmo.h"
 #include "render/font/FontManager.h"
 #include <imgui_internal.h>
 
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include <backends/imgui_impl_vulkan.h>
 
 namespace Kita {
 
@@ -14,6 +14,8 @@ namespace Kita {
 	{
 		bool DrawViewportCloseButton(const ImRect& anchorRect, ImGuiID id)
 		{
+			(void)id;
+
 			ImGuiContext& g = *GImGui;
 			ImGuiStyle& style = ImGui::GetStyle();
 			ImDrawList* drawList = ImGui::GetForegroundDrawList();
@@ -53,26 +55,63 @@ namespace Kita {
 
 			if (hovered)
 				ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+
 			return pressed;
 		}
 	}
 
-	SceneViewportPanel::SceneViewportPanel(const Ref<Scene>& scene, const Ref<SceneSelectionContext>& selectionContext, std::string windowName)
-		: m_ViewportCamera(CreateUnique<ViewportCamera>()),
-		m_SceneContext(scene),
-		m_SelectionContext(selectionContext),
-		m_WindowName(std::move(windowName))
+	SceneViewportPanel::SceneViewportPanel(
+		const Ref<SceneSelectionContext>& selectionContext,
+		std::string windowName)
+		: m_WindowName(std::move(windowName)),
+		m_ViewportCamera(CreateUnique<ViewportCamera>()),
+		m_SelectionContext(selectionContext)
 	{
-		InitFrameBuffer();
 		m_GizmoControlType = ImGuizmo::OPERATION::TRANSLATE;
+		InitRenderResources();
+	}
+
+	SceneViewportPanel::~SceneViewportPanel()
+	{
+		if (m_SceneTextureID)
+		{
+			Application::Get().GetVulkanContext().WaitIdle();
+			ImGui_ImplVulkan_RemoveTexture(reinterpret_cast<VkDescriptorSet>(static_cast<uint64_t>(m_SceneTextureID)));
+			m_SceneTextureID = 0;
+		}
+	}
+
+	void SceneViewportPanel::InitRenderResources()
+	{
+		VulkanContext& context = Application::Get().GetVulkanContext();
+
+		VulkanRenderTarget::CreateInfo renderTargetInfo{};
+		renderTargetInfo.Name = m_WindowName + "_RenderTarget";
+		renderTargetInfo.Width = static_cast<uint32_t>(m_ViewportSize.x);
+		renderTargetInfo.Height = static_cast<uint32_t>(m_ViewportSize.y);
+		renderTargetInfo.Samples = VK_SAMPLE_COUNT_1_BIT;
+
+		VulkanRenderTarget::ColorAttachmentDesc colorAttachment{};
+		colorAttachment.Name = m_WindowName + "_Color";
+		colorAttachment.Format = VK_FORMAT_R16G16B16A16_SFLOAT;
+		colorAttachment.CreateSampler = true;
+		colorAttachment.CreateResolveImage = false;
+		colorAttachment.Filter = VK_FILTER_LINEAR;
+		colorAttachment.AddressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+		renderTargetInfo.ColorAttachments.push_back(colorAttachment);
+
+		renderTargetInfo.DepthAttachment.Enabled = true;
+		renderTargetInfo.DepthAttachment.Name = m_WindowName + "_Depth";
+		renderTargetInfo.DepthAttachment.Format = VK_FORMAT_D32_SFLOAT;
+		renderTargetInfo.DepthAttachment.CreateSampler = false;
+
+		m_RenderTarget = CreateUnique<VulkanRenderTarget>(context, renderTargetInfo);
+		RecreateViewportTexture();
 	}
 
 	void SceneViewportPanel::Simulate(float daltaTime)
 	{
-		if (!m_ViewportCamera)
-			return;
-
-		if (!m_IsActive)
+		if (!m_ViewportCamera || !m_IsActive)
 			return;
 
 		m_ViewportCamera->OnUpdate(daltaTime);
@@ -80,7 +119,7 @@ namespace Kita {
 
 	void SceneViewportPanel::OnImGuiRender()
 	{
-		if (!m_SelectionContext || !m_SceneContext || !m_IsOpen)
+		if (!m_SelectionContext || !m_IsOpen)
 			return;
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
@@ -96,8 +135,6 @@ namespace Kita {
 			const float offsetX = 48.0f * static_cast<float>(windowId % 4u);
 			const float offsetY = 40.0f * static_cast<float>((windowId / 4u) % 4u);
 
-			// Only provide a fallback layout for brand-new viewport windows.
-			// When imgui.ini already has persisted state, FirstUseEver keeps it intact.
 			ImGui::SetNextWindowDockID(0, ImGuiCond_FirstUseEver);
 			ImGui::SetNextWindowPos(
 				ImVec2(mainViewport->WorkPos.x + 72.0f + offsetX, mainViewport->WorkPos.y + 72.0f + offsetY),
@@ -117,13 +154,9 @@ namespace Kita {
 		{
 			ImRect closeButtonAnchorRect{};
 			if (window->DockIsActive && window->DockNode && window->DockNode->TabBar)
-			{
 				closeButtonAnchorRect = window->DockNode->TabBar->BarRect;
-			}
 			else
-			{
 				closeButtonAnchorRect = window->TitleBarRect();
-			}
 
 			if (DrawViewportCloseButton(closeButtonAnchorRect, window->GetID("#VIEWPORT_CLOSE")))
 			{
@@ -139,122 +172,33 @@ namespace Kita {
 
 		m_IsHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows);
 		m_IsFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
-		ImVec2 viewportSize = ImGui::GetContentRegionAvail();
-		m_ViewportSize = { viewportSize.x, viewportSize.y };
-		auto viewportRegionMin = ImGui::GetWindowContentRegionMin();
-		auto viewportRegionMax = ImGui::GetWindowContentRegionMax();
-		auto viewportOffset = ImGui::GetWindowPos();
+
+		const ImVec2 viewportSize = ImGui::GetContentRegionAvail();
+		if (viewportSize.x > 1.0f && viewportSize.y > 1.0f)
+		{
+			m_ViewportSize = { viewportSize.x, viewportSize.y };
+			m_ViewportCamera->SetViewport(m_ViewportSize.x, m_ViewportSize.y);
+		}
+
+		const auto viewportRegionMin = ImGui::GetWindowContentRegionMin();
+		const auto viewportRegionMax = ImGui::GetWindowContentRegionMax();
+		const auto viewportOffset = ImGui::GetWindowPos();
 		m_ViewportBounds[0] = { viewportRegionMin.x + viewportOffset.x, viewportRegionMin.y + viewportOffset.y };
 		m_ViewportBounds[1] = { viewportRegionMax.x + viewportOffset.x, viewportRegionMax.y + viewportOffset.y };
 
-		ImGui::Image((ImTextureID)(uint64_t)m_SceneTexID, ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2(0, 1), ImVec2(1, 0));
-		m_IsImageHovered = ImGui::IsItemHovered();
-
-		auto& selectedObj = m_SelectionContext->GetSelectedObject();
-		auto& selectedPoint = m_SelectionContext->GetSelectedPoint();
-
-		if (selectedObj && selectedPoint.id != -1 && m_IsActive)
+		if (m_SceneTextureID)
 		{
-			ImGuizmo::SetDrawlist();
-
-			ImGuizmo::SetGizmoSizeClipSpace(0.22f);
-			auto& gizmoStyle = ImGuizmo::GetStyle();
-			gizmoStyle.TranslationLineThickness = 2.0f;
-			gizmoStyle.TranslationLineArrowSize = 5.0f;
-			gizmoStyle.CenterCircleSize = 0.0f;
-
-			ImVec2 imageMin = ImGui::GetItemRectMin();
-			ImVec2 imageMax = ImGui::GetItemRectMax();
-
-			ImGuizmo::SetDrawlist();
-			ImGuizmo::SetRect(imageMin.x, imageMin.y, imageMax.x - imageMin.x, imageMax.y - imageMin.y);
-
-			glm::mat4 viewMatrix = m_ViewportCamera->GetViewMatrix();
-			glm::mat4 projectionMatrix = m_ViewportCamera->GetProjectionMatrix();
-
-			auto& transform = selectedObj.GetComponent<Transform>();
-			glm::mat4 ownerModel = transform.GetTransformMatrix();
-
-			glm::vec3 worldPointPos = glm::vec3(ownerModel * glm::vec4(selectedPoint.position, 1.0f));
-			glm::mat4 pointMatrix = glm::translate(glm::mat4(1.0f), worldPointPos);
-			bool enableSnapping = Input::IsKeyPressed(Key::LeftControl);
-			float snappingValue = 0.1f;
-			float snappingValues[3] = { snappingValue, snappingValue, snappingValue };
-
-			ImGuizmo::SetGizmoSizeClipSpace(0.18f);
-
-			ImGuizmo::Manipulate(
-				glm::value_ptr(viewMatrix),
-				glm::value_ptr(projectionMatrix),
-				ImGuizmo::TRANSLATE,
-				ImGuizmo::WORLD,
-				glm::value_ptr(pointMatrix),
-				nullptr,
-				enableSnapping ? snappingValues : nullptr
-			);
-
-			if (ImGuizmo::IsUsing())
-			{
-				glm::vec3 newWorldPos, rotate, scale;
-				Transform::DecomposeTransformMatrix(pointMatrix, newWorldPos, rotate, scale);
-
-				glm::vec3 newLocalPos = glm::vec3(glm::inverse(ownerModel) * glm::vec4(newWorldPos, 1.0f));
-
-				if (selectedObj.HasComponent<LineRenderer>())
-				{
-					auto& lineRenderer = selectedObj.GetComponent<LineRenderer>();
-
-					lineRenderer.MoveControlPoint(selectedPoint.id, newLocalPos);
-					selectedPoint = lineRenderer.GetControlPointByIndex(selectedPoint.id);
-				}
-			}
+			ImGui::Image(
+				m_SceneTextureID,
+				ImVec2(m_ViewportSize.x, m_ViewportSize.y),
+				ImVec2(0.0f, 1.0f),
+				ImVec2(1.0f, 0.0f));
+			m_IsImageHovered = ImGui::IsItemHovered();
 		}
-		else if (selectedObj && m_IsActive)
+		else
 		{
-			ImGuizmo::SetDrawlist();
-			ImVec2 imageMin = ImGui::GetItemRectMin();
-			ImVec2 imageMax = ImGui::GetItemRectMax();
-
-			ImGuizmo::SetDrawlist();
-			ImGuizmo::SetRect(imageMin.x, imageMin.y, imageMax.x - imageMin.x, imageMax.y - imageMin.y);
-
-			glm::mat4 viewMatrix = m_ViewportCamera->GetViewMatrix();
-			glm::mat4 projectionMatrix = m_ViewportCamera->GetProjectionMatrix();
-
-			auto& selectedObjTransform = selectedObj.GetComponent<Transform>();
-			glm::mat4 modelMatrix = selectedObjTransform.GetTransformMatrix();
-
-			bool enableSnapping = Input::IsKeyPressed(Key::LeftControl);
-			float snappingValue = 0.1f;
-			float snappingValues[3] = { snappingValue, snappingValue, snappingValue };
-
-			ImGuizmo::SetGizmoSizeClipSpace(0.22f);
-			auto& gizmoStyle = ImGuizmo::GetStyle();
-			gizmoStyle.TranslationLineThickness = 2.0f;
-			gizmoStyle.TranslationLineArrowSize = 5.0f;
-			gizmoStyle.CenterCircleSize = 3.0f;
-
-			ImGuizmo::Manipulate(
-				glm::value_ptr(viewMatrix),
-				glm::value_ptr(projectionMatrix),
-				ImGuizmo::OPERATION(m_GizmoControlType),
-				ImGuizmo::LOCAL,
-				glm::value_ptr(modelMatrix),
-				nullptr,
-				enableSnapping ? snappingValues : nullptr);
-
-			if (ImGuizmo::IsUsing())
-			{
-				glm::vec3 translate, rotate, scale;
-				Transform::DecomposeTransformMatrix(modelMatrix, translate, rotate, scale);
-				glm::vec3 currentRotate = glm::radians(selectedObjTransform.GetRotation());
-				glm::vec3 deltaRotate = rotate - currentRotate;
-				currentRotate += deltaRotate;
-
-				selectedObjTransform.SetPosition(translate);
-				selectedObjTransform.SetRotation(glm::degrees(currentRotate));
-				selectedObjTransform.SetScale(scale);
-			}
+			ImGui::TextUnformatted("Viewport texture unavailable.");
+			m_IsImageHovered = false;
 		}
 
 		ImGui::End();
@@ -285,108 +229,54 @@ namespace Kita {
 
 	void SceneViewportPanel::Render()
 	{
-		if (!m_SelectionContext || !m_SceneContext || !m_ViewportCamera)
+		if (!m_RenderTarget)
 			return;
 
-		if (!m_SceneMSAAFrameBuffer || !m_SceneResolveFrameBuffer || !m_PickingFrameBuffer)
-		{
-			InitFrameBuffer();
-			if (!m_SceneMSAAFrameBuffer || !m_SceneResolveFrameBuffer || !m_PickingFrameBuffer)
-				return;
-		}
-
-		if (m_ViewportSize.x <= 0.0f || m_ViewportSize.y <= 0.0f)
-			return;
-
-		auto resolveDesc = m_SceneResolveFrameBuffer->GetDescriptor();
-		if (m_ViewportSize.x != resolveDesc.Width || m_ViewportSize.y != resolveDesc.Height)
-		{
-			const uint32_t width = (uint32_t)m_ViewportSize.x;
-			const uint32_t height = (uint32_t)m_ViewportSize.y;
-
-			m_SceneMSAAFrameBuffer->ReSize(width, height);
-			m_SceneResolveFrameBuffer->ReSize(width, height);
-			m_PickingFrameBuffer->ReSize(width, height);
-
-			m_ViewportCamera->SetViewport(m_ViewportSize.x, m_ViewportSize.y);
-			m_SceneTexID = m_SceneResolveFrameBuffer->GetColorAttachment(0);
-		}
-
-		DirectLightData lightData = m_SceneContext->GetMainDirectLightData();
-
-		m_PickingFrameBuffer->Bind();
-		Renderer::BeginScene(
-			m_ViewportCamera->GetViewMatrix(),
-			m_ViewportCamera->GetProjectionMatrix(),
-			m_ViewportCamera->GetPosition(),
-			lightData,
-			{ m_PickingFrameBuffer->GetSize() });
-
-		RenderCommand::SetClearColor(glm::vec4(0.12f, 0.12f, 0.13f, 1.0f));
-		RenderCommand::Clear();
-		m_PickingFrameBuffer->ClearIDBuffer(-1, 1);
-		m_PickingFrameBuffer->ClearIDBuffer(-1, 2);
-
-		m_SceneContext->RenderSceneEditor();
-
-		Renderer::EndScene();
-		m_PickingFrameBuffer->UnBind();
-
-		m_SceneMSAAFrameBuffer->Bind();
-		Renderer::BeginScene(
-			m_ViewportCamera->GetViewMatrix(),
-			m_ViewportCamera->GetProjectionMatrix(),
-			m_ViewportCamera->GetPosition(),
-			lightData,
-			{ m_SceneMSAAFrameBuffer->GetSize() });
-
-		RenderCommand::SetClearColor(glm::vec4(0.12f, 0.12f, 0.13f, 1.0f));
-		RenderCommand::Clear();
-
-		m_SceneContext->RenderSceneEditor();
-
-		Renderer::EndScene();
-		m_SceneMSAAFrameBuffer->UnBind();
-
-		m_SceneMSAAFrameBuffer->BlitColorTo(m_SceneResolveFrameBuffer, 0, 0);
+		ResizeRenderTargetIfNeeded();
 	}
 
-	void SceneViewportPanel::InitFrameBuffer()
+	void SceneViewportPanel::ResizeRenderTargetIfNeeded()
 	{
-		m_ViewportSize = { 1280, 720 };
-		FrameBufferDescriptor sceneMSAADesc;
-		sceneMSAADesc.AttachmentsDescription = {
-			FrameBufferTexFormat::RGBA16F,
-			FrameBufferTexFormat::DEPTH
-		};
-		sceneMSAADesc.Width = 1280;
-		sceneMSAADesc.Height = 720;
-		sceneMSAADesc.Samples = 4;
-		m_SceneMSAAFrameBuffer = FrameBuffer::Create(sceneMSAADesc);
+		if (!m_RenderTarget)
+			return;
 
-		FrameBufferDescriptor sceneResolveDesc;
-		sceneResolveDesc.AttachmentsDescription = {
-			FrameBufferTexFormat::RGBA16F,
-			FrameBufferTexFormat::DEPTH
-		};
-		sceneResolveDesc.Width = 1280;
-		sceneResolveDesc.Height = 720;
-		sceneResolveDesc.Samples = 1;
-		m_SceneResolveFrameBuffer = FrameBuffer::Create(sceneResolveDesc);
+		const uint32_t width = std::max(1u, static_cast<uint32_t>(m_ViewportSize.x));
+		const uint32_t height = std::max(1u, static_cast<uint32_t>(m_ViewportSize.y));
 
-		FrameBufferDescriptor pickingDesc;
-		pickingDesc.AttachmentsDescription = {
-			FrameBufferTexFormat::RGBA16F,
-			FrameBufferTexFormat::RED_INTEGER,
-			FrameBufferTexFormat::RED_INTEGER,
-			FrameBufferTexFormat::DEPTH
-		};
-		pickingDesc.Width = 1280;
-		pickingDesc.Height = 720;
-		pickingDesc.Samples = 1;
-		m_PickingFrameBuffer = FrameBuffer::Create(pickingDesc);
+		if (width == m_RenderTarget->GetWidth() && height == m_RenderTarget->GetHeight())
+			return;
 
-		m_SceneTexID = m_SceneResolveFrameBuffer->GetColorAttachment(0);
+		VulkanContext& context = Application::Get().GetVulkanContext();
+		context.WaitIdle();
+
+		if (m_SceneTextureID)
+		{
+			ImGui_ImplVulkan_RemoveTexture(reinterpret_cast<VkDescriptorSet>(static_cast<uint64_t>(m_SceneTextureID)));
+			m_SceneTextureID = 0;
+		}
+
+		m_RenderTarget->Resize(width, height);
+		RecreateViewportTexture();
+	}
+
+	void SceneViewportPanel::RecreateViewportTexture()
+	{
+		if (m_SceneTextureID)
+		{
+			ImGui_ImplVulkan_RemoveTexture(reinterpret_cast<VkDescriptorSet>(static_cast<uint64_t>(m_SceneTextureID)));
+			m_SceneTextureID = 0;
+		}
+
+		if (!m_RenderTarget)
+			return;
+
+		const VulkanImage& sampledImage = m_RenderTarget->GetSampledColorAttachment(0);
+		KITA_CORE_ASSERT(sampledImage.HasSampler(), "Viewport sampled image has no sampler");
+
+		m_SceneTextureID = static_cast<ImTextureID>(reinterpret_cast<uint64_t>(ImGui_ImplVulkan_AddTexture(
+			sampledImage.GetSampler(),
+			sampledImage.GetView(),
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)));
 	}
 
 	bool SceneViewportPanel::OnKeyPressed(KeyPressedEvent& event)
@@ -406,15 +296,15 @@ namespace Kita {
 			m_GizmoControlType = ImGuizmo::OPERATION::SCALE;
 			break;
 		}
+
 		return false;
 	}
 
 	bool SceneViewportPanel::OnMouseButtonPressed(MouseButtonPressedEvent& event)
 	{
 		if (m_IsActive && event.GetMouseButton() == Mouse::Button0 && IsMouseInsideImageBounds())
-		{
 			TryPickObject();
-		}
+
 		return false;
 	}
 
@@ -427,74 +317,7 @@ namespace Kita {
 
 	void SceneViewportPanel::TryPickObject()
 	{
-		if (!m_SelectionContext || !m_SceneContext)
-			return;
 
-		if (Input::IsKeyPressed(Key::LeftAlt))
-			return;
-
-		if (ImGuizmo::IsUsing())
-			return;
-
-		auto [mx, my] = ImGui::GetMousePos();
-		mx -= m_ViewportBounds[0].x;
-		my -= m_ViewportBounds[0].y;
-		glm::vec2 size = m_ViewportBounds[1] - m_ViewportBounds[0];
-
-		if (mx < 0.0f || my < 0.0f || mx >= size.x || my >= size.y)
-			return;
-
-		m_PickingFrameBuffer->Bind();
-
-		int mouseX = (int)mx;
-		int mouseY = (int)(size.y - my);
-		mouseX = std::clamp(mouseX, 0, (int)size.x - 1);
-		mouseY = std::clamp(mouseY, 0, (int)size.y - 1);
-
-		int pixelId = m_PickingFrameBuffer->GetIDBufferValue(mouseX, mouseY, 1);
-		int pixelIndex = m_PickingFrameBuffer->GetIDBufferValue(mouseX, mouseY, 2);
-
-		if (pixelId == -1)
-		{
-			pixelIndex = -1;
-		}
-
-		if (ImGuizmo::IsOver() && pixelIndex == -1)
-		{
-			m_PickingFrameBuffer->UnBind();
-			return;
-		}
-
-		if (pixelIndex != -1 && pixelId != -1)
-		{
-			Object selectedObject = Object{ (entt::entity)pixelId, m_SceneContext.get() };
-			if (selectedObject.HasComponent<LineRenderer>())
-			{
-				auto& lineRenderer = selectedObject.GetComponent<LineRenderer>();
-				m_SelectionContext->ClearSelectedPoint();
-				m_SelectionContext->SetSelection(selectedObject);
-				m_SelectionContext->SetSelectedPoint(lineRenderer.GetControlPointByIndex(pixelIndex));
-				lineRenderer.SetSelectedControlPoint(pixelIndex);
-
-				const glm::vec4 highlightColor = lineRenderer.IsAnchorControlPoint(pixelIndex)
-					? glm::vec4(0.95f, 0.90f, 0.22f, 1.0f)
-					: glm::vec4(0.55f, 0.85f, 1.0f, 1.0f);
-				lineRenderer.SetControlPointColorByIndex(highlightColor, pixelIndex);
-			}
-		}
-		else if (pixelId != -1)
-		{
-			Object selectedObject = Object{ (entt::entity)pixelId, m_SceneContext.get() };
-			m_SelectionContext->ClearSelectedPoint();
-			m_SelectionContext->SetSelection(selectedObject);
-			m_SelectionContext->SetSelectedPoint({});
-		}
-		else
-		{
-			m_SelectionContext->ClearSelection();
-		}
-
-		KITA_CLENT_INFO("pixel in viewport,id :{0},index :{1}", pixelId, pixelIndex);
-		m_PickingFrameBuffer->UnBind();
 	}
+
 }

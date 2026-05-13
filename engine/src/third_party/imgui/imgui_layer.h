@@ -1,5 +1,6 @@
 #pragma once
 #include "core/Layer.h"
+#include <vulkan/vulkan.h>
 
 namespace Kita {
 
@@ -12,7 +13,10 @@ namespace Kita {
 
 		virtual void OnCreate() override;
 		virtual void OnDestroy() override;
-		virtual void OnUpdate(float daltaTime) override;
+		virtual void OnUpdate(Timestep ts) override;
+
+
+		virtual void OnRender() override;
 
 		virtual void OnImGuiRender() override;
 
@@ -25,5 +29,6 @@ namespace Kita {
 
 	private:
 		float m_Time = 0.0f;
+		VkDescriptorPool m_DescriptorPool = VK_NULL_HANDLE;
 	};
 }

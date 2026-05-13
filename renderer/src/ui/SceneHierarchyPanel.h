@@ -1,5 +1,5 @@
 #pragma once
-#include <Engine.h>
+#include <EngineCore.h>
 #include "SceneSelectionContext.h"
 
 namespace Kita {
@@ -26,19 +26,19 @@ namespace Kita {
 			return m_SelectionContext ? m_SelectionContext->GetSelectedObject() : emptyObject;
 		}
 
-		PointData& GetSelectedPoint()
+		SelectedPoint& GetSelectedPoint()
 		{
-			static PointData emptyPoint{};
+			static SelectedPoint emptyPoint{};
 			return m_SelectionContext ? m_SelectionContext->GetSelectedPoint() : emptyPoint;
 		}
-		const PointData& GetSelectedPoint() const
+		const SelectedPoint& GetSelectedPoint() const
 		{
-			static PointData emptyPoint{};
+			static SelectedPoint emptyPoint{};
 			return m_SelectionContext ? m_SelectionContext->GetSelectedPoint() : emptyPoint;
 		}
 
 		void SetSelectedObject(Object obj) { if (m_SelectionContext) m_SelectionContext->SetSelection(obj); }
-		void SetSelectedPoint(PointData point) { if (m_SelectionContext) m_SelectionContext->SetSelectedPoint(point); }
+		void SetSelectedPoint(SelectedPoint point) { if (m_SelectionContext) m_SelectionContext->SetSelectedPoint(point); }
 
 		void ClearSelectedPoint() { if (m_SelectionContext) m_SelectionContext->ClearSelectedPoint(); }
 		void ClearSelection() { if (m_SelectionContext) m_SelectionContext->ClearSelection(); }

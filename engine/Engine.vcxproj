@@ -76,15 +76,15 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>kita_pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;GLFW_INCLUDE_NONE;PLATFORM_WINDOWS;KITA_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;third-party\glfw\include;third-party\glad\include;third-party\imgui;third-party\spdlog\include;third-party\glm;third-party\assimp\include;third-party\entt;third-party\imguizmo;third-party\nlohmann\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;GLFW_INCLUDE_NONE;VULKAN_HPP_NO_STRUCT_CONSTRUCTORS;PLATFORM_WINDOWS;KITA_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>src;third-party\glfw\include;third-party\imgui;third-party\spdlog\include;third-party\glm;third-party\assimp\include;third-party\entt;third-party\imguizmo;third-party\nlohmann\include;C:\VulkanSDK\1.4.341.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <Link>
@@ -92,7 +92,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>C:\VulkanSDK\1.4.341.1\Lib\vulkan-1.lib;C:\VulkanSDK\1.4.341.1\Lib\slang.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
     <ProjectReference>
     </ProjectReference>
@@ -102,8 +102,8 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>kita_pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;GLFW_INCLUDE_NONE;PLATFORM_WINDOWS;KITA_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;third-party\glfw\include;third-party\glad\include;third-party\imgui;third-party\spdlog\include;third-party\glm;third-party\assimp\include;third-party\entt;third-party\imguizmo;third-party\nlohmann\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;GLFW_INCLUDE_NONE;VULKAN_HPP_NO_STRUCT_CONSTRUCTORS;PLATFORM_WINDOWS;KITA_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>src;third-party\glfw\include;third-party\imgui;third-party\spdlog\include;third-party\glm;third-party\assimp\include;third-party\entt;third-party\imguizmo;third-party\nlohmann\include;C:\VulkanSDK\1.4.341.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -112,7 +112,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <Link>
@@ -121,7 +121,7 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Lib>
-      <AdditionalDependencies>opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>C:\VulkanSDK\1.4.341.1\Lib\vulkan-1.lib;C:\VulkanSDK\1.4.341.1\Lib\slang.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
     <ProjectReference>
     </ProjectReference>
@@ -131,8 +131,8 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>kita_pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;GLFW_INCLUDE_NONE;PLATFORM_WINDOWS;KITA_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;third-party\glfw\include;third-party\glad\include;third-party\imgui;third-party\spdlog\include;third-party\glm;third-party\assimp\include;third-party\entt;third-party\imguizmo;third-party\nlohmann\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;GLFW_INCLUDE_NONE;VULKAN_HPP_NO_STRUCT_CONSTRUCTORS;PLATFORM_WINDOWS;KITA_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>src;third-party\glfw\include;third-party\imgui;third-party\spdlog\include;third-party\glm;third-party\assimp\include;third-party\entt;third-party\imguizmo;third-party\nlohmann\include;C:\VulkanSDK\1.4.341.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -141,7 +141,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <Link>
@@ -150,18 +150,19 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Lib>
-      <AdditionalDependencies>opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>C:\VulkanSDK\1.4.341.1\Lib\vulkan-1.lib;C:\VulkanSDK\1.4.341.1\Lib\slang.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
     <ProjectReference>
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="src\Engine.h" />
+    <ClInclude Include="src\core\Timestep.h" />
+    <ClInclude Include="src\EngineCore.h" />
+    <ClInclude Include="src\EngineRender.h" />
     <ClInclude Include="src\asset\Asset.h" />
     <ClInclude Include="src\asset\AssetFactory.h" />
     <ClInclude Include="src\asset\AssetManager.h" />
     <ClInclude Include="src\component\LightComponent.h" />
-    <ClInclude Include="src\component\LineRenderer.h" />
     <ClInclude Include="src\component\MeshRenderer.h" />
     <ClInclude Include="src\component\Object.h" />
     <ClInclude Include="src\component\Scene.h" />
@@ -181,38 +182,43 @@
     <ClInclude Include="src\event\KeyCode.h" />
     <ClInclude Include="src\event\MouseEvent.h" />
     <ClInclude Include="src\kita_pch.h" />
-    <ClInclude Include="src\platform\opengl\OpenGLBuffer.h" />
-    <ClInclude Include="src\platform\opengl\OpenGLContext.h" />
-    <ClInclude Include="src\platform\opengl\OpenGLFrameBuffer.h" />
-    <ClInclude Include="src\platform\opengl\OpenGLRendererAPI.h" />
-    <ClInclude Include="src\platform\opengl\OpenGLShader.h" />
-    <ClInclude Include="src\platform\opengl\OpenGLTexture.h" />
-    <ClInclude Include="src\platform\opengl\OpenGLUniformBuffer.h" />
-    <ClInclude Include="src\platform\opengl\OpenGLUtil.h" />
-    <ClInclude Include="src\platform\opengl\OpenGLVertexArray.h" />
     <ClInclude Include="src\platform\windows\WindowsWindow.h" />
-    <ClInclude Include="src\render\Buffer.h" />
-    <ClInclude Include="src\render\FrameBuffer.h" />
-    <ClInclude Include="src\render\GraphicsContext.h" />
+    <ClInclude Include="src\render\BufferLayout.h" />
     <ClInclude Include="src\render\Light.h" />
-    <ClInclude Include="src\render\Material.h" />
-    <ClInclude Include="src\render\RenderAssetUtils.h" />
-    <ClInclude Include="src\render\RenderCommand.h" />
-    <ClInclude Include="src\render\Renderer.h" />
-    <ClInclude Include="src\render\RendererAPI.h" />
-    <ClInclude Include="src\render\Shader.h" />
-    <ClInclude Include="src\render\Texture.h" />
-    <ClInclude Include="src\render\UniformBuffer.h" />
-    <ClInclude Include="src\render\VertexArray.h" />
+    <ClInclude Include="src\render\ShaderCompiler.h" />
+    <ClInclude Include="src\render\VulkanBuffer.h" />
+    <ClInclude Include="src\render\VulkanContext.h" />
+    <ClInclude Include="src\render\VulkanDescriptorSet.h" />
+    <ClInclude Include="src\render\VulkanGeometry.h" />
+    <ClInclude Include="src\render\VulkanGraphicsPipeline.h" />
+    <ClInclude Include="src\render\VulkanImage.h" />
+    <ClInclude Include="src\render\VulkanIndexBuffer.h" />
+    <ClInclude Include="src\render\VulkanMaterial.h" />
+    <ClInclude Include="src\render\VulkanRenderCommand.h" />
+    <ClInclude Include="src\render\VulkanRenderTarget.h" />
+    <ClInclude Include="src\render\VulkanRenderer.h" />
+    <ClInclude Include="src\render\VulkanResourceFactory.h" />
+    <ClInclude Include="src\render\VulkanShader.h" />
+    <ClInclude Include="src\render\VulkanStorageBuffer.h" />
+    <ClInclude Include="src\render\VulkanTexture.h" />
+    <ClInclude Include="src\render\VulkanTextureLoader.h" />
+    <ClInclude Include="src\render\VulkanUniformBuffer.h" />
+    <ClInclude Include="src\render\VulkanVertexBuffer.h" />
     <ClInclude Include="src\render\font\FontManager.h" />
     <ClInclude Include="src\render\mesh\Mesh.h" />
+    <ClInclude Include="src\render\pass\ForwardOpaquePass.h" />
+    <ClInclude Include="src\render\pass\RenderContext.h" />
+    <ClInclude Include="src\render\pass\RenderDataStruct.h" />
+    <ClInclude Include="src\render\pass\RenderPass.h" />
+    <ClInclude Include="src\render\pass\SceneBindings.h" />
+    <ClInclude Include="src\render\pipeline\PipelineFactory.h" />
     <ClInclude Include="src\render\scene\Camera.h" />
-    <ClInclude Include="src\render\scene\Gizmo.h" />
     <ClInclude Include="src\render\scene\OrthographicCamera.h" />
     <ClInclude Include="src\render\scene\PerspectiveCamera.h" />
     <ClInclude Include="src\serialize\JsonUtils.h" />
     <ClInclude Include="src\serialize\MaterialSerializer.h" />
     <ClInclude Include="src\serialize\SceneSerializer.h" />
+    <ClInclude Include="src\system\TimeSystem.h" />
     <ClInclude Include="src\third_party\imgui\imgui_layer.h" />
     <ClInclude Include="src\third_party\stb_image\stb_image.h" />
     <ClInclude Include="third-party\glm\glm\common.hpp" />
@@ -638,9 +644,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\asset\Asset.cpp" />
+    <ClCompile Include="src\asset\AssetFactory.cpp" />
     <ClCompile Include="src\asset\AssetManager.cpp" />
     <ClCompile Include="src\component\LightComponent.cpp" />
-    <ClCompile Include="src\component\LineRenderer.cpp" />
     <ClCompile Include="src\component\MeshRenderer.cpp" />
     <ClCompile Include="src\component\Object.cpp" />
     <ClCompile Include="src\component\Scene.cpp" />
@@ -653,35 +659,40 @@
     <ClCompile Include="src\kita_pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="src\platform\opengl\OpenGLBuffer.cpp" />
-    <ClCompile Include="src\platform\opengl\OpenGLContext.cpp" />
-    <ClCompile Include="src\platform\opengl\OpenGLFrameBuffer.cpp" />
-    <ClCompile Include="src\platform\opengl\OpenGLRendererAPI.cpp" />
-    <ClCompile Include="src\platform\opengl\OpenGLShader.cpp" />
-    <ClCompile Include="src\platform\opengl\OpenGLTexture.cpp" />
-    <ClCompile Include="src\platform\opengl\OpenGLUniformBuffer.cpp" />
-    <ClCompile Include="src\platform\opengl\OpenGLUtil.cpp" />
-    <ClCompile Include="src\platform\opengl\OpenGLVertexArray.cpp" />
     <ClCompile Include="src\platform\windows\WindowsInput.cpp" />
     <ClCompile Include="src\platform\windows\WindowsWindow.cpp" />
-    <ClCompile Include="src\render\Buffer.cpp" />
-    <ClCompile Include="src\render\FrameBuffer.cpp" />
-    <ClCompile Include="src\render\Material.cpp" />
-    <ClCompile Include="src\render\RenderCommand.cpp" />
-    <ClCompile Include="src\render\Renderer.cpp" />
-    <ClCompile Include="src\render\RendererAPI.cpp" />
-    <ClCompile Include="src\render\Shader.cpp" />
-    <ClCompile Include="src\render\Texture.cpp" />
-    <ClCompile Include="src\render\UniformBuffer.cpp" />
-    <ClCompile Include="src\render\VertexArray.cpp" />
+    <ClCompile Include="src\render\BufferLayout.cpp" />
+    <ClCompile Include="src\render\ShaderCompiler.cpp" />
+    <ClCompile Include="src\render\VulkanBuffer.cpp" />
+    <ClCompile Include="src\render\VulkanContext.cpp" />
+    <ClCompile Include="src\render\VulkanDescriptorSet.cpp" />
+    <ClCompile Include="src\render\VulkanGeometry.cpp" />
+    <ClCompile Include="src\render\VulkanGraphicsPipeline.cpp" />
+    <ClCompile Include="src\render\VulkanImage.cpp" />
+    <ClCompile Include="src\render\VulkanIndexBuffer.cpp" />
+    <ClCompile Include="src\render\VulkanMaterial.cpp" />
+    <ClCompile Include="src\render\VulkanRenderCommand.cpp" />
+    <ClCompile Include="src\render\VulkanRenderTarget.cpp" />
+    <ClCompile Include="src\render\VulkanRenderer.cpp" />
+    <ClCompile Include="src\render\VulkanResourceFactory.cpp" />
+    <ClCompile Include="src\render\VulkanShader.cpp" />
+    <ClCompile Include="src\render\VulkanStorageBuffer.cpp" />
+    <ClCompile Include="src\render\VulkanTexture.cpp" />
+    <ClCompile Include="src\render\VulkanTextureLoader.cpp" />
+    <ClCompile Include="src\render\VulkanUniformBuffer.cpp" />
+    <ClCompile Include="src\render\VulkanVertexBuffer.cpp" />
     <ClCompile Include="src\render\font\FontManager.cpp" />
     <ClCompile Include="src\render\mesh\Mesh.cpp" />
-    <ClCompile Include="src\render\scene\Gizmo.cpp" />
+    <ClCompile Include="src\render\pass\ForwardOpaquePass.cpp" />
+    <ClCompile Include="src\render\pass\RenderContext.cpp" />
+    <ClCompile Include="src\render\pass\RenderPass.cpp" />
+    <ClCompile Include="src\render\pass\SceneBindings.cpp" />
+    <ClCompile Include="src\render\pipeline\PipelineFactory.cpp" />
     <ClCompile Include="src\render\scene\OrthographicCamera.cpp" />
     <ClCompile Include="src\render\scene\PerspectiveCamera.cpp" />
     <ClCompile Include="src\serialize\JsonUtils.cpp" />
-    <ClCompile Include="src\serialize\MaterialSerializer.cpp" />
     <ClCompile Include="src\serialize\SceneSerializer.cpp" />
+    <ClCompile Include="src\system\TimeSystem.cpp" />
     <ClCompile Include="src\third_party\imgui\imgui_build.cpp" />
     <ClCompile Include="src\third_party\imgui\imgui_layer.cpp" />
     <ClCompile Include="src\third_party\stb_image\stb_image.cpp" />
@@ -693,9 +704,6 @@
   <ItemGroup>
     <ProjectReference Include="third-party\glfw\GLFW.vcxproj">
       <Project>{154B857C-0182-860D-AA6E-6C109684020F}</Project>
-    </ProjectReference>
-    <ProjectReference Include="third-party\glad\glad.vcxproj">
-      <Project>{DD62977C-C999-980D-7286-7E105E9C140F}</Project>
     </ProjectReference>
     <ProjectReference Include="third-party\imgui\ImGui.vcxproj">
       <Project>{C0FF640D-2C14-8DBE-F595-301E616989EF}</Project>

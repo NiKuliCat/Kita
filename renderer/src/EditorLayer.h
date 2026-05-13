@@ -1,11 +1,13 @@
 ﻿#pragma once
-#include <Engine.h>
-#include "scene/ViewportCamera.h"
+#include <EngineCore.h>
+#include "scene/EditorRenderer.h"
 #include "ui/InspectorPanel.h"
 #include "ui/SceneHierarchyPanel.h"
 #include "ui/SceneSelectionContext.h"
 #include "ui/SceneViewportPanel.h"
 #include "ui/ContentBrowserPanel.h"
+#include "ui/SvgIconAtlas.h"
+#include "ui/ThumbnailCache.h"
 #include "ui/UIColorPanel.h"
 namespace Kita {
 
@@ -19,9 +21,10 @@ namespace Kita {
 
 
 		virtual void OnCreate()  override;
-		virtual void OnUpdate(float daltaTime)  override;
+		virtual void OnUpdate(Timestep ts)  override;
 		virtual void OnDestroy()  override;
 
+		virtual void OnRender()  override;
 		virtual void OnImGuiRender()  override;
 		virtual void OnEvent(Event& event)  override;
 
@@ -30,7 +33,14 @@ namespace Kita {
 		bool OnMouseButtonPressed(MouseButtonPressedEvent& event);
 		void AddViewportPanel(std::string windowName);
 		void RemoveClosedViewportPanels();
+		void RenderTimeSystemPanel();
 	private:
+
+		struct ViewportInstance
+		{
+			Unique<SceneViewportPanel> Panel = nullptr;
+			Unique<EditorRenderer> Renderer = nullptr;
+		};
 
 		Ref<Scene> m_Scene = nullptr;
 		SceneSerializer  m_SceneSerializer;
@@ -40,10 +50,14 @@ namespace Kita {
 		InspectorPanel m_InspectorPanel;
 		ContentBrowserPanel m_ContentBrowserPanel;
 		UIColorPanel m_UIColorPanel;
-		std::vector<Unique<SceneViewportPanel>> m_SceneViewportPanels{};
+		std::vector<ViewportInstance> m_SceneViewportPanels{};
 		int32_t m_ActiveViewportIndex = -1;
 		uint32_t m_NextViewportSerial = 1;
+		bool m_ShowTimeSystemPanel = true;
 
 		Ref<SceneSelectionContext> m_SceneSelectionContext = nullptr;
+		Unique<VulkanResourceFactory> m_ContentBrowserResourceFactory = nullptr;
+		Unique<ThumbnailCache> m_ContentBrowserThumbnailCache = nullptr;
+		Unique<SvgIconAtlas> m_ContentBrowserIconAtlas = nullptr;
 	};
 }

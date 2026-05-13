@@ -2,20 +2,16 @@
 #include "Application.h"
 
 #include "Log.h"
-#include <glad/glad.h>
 #include <GLFW/glfw3.h>
-
 
 #include "Input.h"
 #include "event/KeyCode.h"
 
-#include "render/Buffer.h"
-#include "render/scene/OrthographicCamera.h"
-#include "render/RenderCommand.h"
-#include "component/Object.h"
-#include "render/Renderer.h"
-#include "render/Texture.h"
-#include  "render/FrameBuffer.h"
+#include "asset/AssetManager.h"
+#include "render/BufferLayout.h"
+#include "render/VulkanRenderCommand.h"
+#include "render/VulkanRenderTarget.h"
+#include <backends/imgui_impl_vulkan.h>
 namespace Kita {
 
 	Application* Application::s_Instance = nullptr;
@@ -26,14 +22,19 @@ namespace Kita {
 		KITA_CORE_TRACE("launch current active app: " + m_Descriptor.name);
 
 		m_Active = true;
-		InitWindow();
-		InitImGuiLayer();
-		InitRenderer();
+
 	}
 
 	void Application::Run()
 	{
-	
+		InitWindow();
+
+		InitVulkanContext();
+
+		InitImGuiLayer();
+		InitRenderer();
+		InitializePendingLayers();
+
 		MainLoop();
 		ShutDown();
 	}
@@ -49,6 +50,15 @@ namespace Kita {
 		m_Window->SetEventCallback(BIND_EVENT_FUNC(Application::OnEvent));
 	}
 
+	void Application::InitVulkanContext()
+	{
+		GLFWwindow* nativeWindow = static_cast<GLFWwindow*>(m_Window->GetNativeWindow());
+		KITA_CORE_ASSERT(nativeWindow, "Application native window is null");
+
+		m_VulkanContext = CreateUnique<VulkanContext>(nativeWindow);
+		m_VulkanContext->Init();
+	}
+
 	void Application::InitImGuiLayer()
 	{
 		m_ImGuiLayer = new ImGuiLayer();
@@ -58,42 +68,91 @@ namespace Kita {
 
 	void Application::InitRenderer()
 	{
-		Renderer::Init();
 	}
+
 
 	void Application::MainLoop()
 	{
 
 		while (m_Active)
 		{
-			
+		
+			const Timestep& timestep = m_TimeSystem.Tick();
 
 			if (!m_Minimized)
 			{
 				for (Layer* layer : m_LayerStack)
 				{
-					layer->OnUpdate(0.1f);
+					layer->OnUpdate(timestep);
 				}
 			}
 
-			
 
-			m_ImGuiLayer->Begin();
-			for (Layer* layer : m_LayerStack)
+			if (m_VulkanContext->BeginFrame())
 			{
-				layer->OnImGuiRender();
+
+				for (Layer* layer : m_LayerStack)
+					layer->OnRender();
+
+				m_ImGuiLayer->Begin();
+
+				for (Layer* layer : m_LayerStack)
+					layer->OnImGuiRender();
+
+				VulkanRenderCommand::BeginSwapchainRendering(*m_VulkanContext, { 0.1f, 0.1f, 0.12f, 1.0f });
+
+				m_ImGuiLayer->End();
+
+				VulkanRenderCommand::EndRendering(*m_VulkanContext);
+				m_VulkanContext->EndFrame();
 			}
-			m_ImGuiLayer->End();
 			
 			m_Window->OnUpdate();
-
 		}
 
 	}
 
 	void Application::ShutDown()
 	{
-		Renderer::ShutDown();
+		if (m_VulkanContext)
+			m_VulkanContext->WaitIdle();
+
+		m_LayerStack.DestroyAll();
+		m_ImGuiLayer = nullptr;
+		m_LayersInitialized = false;
+
+		AssetManager::GetInstance().Clear();
+
+		if (m_VulkanContext)
+		{
+			m_VulkanContext->WaitIdle();
+			m_VulkanContext.reset();
+		}
+
+		m_Window.reset();
+	}
+
+	void Application::InitializePendingLayers()
+	{
+		if (m_LayersInitialized)
+			return;
+
+		if (m_ImGuiLayer && !m_ImGuiLayer->m_IsCreated)
+		{
+			m_ImGuiLayer->OnCreate();
+			m_ImGuiLayer->m_IsCreated = true;
+		}
+
+		for (Layer* layer : m_LayerStack)
+		{
+			if (!layer || layer->m_IsCreated)
+				continue;
+
+			layer->OnCreate();
+			layer->m_IsCreated = true;
+		}
+
+		m_LayersInitialized = true;
 	}
 
 	void Application::OnEvent(Event& event)
@@ -114,12 +173,20 @@ namespace Kita {
 	void Application::PushLayer(Layer* layer)
 	{
 		m_LayerStack.PushLayer(layer);
-		layer->OnCreate();
+		if (m_LayersInitialized && layer && !layer->m_IsCreated)
+		{
+			layer->OnCreate();
+			layer->m_IsCreated = true;
+		}
 	}
 	void Application::PushOverlay(Layer* overlay)
 	{
 		m_LayerStack.PushOverlay(overlay);
-		overlay->OnCreate();
+		if (m_LayersInitialized && overlay && !overlay->m_IsCreated)
+		{
+			overlay->OnCreate();
+			overlay->m_IsCreated = true;
+		}
 	}
 	bool Application::OnWindowClosed(WindowCloseEvent& event)
 	{
@@ -133,7 +200,7 @@ namespace Kita {
 			m_Minimized = true;
 			return false;
 		}
-		glViewport(0, 0, event.GetWidth(), event.GetHeight());
+		m_VulkanContext->OnResize(event.GetWidth(), event.GetHeight());
 		m_Minimized = false;
 		return false;
 	}

@@ -79,15 +79,15 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>renderer_pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>PLATFORM_WINDOWS;KITA_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\engine\src;src;..\engine\third-party\glfw\include;..\engine\third-party\glad\include;..\engine\third-party\imgui;..\engine\third-party\spdlog\include;..\engine\third-party\glm;..\engine\third-party\assimp\include;..\engine\third-party\entt;..\engine\third-party\imguizmo;..\engine\third-party\nlohmann\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>PLATFORM_WINDOWS;VULKAN_HPP_NO_STRUCT_CONSTRUCTORS;KITA_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\engine\src;src;..\engine\third-party\glfw\include;..\engine\third-party\imgui;..\engine\third-party\spdlog\include;..\engine\third-party\glm;..\engine\third-party\assimp\include;..\engine\third-party\entt;..\engine\third-party\imguizmo;..\engine\third-party\nlohmann\include;C:\VulkanSDK\1.4.341.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <Link>
@@ -98,7 +98,8 @@
     <ProjectReference>
     </ProjectReference>
     <PostBuildEvent>
-      <Command>IF EXIST "$(SolutionDir)\engine\third-party\assimp\bin\Debug\assimp-vc145-mtd.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)\engine\third-party\assimp\bin\Debug\assimp-vc145-mtd.dll" "..\bin\Debug-windows-x86_64\Renderer" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)\engine\third-party\assimp\bin\Debug\assimp-vc145-mtd.dll" "..\bin\Debug-windows-x86_64\Renderer" &gt; nul)</Command>
+      <Command>IF EXIST "$(SolutionDir)\engine\third-party\assimp\bin\Debug\assimp-vc145-mtd.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)\engine\third-party\assimp\bin\Debug\assimp-vc145-mtd.dll" "..\bin\Debug-windows-x86_64\Renderer" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)\engine\third-party\assimp\bin\Debug\assimp-vc145-mtd.dll" "..\bin\Debug-windows-x86_64\Renderer" &gt; nul)
+IF EXIST "C:\VulkanSDK\1.4.341.1\Bin\slang.dll"\ (xcopy /Q /E /Y /I "C:\VulkanSDK\1.4.341.1\Bin\slang.dll" "..\bin\Debug-windows-x86_64\Renderer" &gt; nul) ELSE (xcopy /Q /Y /I "C:\VulkanSDK\1.4.341.1\Bin\slang.dll" "..\bin\Debug-windows-x86_64\Renderer" &gt; nul)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -106,8 +107,8 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>renderer_pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>PLATFORM_WINDOWS;KITA_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\engine\src;src;..\engine\third-party\glfw\include;..\engine\third-party\glad\include;..\engine\third-party\imgui;..\engine\third-party\spdlog\include;..\engine\third-party\glm;..\engine\third-party\assimp\include;..\engine\third-party\entt;..\engine\third-party\imguizmo;..\engine\third-party\nlohmann\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>PLATFORM_WINDOWS;VULKAN_HPP_NO_STRUCT_CONSTRUCTORS;KITA_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\engine\src;src;..\engine\third-party\glfw\include;..\engine\third-party\imgui;..\engine\third-party\spdlog\include;..\engine\third-party\glm;..\engine\third-party\assimp\include;..\engine\third-party\entt;..\engine\third-party\imguizmo;..\engine\third-party\nlohmann\include;C:\VulkanSDK\1.4.341.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -117,7 +118,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <Link>
@@ -130,7 +131,8 @@
     <ProjectReference>
     </ProjectReference>
     <PostBuildEvent>
-      <Command>IF EXIST "$(SolutionDir)\engine\third-party\assimp\bin\Release\assimp-vc145-mt.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)\engine\third-party\assimp\bin\Release\assimp-vc145-mt.dll" "..\bin\Release-windows-x86_64\Renderer" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)\engine\third-party\assimp\bin\Release\assimp-vc145-mt.dll" "..\bin\Release-windows-x86_64\Renderer" &gt; nul)</Command>
+      <Command>IF EXIST "$(SolutionDir)\engine\third-party\assimp\bin\Release\assimp-vc145-mt.dll"\ (xcopy /Q /E /Y /I "$(SolutionDir)\engine\third-party\assimp\bin\Release\assimp-vc145-mt.dll" "..\bin\Release-windows-x86_64\Renderer" &gt; nul) ELSE (xcopy /Q /Y /I "$(SolutionDir)\engine\third-party\assimp\bin\Release\assimp-vc145-mt.dll" "..\bin\Release-windows-x86_64\Renderer" &gt; nul)
+IF EXIST "C:\VulkanSDK\1.4.341.1\Bin\slang.dll"\ (xcopy /Q /E /Y /I "C:\VulkanSDK\1.4.341.1\Bin\slang.dll" "..\bin\Release-windows-x86_64\Renderer" &gt; nul) ELSE (xcopy /Q /Y /I "C:\VulkanSDK\1.4.341.1\Bin\slang.dll" "..\bin\Release-windows-x86_64\Renderer" &gt; nul)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dist|x64'">
@@ -138,8 +140,8 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>renderer_pch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>PLATFORM_WINDOWS;KITA_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\engine\src;src;..\engine\third-party\glfw\include;..\engine\third-party\glad\include;..\engine\third-party\imgui;..\engine\third-party\spdlog\include;..\engine\third-party\glm;..\engine\third-party\assimp\include;..\engine\third-party\entt;..\engine\third-party\imguizmo;..\engine\third-party\nlohmann\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>PLATFORM_WINDOWS;VULKAN_HPP_NO_STRUCT_CONSTRUCTORS;KITA_DIST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\engine\src;src;..\engine\third-party\glfw\include;..\engine\third-party\imgui;..\engine\third-party\spdlog\include;..\engine\third-party\glm;..\engine\third-party\assimp\include;..\engine\third-party\entt;..\engine\third-party\imguizmo;..\engine\third-party\nlohmann\include;C:\VulkanSDK\1.4.341.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>None</DebugInformationFormat>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -149,7 +151,7 @@
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <ExternalWarningLevel>Level3</ExternalWarningLevel>
     </ClCompile>
     <Link>
@@ -168,13 +170,17 @@
   <ItemGroup>
     <ClInclude Include="src\EditorLayer.h" />
     <ClInclude Include="src\file\Project.h" />
+    <ClInclude Include="src\project\EditorProjectBootstrap.h" />
     <ClInclude Include="src\renderer_pch.h" />
+    <ClInclude Include="src\scene\EditorRenderer.h" />
     <ClInclude Include="src\scene\ViewportCamera.h" />
     <ClInclude Include="src\ui\ContentBrowserPanel.h" />
     <ClInclude Include="src\ui\InspectorPanel.h" />
     <ClInclude Include="src\ui\SceneHierarchyPanel.h" />
     <ClInclude Include="src\ui\SceneSelectionContext.h" />
     <ClInclude Include="src\ui\SceneViewportPanel.h" />
+    <ClInclude Include="src\ui\SvgIconAtlas.h" />
+    <ClInclude Include="src\ui\ThumbnailCache.h" />
     <ClInclude Include="src\ui\UIColorPanel.h" />
     <ClInclude Include="src\utils\FileDialogs.h" />
   </ItemGroup>
@@ -182,14 +188,18 @@
     <ClCompile Include="src\EditorApp.cpp" />
     <ClCompile Include="src\EditorLayer.cpp" />
     <ClCompile Include="src\file\Project.cpp" />
+    <ClCompile Include="src\project\EditorProjectBootstrap.cpp" />
     <ClCompile Include="src\renderer_pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\scene\EditorRenderer.cpp" />
     <ClCompile Include="src\scene\ViewportCamera.cpp" />
     <ClCompile Include="src\ui\ContentBrowserPanel.cpp" />
     <ClCompile Include="src\ui\InspectorPanel.cpp" />
     <ClCompile Include="src\ui\SceneHierarchyPanel.cpp" />
     <ClCompile Include="src\ui\SceneViewportPanel.cpp" />
+    <ClCompile Include="src\ui\SvgIconAtlas.cpp" />
+    <ClCompile Include="src\ui\ThumbnailCache.cpp" />
     <ClCompile Include="src\ui\UIColorPanel.cpp" />
     <ClCompile Include="src\utils\FileDialogs.cpp" />
   </ItemGroup>

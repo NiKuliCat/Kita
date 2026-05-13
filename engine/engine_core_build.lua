@@ -1,6 +1,6 @@
 project "Engine"
     kind "StaticLib"
-    cppdialect "C++17"
+    cppdialect "C++20"
     staticruntime "off"
 
 
@@ -22,24 +22,33 @@ project "Engine"
         "third-party/imguizmo/ImGuizmo.cpp"
     }
 
+    removefiles
+    {
+        "src/component/LineRenderer.h",
+        "src/component/LineRenderer.cpp",
+        "src/render/scene/Gizmo.h",
+        "src/render/scene/Gizmo.cpp"
+    }
+
     defines
     {
         "_CRT_SECURE_NO_WARNINGS",
-        "GLFW_INCLUDE_NONE"
+        "GLFW_INCLUDE_NONE",
+        "VULKAN_HPP_NO_STRUCT_CONSTRUCTORS"
     }
 
     includedirs
     {
         "src",
         "%{IncludeDir.GLFW}",
-        "%{IncludeDir.glad}",
         "%{IncludeDir.ImGui}",
         "%{IncludeDir.spdlog}",
         "%{IncludeDir.glm}",
         "%{IncludeDir.assimp}",
         "%{IncludeDir.entt}",
         "%{IncludeDir.ImGuizmo}",
-        "%{IncludeDir.nlohmann_json}"
+        "%{IncludeDir.nlohmann_json}",
+        "%{IncludeDir.VulkanSDK}"
     }
     buildoptions
     {
@@ -49,9 +58,9 @@ project "Engine"
     links
     {
         "GLFW",
-        "glad",
         "ImGui",
-        "opengl32.lib"
+        "%{Library.Vulkan}",
+        "%{Library.slang}"
     }
 
     filter "files:third-party/imguizmo/ImGuizmo.cpp"

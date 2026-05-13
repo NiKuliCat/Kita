@@ -1,7 +1,9 @@
-﻿#pragma once
-#include "Engine.h"
-#include "scene/ViewportCamera.h"
+#pragma once
+
+#include <EngineCore.h>
+#include <EngineRender.h>
 #include "SceneSelectionContext.h"
+#include "scene/ViewportCamera.h"
 
 namespace Kita {
 
@@ -9,25 +11,29 @@ namespace Kita {
 	{
 	public:
 		SceneViewportPanel(
-			const Ref<Scene>& scene,
 			const Ref<SceneSelectionContext>& selectionContext,
 			std::string windowName = "Viewport");
 
 		SceneViewportPanel(const SceneViewportPanel&) = delete;
 		SceneViewportPanel& operator=(const SceneViewportPanel&) = delete;
 
+		~SceneViewportPanel();
 
 		void Simulate(float daltaTime);
 		void OnImGuiRender();
 		void OnEvent(Event& event);
 		void Render();
+		VulkanRenderTarget* GetRenderTarget() const { return m_RenderTarget.get(); }
+		ViewportCamera* GetViewportCamera() const { return m_ViewportCamera.get(); }
 		void SetActive(bool isActive) { m_IsActive = isActive; }
 		bool IsImageHovered() const { return m_IsImageHovered; }
 		bool IsWindowFocused() const { return m_IsFocused; }
 		bool IsOpen() const { return m_IsOpen; }
 
 	private:
-		void InitFrameBuffer();
+		void InitRenderResources();
+		void ResizeRenderTargetIfNeeded();
+		void RecreateViewportTexture();
 		bool OnKeyPressed(KeyPressedEvent& event);
 		bool OnMouseButtonPressed(MouseButtonPressedEvent& event);
 		void TryPickObject();
@@ -37,15 +43,12 @@ namespace Kita {
 		std::string m_WindowName = "Viewport";
 		Unique<ViewportCamera> m_ViewportCamera = nullptr;
 
-		Ref<FrameBuffer> m_SceneMSAAFrameBuffer = nullptr;
-		Ref<FrameBuffer> m_SceneResolveFrameBuffer = nullptr;
-		Ref<FrameBuffer> m_PickingFrameBuffer = nullptr;
-
-		Ref<Scene> m_SceneContext = nullptr;
 		Ref<SceneSelectionContext> m_SelectionContext = nullptr;
 
-		uint32_t m_SceneTexID = 0;
-		glm::vec2 m_ViewportSize{};
+		Unique<VulkanRenderTarget> m_RenderTarget = nullptr;
+
+		ImTextureID m_SceneTextureID = 0;
+		glm::vec2 m_ViewportSize{ 1280.0f, 720.0f };
 		glm::vec2 m_ViewportBounds[2]{};
 		int32_t m_GizmoControlType = 1;
 		bool m_IsHovered = false;

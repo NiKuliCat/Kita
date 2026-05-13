@@ -19,9 +19,6 @@
     <Filter Include="src\platform">
       <UniqueIdentifier>{41663D6D-2DC9-CC11-D64E-05C8C2909894}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\platform\opengl">
-      <UniqueIdentifier>{B57427EB-21D6-04F9-AA43-4BAB16A43BB8}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\platform\windows">
       <UniqueIdentifier>{9B5931A8-87E8-BA71-3007-CF6C1C75CB17}</UniqueIdentifier>
     </Filter>
@@ -33,6 +30,12 @@
     </Filter>
     <Filter Include="src\render\mesh">
       <UniqueIdentifier>{78BC1DC2-E447-8B86-ED58-0E7B5963E786}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\render\pass">
+      <UniqueIdentifier>{A2501FC2-0EDC-8C86-17ED-0F7B83F7E886}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\render\pipeline">
+      <UniqueIdentifier>{E1ECCCCC-4D4E-AADA-D6BB-F08C421CE199}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\render\scene">
       <UniqueIdentifier>{598B4006-4584-5F58-6EB6-44DD5A0E3F64}</UniqueIdentifier>
@@ -75,7 +78,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Engine.h">
+    <ClInclude Include="src\EngineCore.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\EngineRender.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\asset\Asset.h">
@@ -88,9 +94,6 @@
       <Filter>src\asset</Filter>
     </ClInclude>
     <ClInclude Include="src\component\LightComponent.h">
-      <Filter>src\component</Filter>
-    </ClInclude>
-    <ClInclude Include="src\component\LineRenderer.h">
       <Filter>src\component</Filter>
     </ClInclude>
     <ClInclude Include="src\component\MeshRenderer.h">
@@ -150,70 +153,70 @@
     <ClInclude Include="src\kita_pch.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\platform\opengl\OpenGLBuffer.h">
-      <Filter>src\platform\opengl</Filter>
-    </ClInclude>
-    <ClInclude Include="src\platform\opengl\OpenGLContext.h">
-      <Filter>src\platform\opengl</Filter>
-    </ClInclude>
-    <ClInclude Include="src\platform\opengl\OpenGLFrameBuffer.h">
-      <Filter>src\platform\opengl</Filter>
-    </ClInclude>
-    <ClInclude Include="src\platform\opengl\OpenGLRendererAPI.h">
-      <Filter>src\platform\opengl</Filter>
-    </ClInclude>
-    <ClInclude Include="src\platform\opengl\OpenGLShader.h">
-      <Filter>src\platform\opengl</Filter>
-    </ClInclude>
-    <ClInclude Include="src\platform\opengl\OpenGLTexture.h">
-      <Filter>src\platform\opengl</Filter>
-    </ClInclude>
-    <ClInclude Include="src\platform\opengl\OpenGLUniformBuffer.h">
-      <Filter>src\platform\opengl</Filter>
-    </ClInclude>
-    <ClInclude Include="src\platform\opengl\OpenGLUtil.h">
-      <Filter>src\platform\opengl</Filter>
-    </ClInclude>
-    <ClInclude Include="src\platform\opengl\OpenGLVertexArray.h">
-      <Filter>src\platform\opengl</Filter>
-    </ClInclude>
     <ClInclude Include="src\platform\windows\WindowsWindow.h">
       <Filter>src\platform\windows</Filter>
     </ClInclude>
-    <ClInclude Include="src\render\Buffer.h">
-      <Filter>src\render</Filter>
-    </ClInclude>
-    <ClInclude Include="src\render\FrameBuffer.h">
-      <Filter>src\render</Filter>
-    </ClInclude>
-    <ClInclude Include="src\render\GraphicsContext.h">
+    <ClInclude Include="src\render\BufferLayout.h">
       <Filter>src\render</Filter>
     </ClInclude>
     <ClInclude Include="src\render\Light.h">
       <Filter>src\render</Filter>
     </ClInclude>
-    <ClInclude Include="src\render\Material.h">
+    <ClInclude Include="src\render\ShaderCompiler.h">
       <Filter>src\render</Filter>
     </ClInclude>
-    <ClInclude Include="src\render\RenderCommand.h">
+    <ClInclude Include="src\render\VulkanBuffer.h">
       <Filter>src\render</Filter>
     </ClInclude>
-    <ClInclude Include="src\render\Renderer.h">
+    <ClInclude Include="src\render\VulkanContext.h">
       <Filter>src\render</Filter>
     </ClInclude>
-    <ClInclude Include="src\render\RendererAPI.h">
+    <ClInclude Include="src\render\VulkanDescriptorSet.h">
       <Filter>src\render</Filter>
     </ClInclude>
-    <ClInclude Include="src\render\Shader.h">
+    <ClInclude Include="src\render\VulkanGeometry.h">
       <Filter>src\render</Filter>
     </ClInclude>
-    <ClInclude Include="src\render\Texture.h">
+    <ClInclude Include="src\render\VulkanGraphicsPipeline.h">
       <Filter>src\render</Filter>
     </ClInclude>
-    <ClInclude Include="src\render\UniformBuffer.h">
+    <ClInclude Include="src\render\VulkanImage.h">
       <Filter>src\render</Filter>
     </ClInclude>
-    <ClInclude Include="src\render\VertexArray.h">
+    <ClInclude Include="src\render\VulkanIndexBuffer.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\VulkanMaterial.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\VulkanRenderCommand.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\VulkanRenderTarget.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\VulkanRenderer.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\VulkanResourceFactory.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\VulkanShader.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\VulkanStorageBuffer.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\VulkanTexture.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\VulkanTextureLoader.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\VulkanUniformBuffer.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\VulkanVertexBuffer.h">
       <Filter>src\render</Filter>
     </ClInclude>
     <ClInclude Include="src\render\font\FontManager.h">
@@ -222,10 +225,25 @@
     <ClInclude Include="src\render\mesh\Mesh.h">
       <Filter>src\render\mesh</Filter>
     </ClInclude>
-    <ClInclude Include="src\render\scene\Camera.h">
-      <Filter>src\render\scene</Filter>
+    <ClInclude Include="src\render\pass\ForwardOpaquePass.h">
+      <Filter>src\render\pass</Filter>
     </ClInclude>
-    <ClInclude Include="src\render\scene\Gizmo.h">
+    <ClInclude Include="src\render\pass\RenderContext.h">
+      <Filter>src\render\pass</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\pass\RenderDataStruct.h">
+      <Filter>src\render\pass</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\pass\RenderPass.h">
+      <Filter>src\render\pass</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\pass\SceneBindings.h">
+      <Filter>src\render\pass</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\pipeline\PipelineFactory.h">
+      <Filter>src\render\pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\scene\Camera.h">
       <Filter>src\render\scene</Filter>
     </ClInclude>
     <ClInclude Include="src\render\scene\OrthographicCamera.h">
@@ -1509,19 +1527,20 @@
     <ClInclude Include="third-party\imguizmo\ImGuizmo.h">
       <Filter>third-party\imguizmo</Filter>
     </ClInclude>
-    <ClInclude Include="src\render\RenderAssetUtils.h" />
+    <ClInclude Include="src\core\Timestep.h" />
+    <ClInclude Include="src\system\TimeSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\asset\Asset.cpp">
+      <Filter>src\asset</Filter>
+    </ClCompile>
+    <ClCompile Include="src\asset\AssetFactory.cpp">
       <Filter>src\asset</Filter>
     </ClCompile>
     <ClCompile Include="src\asset\AssetManager.cpp">
       <Filter>src\asset</Filter>
     </ClCompile>
     <ClCompile Include="src\component\LightComponent.cpp">
-      <Filter>src\component</Filter>
-    </ClCompile>
-    <ClCompile Include="src\component\LineRenderer.cpp">
       <Filter>src\component</Filter>
     </ClCompile>
     <ClCompile Include="src\component\MeshRenderer.cpp">
@@ -1554,67 +1573,70 @@
     <ClCompile Include="src\kita_pch.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\platform\opengl\OpenGLBuffer.cpp">
-      <Filter>src\platform\opengl</Filter>
-    </ClCompile>
-    <ClCompile Include="src\platform\opengl\OpenGLContext.cpp">
-      <Filter>src\platform\opengl</Filter>
-    </ClCompile>
-    <ClCompile Include="src\platform\opengl\OpenGLFrameBuffer.cpp">
-      <Filter>src\platform\opengl</Filter>
-    </ClCompile>
-    <ClCompile Include="src\platform\opengl\OpenGLRendererAPI.cpp">
-      <Filter>src\platform\opengl</Filter>
-    </ClCompile>
-    <ClCompile Include="src\platform\opengl\OpenGLShader.cpp">
-      <Filter>src\platform\opengl</Filter>
-    </ClCompile>
-    <ClCompile Include="src\platform\opengl\OpenGLTexture.cpp">
-      <Filter>src\platform\opengl</Filter>
-    </ClCompile>
-    <ClCompile Include="src\platform\opengl\OpenGLUniformBuffer.cpp">
-      <Filter>src\platform\opengl</Filter>
-    </ClCompile>
-    <ClCompile Include="src\platform\opengl\OpenGLUtil.cpp">
-      <Filter>src\platform\opengl</Filter>
-    </ClCompile>
-    <ClCompile Include="src\platform\opengl\OpenGLVertexArray.cpp">
-      <Filter>src\platform\opengl</Filter>
-    </ClCompile>
     <ClCompile Include="src\platform\windows\WindowsInput.cpp">
       <Filter>src\platform\windows</Filter>
     </ClCompile>
     <ClCompile Include="src\platform\windows\WindowsWindow.cpp">
       <Filter>src\platform\windows</Filter>
     </ClCompile>
-    <ClCompile Include="src\render\Buffer.cpp">
+    <ClCompile Include="src\render\BufferLayout.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
-    <ClCompile Include="src\render\FrameBuffer.cpp">
+    <ClCompile Include="src\render\ShaderCompiler.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
-    <ClCompile Include="src\render\Material.cpp">
+    <ClCompile Include="src\render\VulkanBuffer.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
-    <ClCompile Include="src\render\RenderCommand.cpp">
+    <ClCompile Include="src\render\VulkanContext.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
-    <ClCompile Include="src\render\Renderer.cpp">
+    <ClCompile Include="src\render\VulkanDescriptorSet.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
-    <ClCompile Include="src\render\RendererAPI.cpp">
+    <ClCompile Include="src\render\VulkanGeometry.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
-    <ClCompile Include="src\render\Shader.cpp">
+    <ClCompile Include="src\render\VulkanGraphicsPipeline.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
-    <ClCompile Include="src\render\Texture.cpp">
+    <ClCompile Include="src\render\VulkanImage.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
-    <ClCompile Include="src\render\UniformBuffer.cpp">
+    <ClCompile Include="src\render\VulkanIndexBuffer.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
-    <ClCompile Include="src\render\VertexArray.cpp">
+    <ClCompile Include="src\render\VulkanMaterial.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\VulkanRenderCommand.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\VulkanRenderTarget.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\VulkanRenderer.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\VulkanResourceFactory.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\VulkanShader.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\VulkanStorageBuffer.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\VulkanTexture.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\VulkanTextureLoader.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\VulkanUniformBuffer.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\VulkanVertexBuffer.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
     <ClCompile Include="src\render\font\FontManager.cpp">
@@ -1623,8 +1645,20 @@
     <ClCompile Include="src\render\mesh\Mesh.cpp">
       <Filter>src\render\mesh</Filter>
     </ClCompile>
-    <ClCompile Include="src\render\scene\Gizmo.cpp">
-      <Filter>src\render\scene</Filter>
+    <ClCompile Include="src\render\pass\ForwardOpaquePass.cpp">
+      <Filter>src\render\pass</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\pass\RenderContext.cpp">
+      <Filter>src\render\pass</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\pass\RenderPass.cpp">
+      <Filter>src\render\pass</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\pass\SceneBindings.cpp">
+      <Filter>src\render\pass</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\pipeline\PipelineFactory.cpp">
+      <Filter>src\render\pipeline</Filter>
     </ClCompile>
     <ClCompile Include="src\render\scene\OrthographicCamera.cpp">
       <Filter>src\render\scene</Filter>
@@ -1633,9 +1667,6 @@
       <Filter>src\render\scene</Filter>
     </ClCompile>
     <ClCompile Include="src\serialize\JsonUtils.cpp">
-      <Filter>src\serialize</Filter>
-    </ClCompile>
-    <ClCompile Include="src\serialize\MaterialSerializer.cpp">
       <Filter>src\serialize</Filter>
     </ClCompile>
     <ClCompile Include="src\serialize\SceneSerializer.cpp">
@@ -1653,5 +1684,6 @@
     <ClCompile Include="third-party\imguizmo\ImGuizmo.cpp">
       <Filter>third-party\imguizmo</Filter>
     </ClCompile>
+    <ClCompile Include="src\system\TimeSystem.cpp" />
   </ItemGroup>
 </Project>

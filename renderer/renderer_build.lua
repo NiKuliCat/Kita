@@ -1,7 +1,7 @@
 project "Renderer"
     kind "ConsoleApp"
     language "c++"
-    cppdialect "C++17"
+    cppdialect "C++20"
     staticruntime "off"
 
 
@@ -24,15 +24,15 @@ project "Renderer"
         "%{wks.location}/engine/src",
         "%{wks.location}/renderer/src",
         "%{IncludeDir.GLFW}",
-        "%{IncludeDir.glad}",
         "%{IncludeDir.ImGui}",
         "%{IncludeDir.spdlog}",
         "%{IncludeDir.glm}",
         "%{IncludeDir.assimp}",
         "%{IncludeDir.entt}",
         "%{IncludeDir.ImGuizmo}",
-        "%{IncludeDir.nlohmann_json}"
-        
+        "%{IncludeDir.nlohmann_json}",
+        "%{IncludeDir.VulkanSDK}"
+
     }
     
     buildoptions
@@ -50,13 +50,16 @@ project "Renderer"
 
     filter "system:windows"
       systemversion "latest"
-      defines { "PLATFORM_WINDOWS" }
+      defines { "PLATFORM_WINDOWS", "VULKAN_HPP_NO_STRUCT_CONSTRUCTORS" }
 
    filter "configurations:Debug"
       defines { "KITA_DEBUG" }
       runtime "Debug"
       symbols "On"
       configure_assimp("Debug", true)
+      postbuildcommands {
+          '{COPY} "%{VULKANSDK}/Bin/slang.dll" "%{cfg.targetdir}"'
+      }
 
    filter "configurations:Release"
       defines { "KITA_RELEASE" }
@@ -64,6 +67,9 @@ project "Renderer"
       optimize "On"
       symbols "On"
       configure_assimp("Release", true)
+      postbuildcommands {
+          '{COPY} "%{VULKANSDK}/Bin/slang.dll" "%{cfg.targetdir}"'
+      }
 
    filter "configurations:Dist"
       defines { "KITA_DIST" }

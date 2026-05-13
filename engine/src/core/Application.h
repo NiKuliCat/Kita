@@ -6,10 +6,8 @@
 
 #include "event/ApplicationEvent.h"
 
-#include "render/Buffer.h"
-#include "render/VertexArray.h"
-#include "render/Shader.h"
-#include "render/UniformBuffer.h"
+#include "render/VulkanContext.h"
+#include "system/TimeSystem.h"
 namespace Kita {
 
 	struct ApplicationDescriptor
@@ -29,10 +27,12 @@ namespace Kita {
 	public:
 		void Run();
 		void InitWindow();
+		void InitVulkanContext();
 		void InitImGuiLayer();
 		void InitRenderer();
 		void MainLoop();
 		void ShutDown();
+		void InitializePendingLayers();
 
 		void OnEvent(Event& event);
 
@@ -46,7 +46,11 @@ namespace Kita {
 		void PushLayer(Layer* layer);
 		void PushOverlay(Layer* overlay);
 
+		inline VulkanContext& GetVulkanContext() { return *m_VulkanContext; }
+		inline const VulkanContext& GetVulkanContext() const { return *m_VulkanContext; }
 
+		inline TimeSystem& GetTimeSystem() { return m_TimeSystem; }
+		inline const TimeSystem& GetTimeSystem() const { return m_TimeSystem; }
 	private:
 		bool OnWindowClosed(WindowCloseEvent& event);
 		bool OnWindowResize(WindowResizeEvent& event);
@@ -58,11 +62,13 @@ namespace Kita {
 		ApplicationDescriptor m_Descriptor{};
 
 		Ref<Window> m_Window = nullptr;
-		
+		Unique<VulkanContext> m_VulkanContext = nullptr;
+		TimeSystem m_TimeSystem;
 		LayerStack m_LayerStack;
 		ImGuiLayer* m_ImGuiLayer = nullptr;
 		bool m_Active = false;
 		bool m_Minimized = false;
+		bool m_LayersInitialized = false;
 		static Application* s_Instance;
 	};
 

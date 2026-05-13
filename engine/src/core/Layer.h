@@ -1,26 +1,33 @@
 #pragma once
 #include "event/Event.h" 
+#include "Timestep.h"
 namespace Kita {
 
 
 	class Layer
 	{
 	public:
+		friend class Application;
+
 		Layer(const std::string& name = "new layer");
 
 		virtual ~Layer() = default;
 
 
 		virtual void OnCreate() {}
-		virtual void OnUpdate(float daltaTime) {}
+		virtual void OnUpdate(Timestep ts) {}
+		virtual void OnRender() {}
 		virtual void OnDestroy() {}
 
 		virtual void OnImGuiRender() {}
 		virtual void OnEvent(Event& event) {}
 
 		inline const std::string& GetName() const { return m_name; }
+		inline bool IsCreated() const { return m_IsCreated; }
 	protected:
 		std::string m_name;
+	private:
+		bool m_IsCreated = false;
 	};
 
 
@@ -35,6 +42,7 @@ namespace Kita {
 
 		void PushOverlay(Layer* overlay);
 		void PopOverlay(Layer* overlay);
+		void DestroyAll();
 
 		std::vector<Layer*>::iterator begin() { return m_Layer.begin(); }
 		std::vector<Layer*>::iterator end() { return m_Layer.end(); }

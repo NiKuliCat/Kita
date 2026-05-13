@@ -1,63 +1,31 @@
 #pragma once
 #include "asset/Asset.h"
-#include "core/Log.h"
-#include "serialize/MaterialSerializer.h"
 
+
+struct aiMesh;
+struct aiNode;
+struct aiScene;
 namespace Kita {
 
 	class AssetFactory
 	{
 	public:
-		static Ref<Asset> CreateFromMetadata(
-			const AssetMetadata& metadata,
-			const std::filesystem::path& assetPath)
-		{
-			switch (metadata.type)
-			{
-			case AssetType::Shader:
-			{
-				Ref<ShaderAsset> shaderAsset = CreateRef<ShaderAsset>();
-				shaderAsset->SetHandle(metadata.handle);
-				shaderAsset->SetShaderPath(assetPath);
-				return shaderAsset;
-			}
-			case AssetType::Texture:
-			{
-				Ref<TextureAsset> textureAsset = CreateRef<TextureAsset>();
-				textureAsset->SetHandle(metadata.handle);
-				textureAsset->SetTexturePath(assetPath);
-				return textureAsset;
-			}
-			case AssetType::Material:
-			{
-				Ref<MaterialAsset> materialAsset = CreateRef<MaterialAsset>();
-				materialAsset->SetHandle(metadata.handle);
+		static Ref<Asset> CreateFromMetadata(const AssetMetadata& metadata, const std::filesystem::path& assetPath);
+	};
 
-				if (!MaterialSerializer::Deserialize(assetPath, *materialAsset))
-				{
-					KITA_CORE_WARN("Failed to deserialize material asset: {}", assetPath.string());
-					return nullptr;
-				}
 
-				return materialAsset;
-			}
-			case AssetType::Mesh:
-			{
-				Ref<MeshAsset> meshAsset = CreateRef<MeshAsset>();
-				meshAsset->SetHandle(metadata.handle);
-				if (!meshAsset->LoadFromFile(assetPath))
-				{
-					KITA_CORE_WARN("Failed to load mesh asset: {}", assetPath.string());
-					return nullptr;
-				}
+	class AssetBuilder
+	{
+	public:
+		static bool CompilerShader(ShaderAsset& shaderAsset);
+		static bool LoadPixel(TextureAsset& textureAsset);
+		static bool LoadMeshData_FBX(MeshAsset& meshAsset);
 
-				return meshAsset;
-			}
-			default:
-				KITA_CORE_WARN("AssetFactory unsupported asset type.");
-				return nullptr;
-			}
-		}
+	private:
+		// mesh loader helper
+		static void ProcessNode(aiNode* node, const aiScene* scene, MeshAsset& meshAsset);
+		static void ProcessMesh(aiMesh* mesh, const aiScene* scene, MeshAsset& meshAsset);
+
 	};
 
 }

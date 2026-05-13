@@ -20,6 +20,7 @@ namespace Kita {
 
 			return extension == ".mat"
 				|| extension == ".glsl"
+				|| extension == ".slang"
 				|| extension == ".vert"
 				|| extension == ".frag"
 				|| extension == ".png"
@@ -393,7 +394,7 @@ namespace Kita {
 			return AssetType::Material;
 		}
 
-		if (ext == ".glsl" || ext == ".vert" || ext == ".frag")
+		if (ext == ".glsl" || ext == ".slang" || ext == ".vert" || ext == ".frag")
 		{
 			return AssetType::Shader;
 		}

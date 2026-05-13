@@ -3,6 +3,7 @@
 #include <core/Input.h>
 #include <glfw/glfw3.h>
 #define GLM_ENABLE_EXPERIMENTAL
+#include <glm/ext/matrix_clip_space.hpp>
 #include <glm/gtx/quaternion.hpp>
 
 namespace Kita {
@@ -16,7 +17,8 @@ namespace Kita {
 		:m_FOV(fov), m_Aspect(aspect), m_Near(nearPlane), m_Far(farPlane)
 	{
 		UpdateViewMatrix();
-		m_ProjectionMatrix = glm::perspective(glm::radians(m_FOV), m_Aspect, m_Near, m_Far);
+		m_ProjectionMatrix = glm::perspectiveRH_ZO(glm::radians(m_FOV), m_Aspect, m_Near, m_Far);
+		m_ProjectionMatrix[1][1] *= -1.0f;
 	}
 
 
@@ -75,7 +77,8 @@ namespace Kita {
 	void ViewportCamera::UpdateProjectionMatrix()
 	{
 		m_Aspect = m_ViewportWidth / m_ViewportHeight;
-		m_ProjectionMatrix = glm::perspective(glm::radians(m_FOV), m_Aspect, m_Near, m_Far);
+		m_ProjectionMatrix = glm::perspectiveRH_ZO(glm::radians(m_FOV), m_Aspect, m_Near, m_Far);
+		m_ProjectionMatrix[1][1] *= -1.0f;
 	}
 
 	void ViewportCamera::UpdateViewMatrix()

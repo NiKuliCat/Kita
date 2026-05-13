@@ -222,50 +222,6 @@ namespace Kita {
 		ImGui::PopID();
 	}
 
-	void InspectorPanel::DrawPointCountRow(LineRenderer& lineRenderer, PointData& selectedPoint, bool& isHighlight)
-	{
-		BeginPropertyRow(isHighlight);
-		DrawPropertyLabelCell("Point Count");
-		PreparePropertyValueCell(GetInspectorControlYOffset());
-
-		const uint32_t anchorCount = lineRenderer.GetControlPointCount() == 0
-			? 0
-			: static_cast<uint32_t>((lineRenderer.GetControlPointCount() + 2) / 3);
-		const std::string pointCountText = std::to_string(anchorCount);
-		const float totalWidth = ImGui::GetContentRegionAvail().x - textPaddingX;
-		const float buttonWidth = 30.0f;
-		const float spacing = 8.0f;
-		const float textWidth = totalWidth - buttonWidth * 2.0f - spacing * 2.0f;
-		const bool canEditSegments = lineRenderer.GetCurveType() == CurveType::BezierCubic;
-
-		ImGui::PushID("PointCountRow");
-		ImGui::SetNextItemWidth(textWidth);
-		ImGui::InputText("##PointCount", const_cast<char*>(pointCountText.c_str()), static_cast<size_t>(pointCountText.size() + 1), ImGuiInputTextFlags_ReadOnly);
-		ImGui::SameLine(0.0f, spacing);
-		if (!canEditSegments)
-		{
-			ImGui::BeginDisabled();
-		}
-		if (ImGui::Button("+", ImVec2(buttonWidth, 0.0f)))
-		{
-			lineRenderer.AppendBezierSegment();
-		}
-		ImGui::SameLine(0.0f, spacing);
-		if (ImGui::Button("-", ImVec2(buttonWidth, 0.0f)))
-		{
-			lineRenderer.RemoveLastBezierSegment();
-			if (selectedPoint.id >= static_cast<int>(lineRenderer.GetControlPointCount()))
-			{
-				ClearSelectedPoint();
-			}
-		}
-		if (!canEditSegments)
-		{
-			ImGui::EndDisabled();
-		}
-		ImGui::PopID();
-	}
-
 	void InspectorPanel::DrawAnchorRow(const char* label, glm::vec3& value, BezierHandleMode& handleMode, bool& isHighlight)
 	{
 		BeginPropertyRow(isHighlight);
@@ -347,16 +303,15 @@ namespace Kita {
 		ImGui::Begin("Inspector");
 
 		auto& selectedObject = GetSelectedObject();
-		auto& selectedPoint = GetSelectedPoint();
 		if (selectedObject)
 		{
-			DrawSelectedObject(selectedObject, selectedPoint);
+			DrawSelectedObject(selectedObject);
 		}
 
 		ImGui::End();
 	}
 
-	void InspectorPanel::DrawSelectedObject(Object& selectedObject, PointData& selectedPoint)
+	void InspectorPanel::DrawSelectedObject(Object& selectedObject)
 	{
 		DrawObjectInfoSection(selectedObject);
 
@@ -374,15 +329,6 @@ namespace Kita {
 			[&](LightComponent& lightComponent)
 			{
 				DrawLightComponentProperties(lightComponent);
-			});
-
-		DrawComponentSection<LineRenderer>(
-			selectedObject,
-			"LineRenderer",
-			[&](LineRenderer& lineRenderer)
-			{
-				DrawLineRendererProperties(lineRenderer, selectedPoint);
-				DrawLineRendererControlPoints(lineRenderer, selectedPoint);
 			});
 	}
 
@@ -426,18 +372,33 @@ namespace Kita {
 		if (BeginPropertyTable("##MeshRendererComponentTable"))
 		{
 			bool isHighlight = false;
-
-			DrawInfoRow("Mesh Source", meshRenderer.GetMeshFilePath(), isHighlight);
-			DrawInfoRow("SubMesh Count", std::to_string(meshRenderer.GetSubMeshCount()), isHighlight);
-
-			auto& materialHandles = meshRenderer.GetMaterialAssetHandles();
-			auto& runtimeMaterials = meshRenderer.GetRuntimeMaterials();
 			auto& assetManager = AssetManager::GetInstance();
+
+			std::string meshSource = "None";
+			size_t subMeshCount = 0;
+			if (Asset::IsValidHandle(meshRenderer.MeshAssetHandle))
+			{
+				if (const AssetMetadata* metadata = assetManager.GetMetadata(meshRenderer.MeshAssetHandle))
+				{
+					meshSource = metadata->relativePath.generic_string();
+				}
+
+				if (Ref<MeshAsset> meshAsset = assetManager.GetMeshAsset(meshRenderer.MeshAssetHandle))
+				{
+					subMeshCount = meshAsset->MeshRawData.size();
+				}
+			}
+
+			DrawInfoRow("Mesh Source", meshSource, isHighlight);
+			DrawInfoRow("SubMesh Count", std::to_string(subMeshCount), isHighlight);
+
+			auto& materialHandles = meshRenderer.MaterialAssetHandles;
 			const auto shaderAssets = assetManager.GetAssetsByType(AssetType::Shader);
 			const auto textureAssets = assetManager.GetAssetsByType(AssetType::Texture);
 			for (size_t i = 0; i < materialHandles.size(); ++i)
 			{
-				Ref<MaterialAsset> materialAsset = meshRenderer.GetMaterialAsset(i);
+				const AssetHandle materialHandle = materialHandles[i];
+				Ref<MaterialAsset> materialAsset = assetManager.GetMaterialAsset(materialHandle);
 				if (!materialAsset)
 				{
 					DrawInfoRow(("Material " + std::to_string(i)).c_str(), "None", isHighlight);
@@ -451,7 +412,7 @@ namespace Kita {
 				{
 					if (auto shaderAsset = assetManager.GetShaderAsset(materialAsset->ShaderHandle))
 					{
-						shaderPath = shaderAsset->GetFilePath().string();
+						shaderPath = shaderAsset->SourcePath.string();
 					}
 				}
 
@@ -471,7 +432,6 @@ namespace Kita {
 					if (ImGui::Selectable("None", isNoneSelected))
 					{
 						materialAsset->ShaderHandle = InvalidAssetHandle;
-						meshRenderer.SyncMaterial(i);
 						shaderPath = "None";
 					}
 
@@ -487,7 +447,6 @@ namespace Kita {
 						if (ImGui::Selectable(label.c_str(), isSelected))
 						{
 							materialAsset->ShaderHandle = metadata.handle;
-							meshRenderer.SyncMaterial(i);
 							shaderPath = label;
 						}
 
@@ -506,7 +465,7 @@ namespace Kita {
 				{
 					if (auto textureAsset = assetManager.GetTextureAsset(materialAsset->AlbedoTextureHandle))
 					{
-						texturePath = textureAsset->GetFilePath().string();
+						texturePath = textureAsset->SourcePath.string();
 					}
 				}
 
@@ -529,7 +488,6 @@ namespace Kita {
 					if (ImGui::Selectable("None", isNoneSelected))
 					{
 						materialAsset->AlbedoTextureHandle = InvalidAssetHandle;
-						meshRenderer.SyncMaterial(i);
 						texturePath = "None";
 					}
 
@@ -545,7 +503,6 @@ namespace Kita {
 						if (ImGui::Selectable(label.c_str(), isSelected))
 						{
 							materialAsset->AlbedoTextureHandle = metadata.handle;
-							meshRenderer.SyncMaterial(i);
 							texturePath = label;
 						}
 
@@ -567,15 +524,7 @@ namespace Kita {
 				if (baseColor != materialAsset->BaseColor)
 				{
 					materialAsset->BaseColor = baseColor;
-					meshRenderer.SyncMaterial(i);
 				}
-
-				std::string runtimeState = "Ready";
-				if (i >= runtimeMaterials.size() || !runtimeMaterials[i] || !runtimeMaterials[i]->GetShader())
-				{
-					runtimeState = "Invalid Runtime Material";
-				}
-				DrawInfoRow(("Runtime " + std::to_string(i)).c_str(), runtimeState, isHighlight);
 			}
 
 			EndPropertyTable();
@@ -616,105 +565,4 @@ namespace Kita {
 		ImGui::Indent(treeIndent);
 	}
 
-	void InspectorPanel::DrawLineRendererProperties(LineRenderer& lineRenderer, PointData& selectedPoint)
-	{
-		const float treeIndent = ImGui::GetTreeNodeToLabelSpacing();
-		ImGui::Unindent(treeIndent);
-
-		if (BeginPropertyTable("##LineRendererComponentTable"))
-		{
-			bool isHighlight = false;
-
-			CurveType curveType = lineRenderer.GetCurveType();
-			DrawCurveTypeRow("Curve Type", curveType, isHighlight);
-			if (curveType != lineRenderer.GetCurveType())
-			{
-				lineRenderer.SetCurveType(curveType);
-			}
-
-			glm::vec4 lineColor = lineRenderer.GetLineColor();
-			DrawColorRow("Line Color", lineColor, isHighlight);
-			if (lineColor.x != lineRenderer.GetLineColor().x ||
-				lineColor.y != lineRenderer.GetLineColor().y ||
-				lineColor.z != lineRenderer.GetLineColor().z ||
-				lineColor.w != lineRenderer.GetLineColor().w)
-			{
-				lineRenderer.SetLineColor(lineColor);
-			}
-
-			float lineWidth = lineRenderer.GetLineWidth();
-			DrawFloatRow("Line Width", lineWidth, isHighlight, 0.05f, 1.0f);
-			if (lineWidth != lineRenderer.GetLineWidth())
-			{
-				lineRenderer.SetLineWidth(lineWidth);
-			}
-
-			DrawPointCountRow(lineRenderer, selectedPoint, isHighlight);
-
-			EndPropertyTable();
-		}
-
-		ImGui::Indent(treeIndent);
-	}
-
-	void InspectorPanel::DrawLineRendererControlPoints(LineRenderer& lineRenderer, PointData& selectedPoint)
-	{
-		const float treeIndent = ImGui::GetTreeNodeToLabelSpacing();
-		const ImGuiTreeNodeFlags childNodeFlags =
-			ImGuiTreeNodeFlags_DefaultOpen |
-			ImGuiTreeNodeFlags_Framed |
-			ImGuiTreeNodeFlags_SpanAvailWidth |
-			ImGuiTreeNodeFlags_FramePadding;
-
-		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 4,4 });
-		const bool open = ImGui::TreeNodeEx("Control Points", childNodeFlags);
-		ImGui::PopStyleVar();
-
-		if (!open)
-		{
-			return;
-		}
-
-		ImGui::Unindent(treeIndent);
-
-		if (BeginPropertyTable("##LineRendererControlPointsTable"))
-		{
-			bool isHighlight = false;
-
-			for (uint32_t i = 0; i < lineRenderer.GetControlPointCount(); ++i)
-			{
-				if (!lineRenderer.IsAnchorControlPoint(static_cast<int>(i)))
-				{
-					continue;
-				}
-
-				auto currentPoint = lineRenderer.GetControlPointByIndex(static_cast<int>(i));
-				glm::vec3 pointPosition = currentPoint.position;
-				BezierHandleMode handleMode = lineRenderer.GetHandleModeForPoint(static_cast<int>(i));
-				const std::string pointLabel = "Anchor " + std::to_string(i / 3);
-				DrawAnchorRow(pointLabel.c_str(), pointPosition, handleMode, isHighlight);
-
-				if (pointPosition.x != currentPoint.position.x ||
-					pointPosition.y != currentPoint.position.y ||
-					pointPosition.z != currentPoint.position.z)
-				{
-					lineRenderer.MoveControlPoint(static_cast<int>(i), pointPosition);
-					if (selectedPoint.id == static_cast<int>(i))
-					{
-						selectedPoint = lineRenderer.GetControlPointByIndex(static_cast<int>(i));
-					}
-				}
-
-				if (handleMode != lineRenderer.GetHandleModeForPoint(static_cast<int>(i)))
-				{
-					lineRenderer.SetHandleModeForPoint(static_cast<int>(i), handleMode);
-				}
-			}
-
-			EndPropertyTable();
-		}
-
-		ImGui::Indent(treeIndent);
-		ImGui::TreePop();
-	}
 }

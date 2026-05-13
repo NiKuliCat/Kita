@@ -13,6 +13,7 @@
 #include <limits>
 #include <cstdint>
 #include <filesystem>
+#include <set>
 
 #include <optional>
 #include <array>

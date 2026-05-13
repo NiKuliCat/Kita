@@ -80,12 +80,13 @@ workspace "Kita"
     configurations { "Debug", "Release", "Dist" }
     multiprocessorcompile "On"
 
+    
+    VULKANSDK = os.getenv("VULKAN_SDK")
     outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
     
     IncludeDir = {}
     IncludeDir["GLFW"]              = "%{wks.location}/engine/third-party/glfw/include"
-    IncludeDir["glad"]              = "%{wks.location}/engine/third-party/glad/include"
     IncludeDir["ImGui"]             = "%{wks.location}/engine/third-party/imgui"
     IncludeDir["spdlog"]            = "%{wks.location}/engine/third-party/spdlog/include"
     IncludeDir["glm"]               = "%{wks.location}/engine/third-party/glm"
@@ -93,10 +94,17 @@ workspace "Kita"
     IncludeDir["entt"]              = "%{wks.location}/engine/third-party/entt"
     IncludeDir["ImGuizmo"]          = "%{wks.location}/engine/third-party/imguizmo"
     IncludeDir["nlohmann_json"]     = "%{wks.location}/engine/third-party/nlohmann/include"
+    IncludeDir["VulkanSDK"] = "%{VULKANSDK}/Include"
+
+    LibraryDir = {}
+    LibraryDir["VulkanSDK"] = "%{VULKANSDK}/Lib"
+
+    Library = {}
+    Library["Vulkan"] = "%{LibraryDir.VulkanSDK}/vulkan-1.lib"
+    Library["slang"] = "%{LibraryDir.VulkanSDK}/slang.lib"
 
     group "Dependencies"
         include "engine/third-party/glfw"
-        include "engine/third-party/glad"
         include "engine/third-party/imgui"
     group "" 
 
