@@ -2,30 +2,50 @@
 #include <EngineCore.h>
 #include "ThumbnailCache.h"
 #include "SvgIconAtlas.h"
+#include "EditorSelectionContext.h"
 namespace Kita {
+
+	struct ContentEntryInfo
+	{
+		std::filesystem::path AbsolutePath;
+		std::filesystem::path RelativePath;
+
+		std::string FileName;
+		std::string DisplayName;
+
+		bool IsDirectory = false;
+		bool IsAsset = false;
+
+		AssetHandle Handle = InvalidAssetHandle;
+		AssetType Type = AssetType::None;
+	};
+
+	struct DirectoryCache
+	{
+		std::filesystem::path Directory;
+		std::vector<ContentEntryInfo> Entries;
+		bool Valid = false;
+	};
 
 	class ContentBrowserPanel {
 
 	public:
 		ContentBrowserPanel() = default;
-		ContentBrowserPanel(const std::filesystem::path& contentPath);
+		ContentBrowserPanel(const std::filesystem::path& contentPath,const Ref<EditorSelectionContext>& selectionContext);
 
 
 		void SetContentRoot(const std::filesystem::path& contentRoot);
+		void SetEditorSelectionContext(const Ref<EditorSelectionContext>& selectionContext) { m_CurrentSelectionContext = selectionContext; }
 		void SetToolbarHeight(float toolbarHeight);
 		void SetThumbnailCache(ThumbnailCache* thumbnailCache) { m_ThumbnailCache = thumbnailCache; }
 		void SetIconAtlas(SvgIconAtlas* iconAtlas) { m_IconAtlas = iconAtlas; }
+		void RefreshCurrentDirectory();
 		void OnImGuiRender();
 
 
 	private:
-		struct ContentEntryInfo
-		{
-			std::filesystem::directory_entry entry;
-			bool isAsset = false;
-			AssetHandle handle = InvalidAssetHandle;
-			AssetType type = AssetType::None;
-		};
+
+		
 
 		struct EntryTileLayout
 		{
@@ -36,10 +56,17 @@ namespace Kita {
 			float BottomPadding = 0.0f;
 		};
 
+		void EnsureCurrentDirectoryCache();
+		void RebuildDirectoryCache();
+
 		void DrawToolbar();
 		void DrawDirectoryTree(const std::filesystem::path& directory);
 		void DrawDirectoryContents();
 		void DrawBreadcrumb();
+		void SetSelectionAsset(const ContentEntryInfo& entry);
+		bool SetSelectedDirectory(const std::filesystem::path& directory);
+		bool PassSearchFilter(const ContentEntryInfo& entryInfo) const;
+		bool IsEntrySelected(const ContentEntryInfo& entryInfo) const;
 		ThumbnailCache::ThumbnailHandle GetEntryThumbnail(const ContentEntryInfo& entryInfo);
 		SvgIconAtlas::IconHandle GetEntryAtlasIcon(const ContentEntryInfo& entryInfo, bool isDirectory) const;
 		EntryTileLayout BuildEntryTileLayout() const;
@@ -50,13 +77,13 @@ namespace Kita {
 			const ImVec2& itemMin,
 			const ImVec2& itemMax,
 			bool isHovered,
+			bool isSelected,
 			ImFont* font,
 			const char* icon,
 			ThumbnailCache::ThumbnailHandle thumbnail,
 			SvgIconAtlas::IconHandle atlasIcon) const;
 		void DrawEntryTooltip(
 			const ContentEntryInfo& entryInfo,
-			const std::string& filename,
 			ThumbnailCache::ThumbnailHandle thumbnail) const;
 		std::string GetDisplayName(const std::filesystem::path& path) const;
 		bool ShouldDisplayEntry(const std::filesystem::directory_entry& entry) const;
@@ -70,6 +97,8 @@ namespace Kita {
 		float m_ToolbarHeight = 24.0f;
 		float m_TileSize = 92.0f;
 
+		Ref<EditorSelectionContext> m_CurrentSelectionContext = nullptr;
+		DirectoryCache  m_CurrentDirectoryCache;
 		ThumbnailCache* m_ThumbnailCache = nullptr;
 		SvgIconAtlas* m_IconAtlas = nullptr;
 	};

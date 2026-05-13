@@ -2,7 +2,7 @@
 
 #include <EngineCore.h>
 #include <EngineRender.h>
-#include "SceneSelectionContext.h"
+#include "EditorSelectionContext.h"
 #include "scene/ViewportCamera.h"
 
 namespace Kita {
@@ -11,7 +11,7 @@ namespace Kita {
 	{
 	public:
 		SceneViewportPanel(
-			const Ref<SceneSelectionContext>& selectionContext,
+			const Ref<EditorSelectionContext>& selectionContext,
 			std::string windowName = "Viewport");
 
 		SceneViewportPanel(const SceneViewportPanel&) = delete;
@@ -43,7 +43,7 @@ namespace Kita {
 		std::string m_WindowName = "Viewport";
 		Unique<ViewportCamera> m_ViewportCamera = nullptr;
 
-		Ref<SceneSelectionContext> m_SelectionContext = nullptr;
+		Ref<EditorSelectionContext> m_SelectionContext = nullptr;
 
 		Unique<VulkanRenderTarget> m_RenderTarget = nullptr;
 

@@ -32,6 +32,30 @@ namespace Kita {
 		return ImMax(0.0f, (GetInspectorContentHeight() - ImGui::GetFrameHeight()) * 0.5f);
 	}
 
+	void InspectorPanel::DrawItemByType(EditorSelectionItemType type)
+	{
+		switch (type)
+		{
+			case EditorSelectionItemType::None:
+			{
+				return;
+			}
+			case EditorSelectionItemType::SceneObject:
+			{
+				DrawSelectedObject(m_SelectionContext->GetSelectionItemHandle().m_SelectionObject);
+				return;
+			}
+			case EditorSelectionItemType::Asset:
+			{
+				DrawSelectedAsset(m_SelectionContext->GetSelectionItemHandle().m_SelectedAssetHandle);
+			}
+			default:
+			{
+				return;
+			}
+		}
+	}
+
 	const char* InspectorPanel::ObjectTypeToString(Type type)
 	{
 		switch (type)
@@ -199,7 +223,7 @@ namespace Kita {
 		ImGui::PopID();
 	}
 
-	void InspectorPanel::DrawCurveTypeRow(const char* label, CurveType& curveType, bool& isHighlight)
+	/*void InspectorPanel::DrawCurveTypeRow(const char* label, CurveType& curveType, bool& isHighlight)
 	{
 		BeginPropertyRow(isHighlight);
 		DrawPropertyLabelCell(label);
@@ -220,9 +244,9 @@ namespace Kita {
 		}
 		ImGui::PopStyleColor(4);
 		ImGui::PopID();
-	}
+	}*/
 
-	void InspectorPanel::DrawAnchorRow(const char* label, glm::vec3& value, BezierHandleMode& handleMode, bool& isHighlight)
+	/*void InspectorPanel::DrawAnchorRow(const char* label, glm::vec3& value, BezierHandleMode& handleMode, bool& isHighlight)
 	{
 		BeginPropertyRow(isHighlight);
 		DrawPropertyLabelCell(label);
@@ -287,7 +311,7 @@ namespace Kita {
 		}
 		ImGui::PopStyleColor(4);
 		ImGui::PopID();
-	}
+	}*/
 
 	void InspectorPanel::OnImGuiRender()
 	{
@@ -302,12 +326,10 @@ namespace Kita {
 
 		ImGui::Begin("Inspector");
 
-		auto& selectedObject = GetSelectedObject();
-		if (selectedObject)
-		{
-			DrawSelectedObject(selectedObject);
-		}
+		EditorSelectionItemType itemType = m_SelectionContext->GetSelectionType();
 
+		DrawItemByType(itemType);
+	
 		ImGui::End();
 	}
 
@@ -330,6 +352,10 @@ namespace Kita {
 			{
 				DrawLightComponentProperties(lightComponent);
 			});
+	}
+
+	void InspectorPanel::DrawSelectedAsset(AssetHandle handle)
+	{
 	}
 
 	void InspectorPanel::DrawObjectInfoSection(Object& selectedObject)

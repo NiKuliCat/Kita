@@ -1,31 +1,21 @@
 #pragma once
 #include <EngineCore.h>
-#include "SceneSelectionContext.h"
-
+#include "EditorSelectionContext.h"
 namespace Kita {
 
 	class InspectorPanel
 	{
 	public:
 		InspectorPanel() = default;
-		InspectorPanel(const Ref<SceneSelectionContext>& selectionContext)
+		InspectorPanel(const Ref<EditorSelectionContext>& selectionContext)
 			:m_SelectionContext(selectionContext){ }
 
-		void SetSelectionContext(const Ref<SceneSelectionContext>& selectionContext) { m_SelectionContext = selectionContext; }
+		void SetSelectionContext(const Ref<EditorSelectionContext>& selectionContext) { m_SelectionContext = selectionContext; }
 
 		void OnImGuiRender();
 	private:
-		Object& GetSelectedObject()
-		{
-			static Object emptyObject;
-			return m_SelectionContext ? m_SelectionContext->GetSelectedObject() : emptyObject;
-		}
-		SelectedPoint& GetSelectedPoint()
-		{
-			static SelectedPoint emptyPoint{};
-			return m_SelectionContext ? m_SelectionContext->GetSelectedPoint() : emptyPoint;
-		}
-		void ClearSelectedPoint() { if (m_SelectionContext) m_SelectionContext->ClearSelectedPoint(); }
+
+		void DrawItemByType(EditorSelectionItemType type);
 
 		static const char* ObjectTypeToString(Type type);
 		static float GetInspectorContentHeight();
@@ -40,6 +30,8 @@ namespace Kita {
 
 		void DrawInspectorPanel();
 		void DrawSelectedObject(Object& selectedObject);
+		void DrawSelectedAsset(AssetHandle handle);
+
 		void DrawObjectInfoSection(Object& selectedObject);
 		void DrawMeshRendererProperties(MeshRenderer& meshRenderer);
 		void DrawLightComponentProperties(LightComponent& lightComponent);
@@ -48,8 +40,6 @@ namespace Kita {
 		void DrawVec3Row(const char* label, glm::vec3& value, bool& isHighlight, float speed = 0.05f);
 		void DrawFloatRow(const char* label, float& value, bool& isHighlight, float speed = 0.05f, float minValue = 0.0f, float maxValue = 0.0f);
 		void DrawColorRow(const char* label, glm::vec4& value, bool& isHighlight);
-		void DrawCurveTypeRow(const char* label, CurveType& curveType, bool& isHighlight);
-		void DrawAnchorRow(const char* label, glm::vec3& value, BezierHandleMode& handleMode, bool& isHighlight);
 
 		template<typename T, typename DrawFunc>
 		void DrawComponentSection(Object& object, const char* label, DrawFunc&& drawFunc, bool enableRemove = true)
@@ -104,6 +94,6 @@ namespace Kita {
 			}
 		}
 	private:
-		Ref<SceneSelectionContext> m_SelectionContext = nullptr;
+		Ref<EditorSelectionContext> m_SelectionContext = nullptr;
 	};
 }

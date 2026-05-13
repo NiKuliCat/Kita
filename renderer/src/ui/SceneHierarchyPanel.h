@@ -1,6 +1,6 @@
 #pragma once
 #include <EngineCore.h>
-#include "SceneSelectionContext.h"
+#include "EditorSelectionContext.h"
 
 namespace Kita {
 
@@ -9,39 +9,15 @@ namespace Kita {
 	{
 	public:
 		SceneHierarchyPanel() = default;
-		SceneHierarchyPanel(const Ref<Scene>& scene, const Ref<SceneSelectionContext>& selectionContext)
+		SceneHierarchyPanel(const Ref<Scene>& scene, const Ref<EditorSelectionContext>& selectionContext)
 			:m_SceneContext(scene), m_SelectionContext(selectionContext) {}
 
 		void SetContext(const Ref<Scene>& scene) { m_SceneContext = scene; }
-		void SetSelectionContext(const Ref<SceneSelectionContext>& selectionContext) { m_SelectionContext = selectionContext; }
+		void SetSelectionContext(const Ref<EditorSelectionContext>& selectionContext) { m_SelectionContext = selectionContext; }
 
-		Object& GetSelectedObject()
-		{
-			static Object emptyObject;
-			return m_SelectionContext ? m_SelectionContext->GetSelectedObject() : emptyObject;
-		}
-		const Object& GetSelectedObject() const
-		{
-			static Object emptyObject;
-			return m_SelectionContext ? m_SelectionContext->GetSelectedObject() : emptyObject;
-		}
 
-		SelectedPoint& GetSelectedPoint()
-		{
-			static SelectedPoint emptyPoint{};
-			return m_SelectionContext ? m_SelectionContext->GetSelectedPoint() : emptyPoint;
-		}
-		const SelectedPoint& GetSelectedPoint() const
-		{
-			static SelectedPoint emptyPoint{};
-			return m_SelectionContext ? m_SelectionContext->GetSelectedPoint() : emptyPoint;
-		}
 
-		void SetSelectedObject(Object obj) { if (m_SelectionContext) m_SelectionContext->SetSelection(obj); }
-		void SetSelectedPoint(SelectedPoint point) { if (m_SelectionContext) m_SelectionContext->SetSelectedPoint(point); }
-
-		void ClearSelectedPoint() { if (m_SelectionContext) m_SelectionContext->ClearSelectedPoint(); }
-		void ClearSelection() { if (m_SelectionContext) m_SelectionContext->ClearSelection(); }
+		void SetSelectedObject(Object obj);
 
 		void OnImGuiRender();
 		operator bool() const { return !(m_SceneContext == nullptr); }
@@ -51,7 +27,7 @@ namespace Kita {
 
 	private:
 		Ref<Scene> m_SceneContext = nullptr;
-		Ref<SceneSelectionContext> m_SelectionContext = nullptr;
+		Ref<EditorSelectionContext> m_SelectionContext = nullptr;
 	};
 
 }

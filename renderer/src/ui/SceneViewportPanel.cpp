@@ -61,7 +61,7 @@ namespace Kita {
 	}
 
 	SceneViewportPanel::SceneViewportPanel(
-		const Ref<SceneSelectionContext>& selectionContext,
+		const Ref<EditorSelectionContext>& selectionContext,
 		std::string windowName)
 		: m_WindowName(std::move(windowName)),
 		m_ViewportCamera(CreateUnique<ViewportCamera>()),

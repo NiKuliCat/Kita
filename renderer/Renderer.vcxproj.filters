@@ -35,6 +35,9 @@
     <ClInclude Include="src\ui\ContentBrowserPanel.h">
       <Filter>ui</Filter>
     </ClInclude>
+    <ClInclude Include="src\ui\EditorSelectionContext.h">
+      <Filter>ui</Filter>
+    </ClInclude>
     <ClInclude Include="src\ui\InspectorPanel.h">
       <Filter>ui</Filter>
     </ClInclude>
@@ -77,6 +80,9 @@
       <Filter>scene</Filter>
     </ClCompile>
     <ClCompile Include="src\ui\ContentBrowserPanel.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\EditorSelectionContext.cpp">
       <Filter>ui</Filter>
     </ClCompile>
     <ClCompile Include="src\ui\InspectorPanel.cpp">

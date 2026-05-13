@@ -5,6 +5,14 @@
 #include <imgui_internal.h>
 
 namespace Kita {
+	void SceneHierarchyPanel::SetSelectedObject(Object obj)
+	{
+		if (m_SelectionContext)
+		{
+			m_SelectionContext->SetSelectionType(EditorSelectionItemType::SceneObject);
+			m_SelectionContext->SetSelctionObject(obj);
+		}
+	}
 
 	void SceneHierarchyPanel::OnImGuiRender()
 	{
@@ -15,15 +23,6 @@ namespace Kita {
 
 		if (m_SceneContext)
 		{
-			ImGuiIO& io = ImGui::GetIO();
-			ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth | ImGuiTreeNodeFlags_DefaultOpen;
-
-
-			if (ImGui::IsItemClicked())
-			{
-				ClearSelection();
-			}
-
 			auto view = m_SceneContext->GetRegistry().view<entt::entity>();
 			for (auto entityID : view)
 			{
@@ -32,10 +31,12 @@ namespace Kita {
 			}
 
 
-
 			if (ImGui::IsMouseDown(0) && ImGui::IsWindowHovered())
 			{
-				ClearSelection();
+				if (m_SelectionContext)
+				{
+					m_SelectionContext->Clear();
+				}
 			}
 
 			if (!ImGui::IsAnyItemHovered() && ImGui::IsWindowHovered() && ImGui::IsMouseClicked(ImGuiMouseButton_Right))
@@ -57,13 +58,18 @@ namespace Kita {
 	void SceneHierarchyPanel::DrawObjectNode(Object obj)
 	{
 		auto& name = obj.GetName();
-		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ((GetSelectedObject() == obj) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_SpanAvailWidth;
+		const bool isSelected =
+			m_SelectionContext &&
+			m_SelectionContext->GetSelectionType() == EditorSelectionItemType::SceneObject &&
+			m_SelectionContext->GetSelectionItemHandle().m_SelectionObject == obj;
+		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow |
+			(isSelected ? ImGuiTreeNodeFlags_Selected : 0) |
+			ImGuiTreeNodeFlags_SpanAvailWidth;
 
 		bool open = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)obj, flags, name.c_str());
 
 		if (ImGui::IsItemClicked())
 		{
-			ClearSelectedPoint();
 			SetSelectedObject(obj);
 		}
 
@@ -81,14 +87,6 @@ namespace Kita {
 		{
 
 			ImGui::TreePop();
-		}
-		if (deleted)
-		{
-			m_SceneContext->DestroyObject(obj);
-			if (GetSelectedObject() == obj)
-			{
-				ClearSelection();
-			}
 		}
 	}
 

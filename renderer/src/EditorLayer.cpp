@@ -25,9 +25,9 @@ namespace Kita {
 		m_Scene = CreateRef<Scene>("example scene");
 		m_SceneSerializer = SceneSerializer(m_Scene);
 
-		m_SceneSelectionContext = CreateRef<SceneSelectionContext>();
-		m_SceneHierarchyPanel = SceneHierarchyPanel(m_Scene, m_SceneSelectionContext);
-		m_InspectorPanel = InspectorPanel(m_SceneSelectionContext);
+		m_EditorSelectionContext = CreateRef<EditorSelectionContext>();
+		m_SceneHierarchyPanel = SceneHierarchyPanel(m_Scene, m_EditorSelectionContext);
+		m_InspectorPanel = InspectorPanel(m_EditorSelectionContext);
 
 		m_SceneViewportPanels.clear();
 		m_NextViewportSerial = 1;
@@ -36,7 +36,7 @@ namespace Kita {
 		const auto project = Project::GetActive();
 		if (project)
 		{
-			m_ContentBrowserPanel = ContentBrowserPanel(project->GetAssetRootDirectory());
+			m_ContentBrowserPanel = ContentBrowserPanel(project->GetAssetRootDirectory(),m_EditorSelectionContext);
 			m_ContentBrowserResourceFactory = CreateUnique<VulkanResourceFactory>(
 				Application::Get().GetVulkanContext(),
 				AssetManager::GetInstance());
@@ -163,7 +163,7 @@ namespace Kita {
 					auto path = FileDialogs::OpenFile(L"Kita Scene (*.sce)\0*.sce\0All Files (*.*)\0*.*\0");
 					if (!path.empty())
 					{
-						m_SceneHierarchyPanel.ClearSelection();
+						//m_SceneHierarchyPanel.ClearSelection();
 						m_SceneSerializer.Deserialize(path);
 					}
 				}
@@ -266,7 +266,7 @@ namespace Kita {
 	void EditorLayer::AddViewportPanel(std::string windowName)
 	{
 		ViewportInstance viewport{};
-		viewport.Panel = CreateUnique<SceneViewportPanel>(m_SceneSelectionContext, std::move(windowName));
+		viewport.Panel = CreateUnique<SceneViewportPanel>(m_EditorSelectionContext, std::move(windowName));
 		if (viewport.Panel && viewport.Panel->GetRenderTarget() && viewport.Panel->GetViewportCamera())
 		{
 			viewport.Renderer = CreateUnique<EditorRenderer>(

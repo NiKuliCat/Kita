@@ -3,7 +3,7 @@
 #include "scene/EditorRenderer.h"
 #include "ui/InspectorPanel.h"
 #include "ui/SceneHierarchyPanel.h"
-#include "ui/SceneSelectionContext.h"
+#include "ui/EditorSelectionContext.h"
 #include "ui/SceneViewportPanel.h"
 #include "ui/ContentBrowserPanel.h"
 #include "ui/SvgIconAtlas.h"
@@ -55,7 +55,7 @@ namespace Kita {
 		uint32_t m_NextViewportSerial = 1;
 		bool m_ShowTimeSystemPanel = true;
 
-		Ref<SceneSelectionContext> m_SceneSelectionContext = nullptr;
+		Ref<EditorSelectionContext> m_EditorSelectionContext = nullptr;
 		Unique<VulkanResourceFactory> m_ContentBrowserResourceFactory = nullptr;
 		Unique<ThumbnailCache> m_ContentBrowserThumbnailCache = nullptr;
 		Unique<SvgIconAtlas> m_ContentBrowserIconAtlas = nullptr;

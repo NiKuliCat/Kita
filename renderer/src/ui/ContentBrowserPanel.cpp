@@ -31,7 +31,35 @@ namespace Kita {
 				|| extension == ".gltf"
 				|| extension == ".glb";
 		}
+
+
+		bool PathsEquivalent(const std::filesystem::path& left, const std::filesystem::path& right)
+		{
+			if (left.empty() || right.empty())
+				return false;
+
+			std::error_code ec;
+			if (std::filesystem::exists(left, ec) && std::filesystem::exists(right, ec))
+			{
+				ec.clear();
+				const bool equivalent = std::filesystem::equivalent(left, right, ec);
+				if (!ec)
+					return equivalent;
+			}
+
+			return left.lexically_normal() == right.lexically_normal();
+		}
+
+		std::string ToLowerCopy(std::string value)
+		{
+			std::transform(value.begin(), value.end(), value.begin(),
+				[](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+			return value;
+		}
 	}
+
+
+
 
 	const ImU32 separatorColor = ImGui::ColorConvertFloat4ToU32(ImVec4(0.055f, 0.056f, 0.060f, 1.0f));
 	const ImU32  searchColor = ImGui::ColorConvertFloat4ToU32(ImVec4(0.102f, 0.102f, 0.102f, 1.0f));
@@ -51,20 +79,28 @@ namespace Kita {
 	constexpr float kTooltipPreviewMaxSize = 256.0f;
 	constexpr float kPreviewCornerRounding = 6.0f;
 
-	ContentBrowserPanel::ContentBrowserPanel(const std::filesystem::path& contentPath)
+	ContentBrowserPanel::ContentBrowserPanel(const std::filesystem::path& contentPath, const Ref<EditorSelectionContext>& selectionContext)
+		:m_CurrentSelectionContext(selectionContext)
 	{
 		SetContentRoot(contentPath);
 	}
 
 	void ContentBrowserPanel::SetContentRoot(const std::filesystem::path& contentRoot)
 	{
-		m_ContentRoot = contentRoot;
-		m_SelectedDirectory = contentRoot;
+		m_ContentRoot = contentRoot.lexically_normal();
+		m_SelectedDirectory = m_ContentRoot;
+		m_CurrentDirectoryCache = {};
 	}
 
 	void ContentBrowserPanel::SetToolbarHeight(float toolbarHeight)
 	{
 		m_ToolbarHeight = toolbarHeight < 0.0f ? 0.0f : toolbarHeight;
+	}
+
+	void ContentBrowserPanel::RefreshCurrentDirectory()
+	{
+		m_CurrentDirectoryCache.Valid = false;
+		EnsureCurrentDirectoryCache();
 	}
 
 	void ContentBrowserPanel::OnImGuiRender()
@@ -88,6 +124,7 @@ namespace Kita {
 		if (m_SelectedDirectory.empty() || !std::filesystem::exists(m_SelectedDirectory))
 		{
 			m_SelectedDirectory = m_ContentRoot;
+			m_CurrentDirectoryCache.Valid = false;
 		}
 
 		DrawToolbar();
@@ -131,6 +168,59 @@ namespace Kita {
 		ImGui::PopStyleVar();
 	}
 
+	void ContentBrowserPanel::RebuildDirectoryCache()
+	{
+		m_CurrentDirectoryCache.Directory = m_SelectedDirectory;
+		m_CurrentDirectoryCache.Entries.clear();
+
+		std::error_code ec;
+		if (m_SelectedDirectory.empty() ||
+			!std::filesystem::exists(m_SelectedDirectory, ec) ||
+			ec ||
+			!std::filesystem::is_directory(m_SelectedDirectory, ec) ||
+			ec)
+		{
+			m_CurrentDirectoryCache.Valid = false;
+			return;
+		}
+
+		for (const auto& entry : std::filesystem::directory_iterator(m_SelectedDirectory, ec))
+		{
+			if (ec)
+			{
+				m_CurrentDirectoryCache.Valid = false;
+				m_CurrentDirectoryCache.Entries.clear();
+				return;
+			}
+
+			if (!ShouldDisplayEntry(entry))
+				continue;
+			m_CurrentDirectoryCache.Entries.push_back(BuildEntryInfo(entry));
+		}
+
+		std::sort(m_CurrentDirectoryCache.Entries.begin(), m_CurrentDirectoryCache.Entries.end(),
+			[](const ContentEntryInfo& left, const ContentEntryInfo& right)
+			{
+				if (left.IsDirectory != right.IsDirectory)
+					return left.IsDirectory > right.IsDirectory;
+
+				return left.FileName < right.FileName;
+			});
+
+		m_CurrentDirectoryCache.Valid = true;
+	}
+
+	void ContentBrowserPanel::EnsureCurrentDirectoryCache()
+	{
+		if (m_CurrentDirectoryCache.Valid &&
+			PathsEquivalent(m_CurrentDirectoryCache.Directory, m_SelectedDirectory))
+		{
+			return;
+		}
+
+		RebuildDirectoryCache();
+	}
+
 	void ContentBrowserPanel::DrawToolbar()
 	{
 		const float toolbarHeight = m_ToolbarHeight;
@@ -160,12 +250,20 @@ namespace Kita {
 		const float visualCenterOffsetY = 1.0f;
 		const float centeredY = IM_TRUNC((actualToolbarHeight - inputHeight) * 0.5f + 0.5f) + visualCenterOffsetY;
 		const float cursorPosY = ImClamp(centeredY, 0.0f, ImMax(0.0f, actualToolbarHeight - inputHeight));
+
+		ImGui::SetCursorPosX(horizontalPadding);
+		ImGui::SetCursorPosY(cursorPosY);
+		if (ImGui::Button("Refresh"))
+		{
+			RefreshCurrentDirectory();
+		}
+
 		ImGui::SetCursorPosY(cursorPosY);
 		ImGui::SetCursorPosX(searchPosX);
 		ImGui::SetNextItemWidth(searchWidth);
 		ImGui::InputTextWithHint("##ContentSearch", "Search...", m_SearchBuffer.data(), m_SearchBuffer.size());
 
-		ImGui::SetCursorPosX(horizontalPadding);
+		ImGui::SetCursorPosX(horizontalPadding + 74.0f);
 		ImGui::SetCursorPosY(cursorPosY);
 		ImGui::SetNextItemWidth(140.0f);
 		ImGui::SliderFloat("##ContentTileSize", &m_TileSize, kTileMinSize, kTileMaxSize, "Size %.0f");
@@ -177,7 +275,7 @@ namespace Kita {
 
 	void ContentBrowserPanel::DrawDirectoryTree(const std::filesystem::path& directory)
 	{
-		const bool isSelected = std::filesystem::equivalent(directory, m_SelectedDirectory);
+		const bool isSelected = PathsEquivalent(directory, m_SelectedDirectory);
 		const ImGuiTreeNodeFlags flags =
 			ImGuiTreeNodeFlags_OpenOnArrow |
 			ImGuiTreeNodeFlags_OpenOnDoubleClick |
@@ -190,7 +288,7 @@ namespace Kita {
 
 		if (ImGui::IsItemClicked())
 		{
-			m_SelectedDirectory = directory;
+			SetSelectedDirectory(directory);
 		}
 
 		if (!isOpen)
@@ -199,8 +297,15 @@ namespace Kita {
 		}
 
 		std::vector<std::filesystem::directory_entry> childDirectories;
-		for (const auto& entry : std::filesystem::directory_iterator(directory))
+		std::error_code ec;
+		for (const auto& entry : std::filesystem::directory_iterator(directory, ec))
 		{
+			if (ec)
+			{
+				ImGui::TreePop();
+				return;
+			}
+
 			if (entry.is_directory())
 			{
 				childDirectories.push_back(entry);
@@ -234,74 +339,63 @@ namespace Kita {
 		ImGui::PopStyleVar(2);
 
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 8.0f);
-
-		std::vector<ContentEntryInfo> entries;
-		for (const auto& entry : std::filesystem::directory_iterator(m_SelectedDirectory))
-		{
-			if (!ShouldDisplayEntry(entry))
-			{
-				continue;
-			}
-
-			entries.push_back(BuildEntryInfo(entry));
-		}
-
-		std::sort(entries.begin(), entries.end(),
-			[](const auto& left, const auto& right)
-			{
-				if (left.entry.is_directory() != right.entry.is_directory())
-				{
-					return left.entry.is_directory() > right.entry.is_directory();
-				}
-
-				return left.entry.path().filename().string() < right.entry.path().filename().string();
-			});
+		EnsureCurrentDirectoryCache();
 
 		const float panelWidth = ImGui::GetContentRegionAvail().x;
 		const int columnCount = std::max(1, static_cast<int>(panelWidth / m_TileSize));
 
 		if (ImGui::BeginTable("##ContentEntryGrid", columnCount, ImGuiTableFlags_SizingFixedFit))
 		{
-			for (const auto& entry : entries)
+			for (const auto& entry : m_CurrentDirectoryCache.Entries)
 			{
-				ImGui::TableNextColumn();
-				ImGui::PushID(entry.entry.path().string().c_str());
+				if (!PassSearchFilter(entry))
+					continue;
 
-				const bool isDirectory = entry.entry.is_directory();
-				const std::string filename = entry.entry.path().filename().string();
-				const std::string stem = entry.entry.path().stem().string();
-				const std::string name = isDirectory || stem.empty() ? filename : stem;
+				ImGui::TableNextColumn();
+				ImGui::PushID(entry.AbsolutePath.string().c_str());
+
+				const bool isDirectory = entry.IsDirectory;
+				const bool isSelected = IsEntrySelected(entry);
 				const char* icon = GetEntryIcon(entry);
 				ImFont* font = ImGui::GetFont();
+
 				const ThumbnailCache::ThumbnailHandle thumbnail = GetEntryThumbnail(entry);
 				const SvgIconAtlas::IconHandle atlasIcon = GetEntryAtlasIcon(entry, isDirectory);
 				const EntryTileLayout layout = BuildEntryTileLayout();
+
 				ImGui::InvisibleButton("##EntryItem", ImVec2(layout.ItemWidth, layout.ItemHeight));
 				const bool clicked = ImGui::IsItemClicked(ImGuiMouseButton_Left);
 				const bool isHovered = ImGui::IsItemHovered();
 
 				const ImVec2 itemMin = ImGui::GetItemRectMin();
 				const ImVec2 itemMax = ImGui::GetItemRectMax();
-				DrawEntryVisual(entry, layout, itemMin, itemMax, isHovered, font, icon, thumbnail, atlasIcon);
+				DrawEntryVisual(entry, layout, itemMin, itemMax, isHovered, isSelected, font, icon, thumbnail, atlasIcon);
 
 				const ImVec2 labelMin(itemMin.x, itemMin.y + layout.TopPadding + layout.ContentHeight + kTileIconTextGap);
 				const ImVec2 labelMax(itemMax.x, itemMax.y - layout.BottomPadding);
-				const ImVec2 labelSize = ImGui::CalcTextSize(name.c_str());
-				ImGui::RenderTextClipped(labelMin, labelMax, name.c_str(), nullptr, &labelSize, ImVec2(0.5f, 0.5f));
+				const ImVec2 labelSize = ImGui::CalcTextSize(entry.DisplayName.c_str());
+				ImGui::RenderTextClipped(labelMin, labelMax, entry.DisplayName.c_str(), nullptr, &labelSize, ImVec2(0.5f, 0.5f));
 
-				if (clicked && isDirectory)
+				if (clicked)
 				{
-					m_SelectedDirectory = entry.entry.path();
+					if (isDirectory)
+					{
+						SetSelectedDirectory(entry.AbsolutePath);
+					}
+					else if (entry.IsAsset)
+					{
+						SetSelectionAsset(entry);
+					}
 				}
 
-				if (isDirectory && ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+				if (isDirectory && isHovered && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 				{
-					m_SelectedDirectory = entry.entry.path();
+					SetSelectedDirectory(entry.AbsolutePath);
 				}
 
-				if (ImGui::IsItemHovered() && !isDirectory)
+				if (isHovered && !isDirectory)
 				{
-					DrawEntryTooltip(entry, filename, thumbnail);
+					DrawEntryTooltip(entry, thumbnail);
 				}
 
 				ImGui::PopID();
@@ -313,12 +407,12 @@ namespace Kita {
 
 	ThumbnailCache::ThumbnailHandle ContentBrowserPanel::GetEntryThumbnail(const ContentEntryInfo& entryInfo)
 	{
-		if (!m_ThumbnailCache || entryInfo.entry.is_directory() || !entryInfo.isAsset || entryInfo.type != AssetType::Texture)
+		if (!m_ThumbnailCache || entryInfo.IsDirectory || !entryInfo.IsAsset || entryInfo.Type != AssetType::Texture)
 		{
 			return {};
 		}
 
-		return m_ThumbnailCache->GetOrCreate(entryInfo.handle, entryInfo.type);
+		return m_ThumbnailCache->GetOrCreate(entryInfo.Handle, entryInfo.Type);
 	}
 
 	SvgIconAtlas::IconHandle ContentBrowserPanel::GetEntryAtlasIcon(const ContentEntryInfo& entryInfo, bool isDirectory) const
@@ -358,11 +452,13 @@ namespace Kita {
 		const ImVec2& itemMin,
 		const ImVec2& itemMax,
 		bool isHovered,
+		bool isSelected,
 		ImFont* font,
 		const char* icon,
 		ThumbnailCache::ThumbnailHandle thumbnail,
 		SvgIconAtlas::IconHandle atlasIcon) const
 	{
+		(void)entryInfo;
 		const float previewSize = layout.ContentHeight;
 		const ImVec2 previewMin(
 			itemMin.x + (itemMax.x - itemMin.x - previewSize) * 0.5f,
@@ -370,10 +466,16 @@ namespace Kita {
 		const ImVec2 previewMax(previewMin.x + previewSize, previewMin.y + previewSize);
 		ImDrawList* drawList = ImGui::GetWindowDrawList();
 
-		if (isHovered)
+		if (isSelected || isHovered)
 		{
-			drawList->AddRectFilled(itemMin, itemMax, tileHoverBgColor, kPreviewCornerRounding);
-			drawList->AddRect(itemMin, itemMax, tileHoverBorderColor, kPreviewCornerRounding, 0, 1.5f);
+			const ImU32 fillColor = isSelected
+				? ImGui::ColorConvertFloat4ToU32(ImVec4(0.720f, 0.540f, 0.080f, 0.32f))
+				: tileHoverBgColor;
+			const ImU32 borderColor = isSelected
+				? ImGui::ColorConvertFloat4ToU32(ImVec4(1.000f, 0.860f, 0.220f, 1.0f))
+				: tileHoverBorderColor;
+			drawList->AddRectFilled(itemMin, itemMax, fillColor, kPreviewCornerRounding);
+			drawList->AddRect(itemMin, itemMax, borderColor, kPreviewCornerRounding, 0, isSelected ? 2.0f : 1.5f);
 		}
 
 		drawList->AddRectFilled(previewMin, previewMax, previewBgColor, kPreviewCornerRounding);
@@ -428,7 +530,6 @@ namespace Kita {
 
 	void ContentBrowserPanel::DrawEntryTooltip(
 		const ContentEntryInfo& entryInfo,
-		const std::string& filename,
 		ThumbnailCache::ThumbnailHandle thumbnail) const
 	{
 		ImGui::BeginTooltip();
@@ -447,12 +548,12 @@ namespace Kita {
 			}
 		}
 
-		ImGui::Text("File: %s", filename.c_str());
-		if (entryInfo.isAsset)
+		ImGui::Text("File: %s", entryInfo.FileName.c_str());
+		if (entryInfo.IsAsset)
 		{
 			ImGui::Separator();
-			ImGui::Text("Asset Type: %s", GetAssetTypeLabel(entryInfo.type));
-			ImGui::Text("Handle: %llu", static_cast<unsigned long long>(entryInfo.handle));
+			ImGui::Text("Asset Type: %s", GetAssetTypeLabel(entryInfo.Type));
+			ImGui::Text("Handle: %llu", static_cast<unsigned long long>(entryInfo.Handle));
 			if (thumbnail.IsValid() && thumbnail.Width > 0 && thumbnail.Height > 0)
 			{
 				ImGui::Text("Size: %u x %u", thumbnail.Width, thumbnail.Height);
@@ -475,10 +576,10 @@ namespace Kita {
 		const std::string rootLabel = GetDisplayName(m_ContentRoot);
 		if (ImGui::Button(rootLabel.c_str()))
 		{
-			m_SelectedDirectory = m_ContentRoot;
+			SetSelectedDirectory(m_ContentRoot);
 		}
 
-		if (std::filesystem::equivalent(m_SelectedDirectory, m_ContentRoot))
+		if (PathsEquivalent(m_SelectedDirectory, m_ContentRoot))
 		{
 			ImGui::PopStyleVar(2);
 			return;
@@ -504,16 +605,68 @@ namespace Kita {
 			ImGui::SameLine();
 			if (ImGui::Button(part.string().c_str()))
 			{
-				m_SelectedDirectory = cumulativePath;
+				SetSelectedDirectory(cumulativePath);
 			}
 		}
 
 		ImGui::PopStyleVar(2);
 	}
 
+	void ContentBrowserPanel::SetSelectionAsset(const ContentEntryInfo& entry)
+	{
+		if (!m_CurrentSelectionContext || !entry.IsAsset || !Asset::IsValidHandle(entry.Handle))
+			return;
+
+		m_CurrentSelectionContext->SetSelectionType(EditorSelectionItemType::Asset);
+		m_CurrentSelectionContext->SetSelectionAsset(entry.Handle);
+	}
+
+	bool ContentBrowserPanel::SetSelectedDirectory(const std::filesystem::path& directory)
+	{
+		if (directory.empty())
+			return false;
+
+		std::error_code ec;
+		if (!std::filesystem::exists(directory, ec) ||
+			ec ||
+			!std::filesystem::is_directory(directory, ec) ||
+			ec)
+		{
+			return false;
+		}
+
+		if (PathsEquivalent(directory, m_SelectedDirectory))
+			return false;
+
+		m_SelectedDirectory = directory.lexically_normal();
+		m_CurrentDirectoryCache.Valid = false;
+		return true;
+	}
+
+	bool ContentBrowserPanel::PassSearchFilter(const ContentEntryInfo& entryInfo) const
+	{
+		if (m_SearchBuffer[0] == '\0')
+			return true;
+
+		const std::string searchText = ToLowerCopy(std::string(m_SearchBuffer.data()));
+		const std::string targetText = ToLowerCopy(entryInfo.DisplayName);
+		return targetText.find(searchText) != std::string::npos;
+	}
+
+	bool ContentBrowserPanel::IsEntrySelected(const ContentEntryInfo& entryInfo) const
+	{
+		if (!entryInfo.IsAsset || !m_CurrentSelectionContext)
+			return false;
+
+		if (m_CurrentSelectionContext->GetSelectionType() != EditorSelectionItemType::Asset)
+			return false;
+
+		return m_CurrentSelectionContext->GetSelectionItemHandle().m_SelectedAssetHandle == entryInfo.Handle;
+	}
+
 	std::string ContentBrowserPanel::GetDisplayName(const std::filesystem::path& path) const
 	{
-		if (std::filesystem::equivalent(path, m_ContentRoot))
+		if (PathsEquivalent(path, m_ContentRoot))
 		{
 			return "Assets";
 		}
@@ -543,40 +696,49 @@ namespace Kita {
 		return true;
 	}
 
-	ContentBrowserPanel::ContentEntryInfo ContentBrowserPanel::BuildEntryInfo(const std::filesystem::directory_entry& entry)
+	ContentEntryInfo ContentBrowserPanel::BuildEntryInfo(const std::filesystem::directory_entry& entry)
 	{
 		ContentEntryInfo entryInfo{};
-		entryInfo.entry = entry;
+		entryInfo.AbsolutePath = entry.path().lexically_normal();
+		entryInfo.FileName = entry.path().filename().string();
+		entryInfo.DisplayName = entry.is_directory() || entry.path().stem().empty()
+			? entryInfo.FileName
+			: entry.path().stem().string();
 
-		if (entry.is_directory())
+		entryInfo.IsDirectory = entry.is_directory();
+
+		if (!m_ContentRoot.empty())
 		{
-			return entryInfo;
+			std::error_code ec;
+			entryInfo.RelativePath = std::filesystem::relative(entryInfo.AbsolutePath, m_ContentRoot, ec);
+			if (ec)
+				entryInfo.RelativePath.clear();
 		}
+
+		if (entryInfo.IsDirectory)
+			return entryInfo;
 
 		const auto& path = entry.path();
-		if (!IsSupportedAssetPath(path))
-		{
+		if (!IsSupportedAssetPath(entryInfo.AbsolutePath))
 			return entryInfo;
-		}
 
 		auto& assetManager = AssetManager::GetInstance();
-		AssetHandle handle = assetManager.GetHandleByPath(path);
+		AssetHandle handle = assetManager.GetHandleByPath(entryInfo.AbsolutePath);
 		if (handle == InvalidAssetHandle)
 		{
-			handle = assetManager.ImportAsset(path);
+			handle = assetManager.ImportAsset(entryInfo.AbsolutePath);
 		}
 
 		if (handle == InvalidAssetHandle)
-		{
 			return entryInfo;
-		}
 
-		entryInfo.isAsset = true;
-		entryInfo.handle = handle;
+		entryInfo.IsAsset = true;
+		entryInfo.Handle = handle;
 
 		if (const AssetMetadata* metadata = assetManager.GetMetadata(handle))
 		{
-			entryInfo.type = metadata->type;
+			entryInfo.Type = metadata->type;
+			entryInfo.RelativePath = metadata->relativePath;
 		}
 
 		return entryInfo;
@@ -584,18 +746,19 @@ namespace Kita {
 
 	const char* ContentBrowserPanel::GetEntryIcon(const ContentEntryInfo& entryInfo) const
 	{
-		if (entryInfo.entry.is_directory())
+		if (entryInfo.IsDirectory)
 		{
 			return ICON_FON_FOLDER;
 		}
 
-		switch (entryInfo.type)
+		switch (entryInfo.Type)
 		{
 		case AssetType::Texture:
 			return ICON_FON_PICTURE;
 		case AssetType::Mesh:
 			return ICON_FON_CUBE;
 		case AssetType::Shader:
+		case AssetType::Material:
 			return ICON_FON_DOC_TEXT;
 		default:
 			return ICON_FON_DOC_TEXT;

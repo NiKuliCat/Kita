@@ -156,7 +156,6 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="src\core\Timestep.h" />
     <ClInclude Include="src\EngineCore.h" />
     <ClInclude Include="src\EngineRender.h" />
     <ClInclude Include="src\asset\Asset.h" />
@@ -174,6 +173,7 @@
     <ClInclude Include="src\core\Input.h" />
     <ClInclude Include="src\core\Layer.h" />
     <ClInclude Include="src\core\Log.h" />
+    <ClInclude Include="src\core\Timestep.h" />
     <ClInclude Include="src\core\UUID.h" />
     <ClInclude Include="src\core\Window.h" />
     <ClInclude Include="src\event\ApplicationEvent.h" />

@@ -43,6 +43,9 @@
     <Filter Include="src\serialize">
       <UniqueIdentifier>{44B52BFF-B075-A735-79B0-F0B2E52FEC11}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\system">
+      <UniqueIdentifier>{C1BD4D7A-AD75-8FC7-167D-682302542AB8}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\third_party">
       <UniqueIdentifier>{A6E46709-1270-D5CD-1B81-58C2878B31CE}</UniqueIdentifier>
     </Filter>
@@ -127,6 +130,9 @@
       <Filter>src\core</Filter>
     </ClInclude>
     <ClInclude Include="src\core\Log.h">
+      <Filter>src\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\core\Timestep.h">
       <Filter>src\core</Filter>
     </ClInclude>
     <ClInclude Include="src\core\UUID.h">
@@ -260,6 +266,9 @@
     </ClInclude>
     <ClInclude Include="src\serialize\SceneSerializer.h">
       <Filter>src\serialize</Filter>
+    </ClInclude>
+    <ClInclude Include="src\system\TimeSystem.h">
+      <Filter>src\system</Filter>
     </ClInclude>
     <ClInclude Include="src\third_party\imgui\imgui_layer.h">
       <Filter>src\third_party\imgui</Filter>
@@ -1527,8 +1536,6 @@
     <ClInclude Include="third-party\imguizmo\ImGuizmo.h">
       <Filter>third-party\imguizmo</Filter>
     </ClInclude>
-    <ClInclude Include="src\core\Timestep.h" />
-    <ClInclude Include="src\system\TimeSystem.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\asset\Asset.cpp">
@@ -1672,6 +1679,9 @@
     <ClCompile Include="src\serialize\SceneSerializer.cpp">
       <Filter>src\serialize</Filter>
     </ClCompile>
+    <ClCompile Include="src\system\TimeSystem.cpp">
+      <Filter>src\system</Filter>
+    </ClCompile>
     <ClCompile Include="src\third_party\imgui\imgui_build.cpp">
       <Filter>src\third_party\imgui</Filter>
     </ClCompile>
@@ -1684,6 +1694,5 @@
     <ClCompile Include="third-party\imguizmo\ImGuizmo.cpp">
       <Filter>third-party\imguizmo</Filter>
     </ClCompile>
-    <ClCompile Include="src\system\TimeSystem.cpp" />
   </ItemGroup>
 </Project>
