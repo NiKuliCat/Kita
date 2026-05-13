@@ -33,6 +33,7 @@ namespace Kita {
             {
             case PassType::ForwardOpaque:      return "ForwardOpaque";
             case PassType::ForwardTransparent: return "ForwardTransparent";
+            case PassType::EditorPicking:      return "EditorPicking";
             case PassType::PostProcess:        return "PostProcess";
             case PassType::GBuffer:            return "GBuffer";
             case PassType::DeferredLighting:   return "DeferredLighting";
@@ -79,6 +80,18 @@ namespace Kita {
         m_Pipelines.clear();
 	}
 
+    namespace
+    {
+        uint64_t BuildDescriptorSetLayoutHash(const std::vector<VkDescriptorSetLayout>& layouts)
+        {
+            size_t seed = 0;
+            for (VkDescriptorSetLayout layout : layouts)
+                HashCombine(seed, reinterpret_cast<uint64_t>(layout));
+
+            return static_cast<uint64_t>(seed);
+        }
+    }
+
 	PipelineKey PipelineFactory::BuildKey(const PipelineRequest& request) const
 	{
         PipelineKey key{};
@@ -99,6 +112,7 @@ namespace Kita {
 
         key.VertexModule = request.VertexShader ? request.VertexShader->GetShaderModule() : VK_NULL_HANDLE;
         key.FragmentModule = request.FragmentShader ? request.FragmentShader->GetShaderModule() : VK_NULL_HANDLE;
+        key.DescriptorSetLayoutHash = BuildDescriptorSetLayoutHash(request.DescriptorSetLayouts);
 
         key.VertexLayoutHash = BuildVertexLayoutHash(*request.Geometry);
 
@@ -183,6 +197,7 @@ namespace Kita {
 
         HashCombine(seed, reinterpret_cast<uint64_t>(key.VertexModule));
         HashCombine(seed, reinterpret_cast<uint64_t>(key.FragmentModule));
+        HashCombine(seed, key.DescriptorSetLayoutHash);
 
         HashCombine(seed, key.VertexLayoutHash);
         HashCombine(seed, static_cast<uint32_t>(key.PushConstantStages));

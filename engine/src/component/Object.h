@@ -54,7 +54,9 @@ namespace Kita {
 
 
 		std::string& GetName() { return GetComponent<Name>().Get(); }
+		const std::string& GetName() const { return m_Scene->GetRegistry().get<Name>(m_EntityHandle).Get(); }
 		uint64_t GetUUID() { return GetComponent<IDComponent>().ID; }
+		uint64_t GetUUID() const { return m_Scene->GetRegistry().get<IDComponent>(m_EntityHandle).ID; }
 
 	private:
 

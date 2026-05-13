@@ -4,6 +4,12 @@
 #include "imgui.h"
 namespace Kita {
 
+	struct ViewportPickRequest
+	{
+		uint32_t PixelX = 0;
+		uint32_t PixelY = 0;
+	};
+
 	class EditorViewportPanel
 	{
 	public:
@@ -25,6 +31,8 @@ namespace Kita {
 		ViewportCamera* GetViewportCamera() const { return m_ViewportCamera.get(); }
 		const glm::vec2& GetDesiredViewportSize() const { return m_ViewportSize; }
 
+		bool HasPendingPickRequest() const { return m_HasPendingPickRequest; }
+		ViewportPickRequest ConsumePickRequest();
 
 		void SetActive(bool isActive) { m_IsActive = isActive; }
 		bool IsImageHovered() const { return m_IsImageHovered; }
@@ -34,6 +42,7 @@ namespace Kita {
 	private:
 		bool OnKeyPressed(KeyPressedEvent& event);
 		bool OnMouseButtonPressed(MouseButtonPressedEvent& event);
+		void RequestPickAtMousePosition();
 		bool IsMouseInsideImageBounds() const;
 
 	private:
@@ -45,6 +54,8 @@ namespace Kita {
 		glm::vec2 m_ViewportBounds[2]{};
 
 		int32_t m_GizmoControlType = 1;
+		ViewportPickRequest m_PendingPickRequest{};
+		bool m_HasPendingPickRequest = false;
 
 		bool m_IsHovered = false;
 		bool m_IsFocused = false;

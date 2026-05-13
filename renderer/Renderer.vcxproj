@@ -174,6 +174,7 @@ IF EXIST "C:\VulkanSDK\1.4.341.1\Bin\slang.dll"\ (xcopy /Q /E /Y /I "C:\VulkanSD
     <ClInclude Include="src\renderer_pch.h" />
     <ClInclude Include="src\scene\EditorRenderer.h" />
     <ClInclude Include="src\scene\ViewportCamera.h" />
+    <ClInclude Include="src\scene\ViewportPickingPass.h" />
     <ClInclude Include="src\ui\ContentBrowserPanel.h" />
     <ClInclude Include="src\ui\EditorSelectionContext.h" />
     <ClInclude Include="src\ui\InspectorPanel.h" />
@@ -182,6 +183,7 @@ IF EXIST "C:\VulkanSDK\1.4.341.1\Bin\slang.dll"\ (xcopy /Q /E /Y /I "C:\VulkanSD
     <ClInclude Include="src\ui\SvgIconAtlas.h" />
     <ClInclude Include="src\ui\ThumbnailCache.h" />
     <ClInclude Include="src\ui\UIColorPanel.h" />
+    <ClInclude Include="src\ui\viewport\EditorPickRegistry.h" />
     <ClInclude Include="src\ui\viewport\EditorViewportPanel.h" />
     <ClInclude Include="src\ui\viewport\EditorViewportSurface.h" />
     <ClInclude Include="src\ui\viewport\ViewportInstance.h" />
@@ -197,6 +199,7 @@ IF EXIST "C:\VulkanSDK\1.4.341.1\Bin\slang.dll"\ (xcopy /Q /E /Y /I "C:\VulkanSD
     </ClCompile>
     <ClCompile Include="src\scene\EditorRenderer.cpp" />
     <ClCompile Include="src\scene\ViewportCamera.cpp" />
+    <ClCompile Include="src\scene\ViewportPickingPass.cpp" />
     <ClCompile Include="src\ui\ContentBrowserPanel.cpp" />
     <ClCompile Include="src\ui\EditorSelectionContext.cpp" />
     <ClCompile Include="src\ui\InspectorPanel.cpp" />
@@ -204,6 +207,7 @@ IF EXIST "C:\VulkanSDK\1.4.341.1\Bin\slang.dll"\ (xcopy /Q /E /Y /I "C:\VulkanSD
     <ClCompile Include="src\ui\SvgIconAtlas.cpp" />
     <ClCompile Include="src\ui\ThumbnailCache.cpp" />
     <ClCompile Include="src\ui\UIColorPanel.cpp" />
+    <ClCompile Include="src\ui\viewport\EditorPickRegistry.cpp" />
     <ClCompile Include="src\ui\viewport\EditorViewportPanel.cpp" />
     <ClCompile Include="src\ui\viewport\EditorViewportSurface.cpp" />
     <ClCompile Include="src\ui\viewport\ViewportInstance.cpp" />

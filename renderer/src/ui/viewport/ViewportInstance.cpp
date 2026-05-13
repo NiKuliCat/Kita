@@ -3,9 +3,18 @@
 
 namespace Kita {
 
-	ViewportInstance::ViewportInstance(VulkanContext& context, const Ref<Scene>& scene, std::string windowName)
+	ViewportInstance::ViewportInstance(
+		VulkanContext& context,
+		VulkanResourceFactory& resFactory,
+		PipelineFactory& pipelineFactory,
+		const Ref<Scene>& scene,
+		const Ref<EditorSelectionContext>& selectionContext,
+		std::string windowName)
 		: m_Context(&context)
+		, m_SceneContext(scene)
+		, m_SelectionContext(selectionContext)
 	{
+		m_PickRegistry = CreateUnique<EditorPickRegistry>();
 		m_Panel = CreateUnique<EditorViewportPanel>(std::move(windowName));
 
 		EditorViewportSurface::CreateInfo surfaceInfo{};
@@ -19,8 +28,12 @@ namespace Kita {
 			m_Renderer = CreateUnique<EditorRenderer>(
 				context,
 				m_Surface->GetRenderTarget(),
+				m_Surface->GetPickingRenderTarget(),
+				resFactory,
+				pipelineFactory,
 				scene,
-				*m_Panel->GetViewportCamera());
+				*m_Panel->GetViewportCamera(),
+				*m_PickRegistry);
 		}
 	}
 
@@ -35,6 +48,7 @@ namespace Kita {
 		m_Renderer.reset();
 		m_Surface.reset();
 		m_Panel.reset();
+		m_PickRegistry.reset();
 	}
 
 	void ViewportInstance::OnUpdate(Timestep ts)
@@ -48,12 +62,16 @@ namespace Kita {
 		if (!m_Panel || !m_Surface || !m_Renderer)
 			return;
 
+		ProcessPendingPickRequest();
+
 		const glm::vec2& desiredSize = m_Panel->GetDesiredViewportSize();
 		m_Surface->EnsureSize(
 			static_cast<uint32_t>(std::max(1.0f, desiredSize.x)),
 			static_cast<uint32_t>(std::max(1.0f, desiredSize.y)));
 
-		m_Renderer->Render(m_Surface->GetRenderTarget());
+		if (m_PickRegistry)
+			m_PickRegistry->Clear();
+		m_Renderer->Render(*m_Surface);
 		m_Panel->SetDisplayTexture(m_Surface->GetTextureID());
 	}
 
@@ -90,6 +108,85 @@ namespace Kita {
 	bool ViewportInstance::IsWindowFocused() const
 	{
 		return m_Panel && m_Panel->IsWindowFocused();
+	}
+
+	Object ViewportInstance::FindSceneObjectByUUID(UUID uuid) const
+	{
+		if (!m_SceneContext || uuid == UUID(0))
+			return {};
+
+		auto view = m_SceneContext->GetRegistry().view<IDComponent>();
+		for (auto entity : view)
+		{
+			const IDComponent& idComponent = view.get<IDComponent>(entity);
+			if (idComponent.ID != uuid)
+				continue;
+
+			return Object(entity, m_SceneContext.get(), "");
+		}
+
+		return {};
+	}
+
+	void ViewportInstance::ProcessPendingPickRequest()
+	{
+		if (!m_Panel || !m_Surface || !m_SelectionContext)
+			return;
+
+		if (!m_Panel->HasPendingPickRequest())
+			return;
+
+		const ViewportPickRequest request = m_Panel->ConsumePickRequest();
+		const uint32_t pickId = m_Surface->ReadPickingPixel(request.PixelX, request.PixelY);
+		ApplyPickResult(pickId);
+	}
+
+	void ViewportInstance::ApplyPickResult(uint32_t pickId)
+	{
+		if (!m_SelectionContext)
+			return;
+
+		EditorPickEntry entry{};
+		if (!m_PickRegistry || !m_PickRegistry->TryGetEntry(pickId, entry))
+		{
+			m_SelectionContext->Clear();
+			return;
+		}
+
+		switch (entry.SelectionType)
+		{
+		case EditorSelectionItemType::SceneObject:
+		{
+			Object selectedObject = FindSceneObjectByUUID(entry.SceneObjectUUID);
+			if (!selectedObject)
+			{
+				m_SelectionContext->Clear();
+				return;
+			}
+
+			m_SelectionContext->SetSelectionType(EditorSelectionItemType::SceneObject);
+			m_SelectionContext->SetSelctionObject(selectedObject);
+			return;
+		}
+
+		case EditorSelectionItemType::Asset:
+		{
+			if (!Asset::IsValidHandle(entry.SelectedAssetHandle))
+			{
+				m_SelectionContext->Clear();
+				return;
+			}
+
+			m_SelectionContext->SetSelectionType(EditorSelectionItemType::Asset);
+			m_SelectionContext->SetSelectionAsset(entry.SelectedAssetHandle);
+			return;
+		}
+
+		case EditorSelectionItemType::None:
+		default:
+			m_SelectionContext->Clear();
+			return;
+		}
 	}
 
 }

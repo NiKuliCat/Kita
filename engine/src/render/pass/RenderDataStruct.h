@@ -12,6 +12,7 @@ namespace Kita {
         Unknown = 0,
         ForwardOpaque,
         ForwardTransparent,
+        EditorPicking,
         PostProcess,
         GBuffer,
         DeferredLighting,

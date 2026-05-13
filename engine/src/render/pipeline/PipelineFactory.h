@@ -76,6 +76,7 @@ namespace Kita {
 
         VkShaderModule VertexModule = VK_NULL_HANDLE;
         VkShaderModule FragmentModule = VK_NULL_HANDLE;
+        uint64_t DescriptorSetLayoutHash = 0;
 
         uint64_t VertexLayoutHash = 0;
 
@@ -97,6 +98,7 @@ namespace Kita {
                 EnableBlending == other.EnableBlending &&
                 VertexModule == other.VertexModule &&
                 FragmentModule == other.FragmentModule &&
+                DescriptorSetLayoutHash == other.DescriptorSetLayoutHash &&
                 VertexLayoutHash == other.VertexLayoutHash &&
                 PushConstantStages == other.PushConstantStages &&
                 PushConstantSize == other.PushConstantSize;

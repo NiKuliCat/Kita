@@ -35,6 +35,9 @@
     <ClInclude Include="src\scene\ViewportCamera.h">
       <Filter>scene</Filter>
     </ClInclude>
+    <ClInclude Include="src\scene\ViewportPickingPass.h">
+      <Filter>scene</Filter>
+    </ClInclude>
     <ClInclude Include="src\ui\ContentBrowserPanel.h">
       <Filter>ui</Filter>
     </ClInclude>
@@ -58,6 +61,9 @@
     </ClInclude>
     <ClInclude Include="src\ui\UIColorPanel.h">
       <Filter>ui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ui\viewport\EditorPickRegistry.h">
+      <Filter>ui\viewport</Filter>
     </ClInclude>
     <ClInclude Include="src\ui\viewport\EditorViewportPanel.h">
       <Filter>ui\viewport</Filter>
@@ -88,6 +94,9 @@
     <ClCompile Include="src\scene\ViewportCamera.cpp">
       <Filter>scene</Filter>
     </ClCompile>
+    <ClCompile Include="src\scene\ViewportPickingPass.cpp">
+      <Filter>scene</Filter>
+    </ClCompile>
     <ClCompile Include="src\ui\ContentBrowserPanel.cpp">
       <Filter>ui</Filter>
     </ClCompile>
@@ -108,6 +117,9 @@
     </ClCompile>
     <ClCompile Include="src\ui\UIColorPanel.cpp">
       <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\viewport\EditorPickRegistry.cpp">
+      <Filter>ui\viewport</Filter>
     </ClCompile>
     <ClCompile Include="src\ui\viewport\EditorViewportPanel.cpp">
       <Filter>ui\viewport</Filter>

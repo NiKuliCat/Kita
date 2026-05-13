@@ -138,6 +138,14 @@ namespace  Kita {
 		m_ViewportBounds[0] = { itemMin.x, itemMin.y };
 		m_ViewportBounds[1] = { itemMax.x, itemMax.y };
 
+		if (m_IsActive &&
+			m_IsImageHovered &&
+			ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
+			!ImGuizmo::IsOver())
+		{
+			RequestPickAtMousePosition();
+		}
+
 		ImGui::End();
 		ImGui::PopStyleVar();
 	}
@@ -164,6 +172,14 @@ namespace  Kita {
 		m_ViewportCamera->OnEvent(event);
 	}
 
+	ViewportPickRequest EditorViewportPanel::ConsumePickRequest()
+	{
+		ViewportPickRequest request = m_PendingPickRequest;
+		m_PendingPickRequest = {};
+		m_HasPendingPickRequest = false;
+		return request;
+	}
+
 	bool EditorViewportPanel::OnKeyPressed(KeyPressedEvent& event)
 	{
 		if (event.IsRepeat())
@@ -188,6 +204,26 @@ namespace  Kita {
 	bool EditorViewportPanel::OnMouseButtonPressed(MouseButtonPressedEvent& event)
 	{
 		return false;
+	}
+
+	void EditorViewportPanel::RequestPickAtMousePosition()
+	{
+		const ImVec2 mousePos = ImGui::GetMousePos();
+		const float localX = mousePos.x - m_ViewportBounds[0].x;
+		const float localY = mousePos.y - m_ViewportBounds[0].y;
+
+		const uint32_t width = static_cast<uint32_t>(std::max(1.0f, m_ViewportSize.x));
+		const uint32_t height = static_cast<uint32_t>(std::max(1.0f, m_ViewportSize.y));
+
+		const uint32_t pixelX = std::min(
+			static_cast<uint32_t>(std::max(0.0f, localX)),
+			width - 1);
+		const uint32_t pixelY = std::min(
+			static_cast<uint32_t>(std::max(0.0f, localY)),
+			height - 1);
+
+		m_PendingPickRequest = { pixelX, pixelY };
+		m_HasPendingPickRequest = true;
 	}
 
 	bool EditorViewportPanel::IsMouseInsideImageBounds() const

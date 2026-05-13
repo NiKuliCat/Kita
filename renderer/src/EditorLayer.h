@@ -51,7 +51,8 @@ namespace Kita {
 		bool m_ShowTimeSystemPanel = true;
 
 		Ref<EditorSelectionContext> m_EditorSelectionContext = nullptr;
-		Unique<VulkanResourceFactory> m_ContentBrowserResourceFactory = nullptr;
+		Unique<VulkanResourceFactory> m_EditorVulkanResourceFactory = nullptr;
+		Unique<PipelineFactory> m_PipelineFactory = nullptr;
 		Unique<ThumbnailCache> m_ContentBrowserThumbnailCache = nullptr;
 		Unique<SvgIconAtlas> m_ContentBrowserIconAtlas = nullptr;
 	};

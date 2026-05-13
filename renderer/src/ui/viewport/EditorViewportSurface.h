@@ -4,6 +4,8 @@
 #include <EngineRender.h>
 namespace Kita {
 
+	class VulkanBuffer;
+	class VulkanImage;
 
 	class EditorViewportSurface
 	{
@@ -51,12 +53,19 @@ namespace Kita {
 		}
 
 		ImTextureID GetTextureID() const { return m_TextureID; }
+		VkFormat GetPickingFormat() const { return VK_FORMAT_R32_UINT; }
+		VkFormat GetPickingDepthFormat() const { return m_CreateInfo.DepthFormat; }
 
 		VulkanRenderTarget& GetRenderTarget();
 		const VulkanRenderTarget& GetRenderTarget() const;
+		VulkanRenderTarget& GetPickingRenderTarget();
+		const VulkanRenderTarget& GetPickingRenderTarget() const;
+		uint32_t ReadPickingPixel(uint32_t x, uint32_t y);
 
 	private:
 		void CreateRenderTarget();
+		void CreatePickingResources();
+		void DestroyPickingResources();
 		void RecreateTextureID();
 		void ReleaseTextureID();
 
@@ -65,6 +74,8 @@ namespace Kita {
 		CreateInfo m_CreateInfo{};
 
 		Unique<VulkanRenderTarget> m_RenderTarget = nullptr;
+		Unique<VulkanRenderTarget> m_PickingRenderTarget = nullptr;
+		Unique<VulkanBuffer> m_PickingReadbackBuffer = nullptr;
 		ImTextureID m_TextureID = 0;
 
 	};

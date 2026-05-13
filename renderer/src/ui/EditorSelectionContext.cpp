@@ -32,7 +32,7 @@ namespace Kita {
 	{
 		if (!obj)
 		{
-			KITA_CLENT_ERROR("this object is null : {0}", obj.GetName().c_str());
+			KITA_CLENT_ERROR("this object is null");
 			return;
 		}
 

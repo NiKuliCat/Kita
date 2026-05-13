@@ -25,22 +25,21 @@ namespace Kita {
 		m_Scene = CreateRef<Scene>("example scene");
 		m_SceneSerializer = SceneSerializer(m_Scene);
 
+
+
 		m_EditorSelectionContext = CreateRef<EditorSelectionContext>();
 		m_SceneHierarchyPanel = SceneHierarchyPanel(m_Scene, m_EditorSelectionContext);
 		m_InspectorPanel = InspectorPanel(m_EditorSelectionContext);
 
-		m_SceneViewportPanels.clear();
-		m_NextViewportSerial = 1;
-		AddViewportPanel("Viewport");
 
 		const auto project = Project::GetActive();
 		if (project)
 		{
 			m_ContentBrowserPanel = ContentBrowserPanel(project->GetAssetRootDirectory(),m_EditorSelectionContext);
-			m_ContentBrowserResourceFactory = CreateUnique<VulkanResourceFactory>(
-				Application::Get().GetVulkanContext(),
-				AssetManager::GetInstance());
-			m_ContentBrowserThumbnailCache = CreateUnique<ThumbnailCache>(*m_ContentBrowserResourceFactory);
+			m_EditorVulkanResourceFactory = CreateUnique<VulkanResourceFactory>(Application::Get().GetVulkanContext(), AssetManager::GetInstance());
+			m_PipelineFactory = CreateUnique<PipelineFactory>(Application::Get().GetVulkanContext());
+
+			m_ContentBrowserThumbnailCache = CreateUnique<ThumbnailCache>(*m_EditorVulkanResourceFactory);
 			m_ContentBrowserPanel.SetThumbnailCache(m_ContentBrowserThumbnailCache.get());
 
 			m_ContentBrowserIconAtlas = CreateUnique<SvgIconAtlas>();
@@ -51,6 +50,10 @@ namespace Kita {
 				m_ContentBrowserPanel.SetIconAtlas(m_ContentBrowserIconAtlas.get());
 			}
 		}
+
+		m_SceneViewportPanels.clear();
+		m_NextViewportSerial = 1;
+		AddViewportPanel("Viewport");
 
 		{
 			auto obj = m_Scene->CreateObject("sphere");
@@ -75,9 +78,13 @@ namespace Kita {
 		m_ContentBrowserPanel.SetThumbnailCache(nullptr);
 		m_ContentBrowserIconAtlas.reset();
 		m_ContentBrowserThumbnailCache.reset();
-		if (m_ContentBrowserResourceFactory)
-			m_ContentBrowserResourceFactory->Clear();
-		m_ContentBrowserResourceFactory.reset();
+		if (m_EditorVulkanResourceFactory)
+			m_EditorVulkanResourceFactory->Clear();
+		m_EditorVulkanResourceFactory.reset();
+
+		if (m_PipelineFactory)
+			m_PipelineFactory->Clear();
+		m_PipelineFactory.reset();
 	}
 
 	void EditorLayer::OnRender()
@@ -267,9 +274,15 @@ namespace Kita {
 
 	void EditorLayer::AddViewportPanel(std::string windowName)
 	{
+		KITA_CORE_ASSERT(m_EditorVulkanResourceFactory, "EditorLayer shared VulkanResourceFactory is null");
+		KITA_CORE_ASSERT(m_PipelineFactory, "EditorLayer shared PipelineFactory is null");
+
 		m_SceneViewportPanels.emplace_back(
 			Application::Get().GetVulkanContext(),
+			*m_EditorVulkanResourceFactory,
+			*m_PipelineFactory,
 			m_Scene,
+			m_EditorSelectionContext,
 			std::move(windowName));
 		m_ActiveViewportIndex = static_cast<int32_t>(m_SceneViewportPanels.size()) - 1;
 	}

@@ -2,16 +2,25 @@
 
 #include <EngineCore.h>
 #include "scene/EditorRenderer.h"
+#include "ui/viewport/EditorPickRegistry.h"
 #include "ui/viewport/EditorViewportPanel.h"
 #include "ui/viewport/EditorViewportSurface.h"
 
 namespace Kita {
 
+	class EditorSelectionContext;
+
 	class ViewportInstance
 	{
 	public:
 		ViewportInstance() = default;
-		ViewportInstance(VulkanContext& context, const Ref<Scene>& scene, std::string windowName = "Viewport");
+		ViewportInstance(
+			VulkanContext& context,
+			VulkanResourceFactory&resFactory,
+			PipelineFactory& pipelineFactory,
+			const Ref<Scene>& scene,
+			const Ref<EditorSelectionContext>& selectionContext,
+			std::string windowName = "Viewport");
 
 		ViewportInstance(const ViewportInstance&) = delete;
 		ViewportInstance& operator=(const ViewportInstance&) = delete;
@@ -37,7 +46,15 @@ namespace Kita {
 		EditorRenderer* GetRenderer() const { return m_Renderer.get(); }
 
 	private:
+		Object FindSceneObjectByUUID(UUID uuid) const;
+		void ProcessPendingPickRequest();
+		void ApplyPickResult(uint32_t pickId);
+
+	private:
 		VulkanContext* m_Context = nullptr;
+		Ref<Scene> m_SceneContext = nullptr;
+		Ref<EditorSelectionContext> m_SelectionContext = nullptr;
+		Unique<EditorPickRegistry> m_PickRegistry = nullptr;
 		Unique<EditorViewportPanel> m_Panel = nullptr;
 		Unique<EditorViewportSurface> m_Surface = nullptr;
 		Unique<EditorRenderer> m_Renderer = nullptr;
