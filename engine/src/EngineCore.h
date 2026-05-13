@@ -3,6 +3,9 @@
 #include "core/Core.h"
 #include "core/Application.h"
 #include "core/Layer.h"
+#include "core/Timestep.h"
+
+#include "system/TimeSystem.h"
 
 #include "event/KeyCode.h"
 #include "event/Event.h"

@@ -1,5 +1,6 @@
 #pragma once
 #include "event/Event.h" 
+#include "Timestep.h"
 namespace Kita {
 
 
@@ -14,7 +15,7 @@ namespace Kita {
 
 
 		virtual void OnCreate() {}
-		virtual void OnUpdate(float daltaTime) {}
+		virtual void OnUpdate(Timestep ts) {}
 		virtual void OnRender() {}
 		virtual void OnDestroy() {}
 

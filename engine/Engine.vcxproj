@@ -156,6 +156,7 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\core\Timestep.h" />
     <ClInclude Include="src\EngineCore.h" />
     <ClInclude Include="src\EngineRender.h" />
     <ClInclude Include="src\asset\Asset.h" />
@@ -217,6 +218,7 @@
     <ClInclude Include="src\serialize\JsonUtils.h" />
     <ClInclude Include="src\serialize\MaterialSerializer.h" />
     <ClInclude Include="src\serialize\SceneSerializer.h" />
+    <ClInclude Include="src\system\TimeSystem.h" />
     <ClInclude Include="src\third_party\imgui\imgui_layer.h" />
     <ClInclude Include="src\third_party\stb_image\stb_image.h" />
     <ClInclude Include="third-party\glm\glm\common.hpp" />
@@ -690,6 +692,7 @@
     <ClCompile Include="src\render\scene\PerspectiveCamera.cpp" />
     <ClCompile Include="src\serialize\JsonUtils.cpp" />
     <ClCompile Include="src\serialize\SceneSerializer.cpp" />
+    <ClCompile Include="src\system\TimeSystem.cpp" />
     <ClCompile Include="src\third_party\imgui\imgui_build.cpp" />
     <ClCompile Include="src\third_party\imgui\imgui_layer.cpp" />
     <ClCompile Include="src\third_party\stb_image\stb_image.cpp" />

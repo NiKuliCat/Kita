@@ -21,7 +21,7 @@ namespace Kita {
 
 
 		virtual void OnCreate()  override;
-		virtual void OnUpdate(float daltaTime)  override;
+		virtual void OnUpdate(Timestep ts)  override;
 		virtual void OnDestroy()  override;
 
 		virtual void OnRender()  override;
@@ -33,6 +33,7 @@ namespace Kita {
 		bool OnMouseButtonPressed(MouseButtonPressedEvent& event);
 		void AddViewportPanel(std::string windowName);
 		void RemoveClosedViewportPanels();
+		void RenderTimeSystemPanel();
 	private:
 
 		struct ViewportInstance
@@ -52,6 +53,7 @@ namespace Kita {
 		std::vector<ViewportInstance> m_SceneViewportPanels{};
 		int32_t m_ActiveViewportIndex = -1;
 		uint32_t m_NextViewportSerial = 1;
+		bool m_ShowTimeSystemPanel = true;
 
 		Ref<SceneSelectionContext> m_SceneSelectionContext = nullptr;
 		Unique<VulkanResourceFactory> m_ContentBrowserResourceFactory = nullptr;

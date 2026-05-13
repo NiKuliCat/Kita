@@ -61,12 +61,12 @@ namespace Kita {
 		}
 	}
 
-	void EditorLayer::OnUpdate(float daltaTime)
+	void EditorLayer::OnUpdate(Timestep ts)
 	{
 		m_Scene->SimulateSceneEditor();
 		RemoveClosedViewportPanels();
 		for (auto& viewport : m_SceneViewportPanels)
-			viewport.Panel->Simulate(daltaTime);
+			viewport.Panel->Simulate(ts.GetSecondsF());
 	}
 
 	void EditorLayer::OnDestroy()
@@ -179,6 +179,8 @@ namespace Kita {
 				if (ImGui::MenuItem("UI Color Panel"))
 					m_UIColorPanel.SetOpen(true);
 
+				ImGui::MenuItem("Time System", nullptr, &m_ShowTimeSystemPanel);
+
 				ImGui::EndMenu();
 			}
 
@@ -219,6 +221,8 @@ namespace Kita {
 		{
 			viewport.Panel->OnImGuiRender();
 		}
+
+		RenderTimeSystemPanel();
 
 		ImGui::End();
 	}
@@ -298,6 +302,78 @@ namespace Kita {
 			else if (m_ActiveViewportIndex >= static_cast<int32_t>(m_SceneViewportPanels.size()))
 				m_ActiveViewportIndex = static_cast<int32_t>(m_SceneViewportPanels.size()) - 1;
 		}
+	}
+
+	void EditorLayer::RenderTimeSystemPanel()
+	{
+		if (!m_ShowTimeSystemPanel)
+			return;
+
+		if (!ImGui::Begin("Time System", &m_ShowTimeSystemPanel))
+		{
+			ImGui::End();
+			return;
+		}
+
+		TimeSystem& timeSystem = Application::Get().GetTimeSystem();
+		const TimeSystemStatistics& stats = timeSystem.GetStatistics();
+		const Timestep& timestep = timeSystem.GetTimestep();
+
+		ImGui::Text("Frame Index: %llu", static_cast<unsigned long long>(stats.FrameIndex));
+		ImGui::Separator();
+
+		ImGui::Text("Raw Delta: %.6f s", stats.RawDeltaSeconds);
+		ImGui::Text("Raw Delta: %.3f ms", stats.RawDeltaSeconds * 1000.0);
+		ImGui::Text("Unscaled Delta: %.6f s", stats.UnscaleDeltaSeconds);
+		ImGui::Text("Scaled Delta: %.6f s", stats.ScaledDeltaSeconds);
+		ImGui::Text("Timestep Seconds: %.6f s", timestep.GetSeconds());
+		ImGui::Text("Timestep Unscaled: %.6f s", timestep.GetUnscaledSeconds());
+		ImGui::Separator();
+
+		ImGui::Text("Display FPS: %.2f", stats.DisplayFPS);
+		ImGui::Text("Display Delta: %.3f ms", stats.DisplayDeltaSeconds * 1000.0);
+		ImGui::Text("Instant FPS: %.2f", stats.InstantFPS);
+		ImGui::Text("Smooth FPS: %.2f", stats.SmoothFPS);
+		ImGui::Text("Smooth Unscaled Delta: %.3f ms", stats.SmoothUnscaleDeltaSeconds * 1000.0);
+		ImGui::Separator();
+
+		ImGui::Text("Real Time: %.3f s", stats.RealTimeSeconds);
+		ImGui::Text("Unscaled Time: %.3f s", stats.UnscaledTimeSeconds);
+		ImGui::Text("Scaled Time: %.3f s", stats.ScaledTimeSeconds);
+		ImGui::Separator();
+
+		double timeScale = timeSystem.GetTimeScale();
+		const double minTimeScale = 0.0;
+		const double maxTimeScale = 4.0;
+		if (ImGui::SliderScalar("Time Scale", ImGuiDataType_Double, &timeScale, &minTimeScale, &maxTimeScale, "%.2f"))
+		{
+			timeSystem.SetTimeScale(timeScale);
+		}
+
+		bool paused = timeSystem.IsPaused();
+		if (ImGui::Checkbox("Paused", &paused))
+		{
+			timeSystem.SetPaused(paused);
+		}
+
+		double maxDeltaSeconds = timeSystem.GetMaxDeltaSeconds();
+		const double minMaxDeltaSeconds = 0.001;
+		const double maxMaxDeltaSeconds = 0.250;
+		if (ImGui::SliderScalar("Max Delta (s)", ImGuiDataType_Double, &maxDeltaSeconds, &minMaxDeltaSeconds, &maxMaxDeltaSeconds, "%.3f"))
+		{
+			timeSystem.SetMaxDeltaSeconds(maxDeltaSeconds);
+		}
+
+		int smoothingWindowSize = static_cast<int>(timeSystem.GetSmoothingWindowSize());
+		if (ImGui::SliderInt("Smoothing Window", &smoothingWindowSize, 1, 240))
+		{
+			timeSystem.SetSmoothingWindowSize(static_cast<std::size_t>(smoothingWindowSize));
+		}
+
+		ImGui::Text("Applied Time Scale: %.2f", stats.AppliedTimeScale);
+		ImGui::Text("Paused State: %s", stats.Paused ? "true" : "false");
+
+		ImGui::End();
 	}
 
 }

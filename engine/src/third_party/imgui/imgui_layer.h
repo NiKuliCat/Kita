@@ -13,7 +13,7 @@ namespace Kita {
 
 		virtual void OnCreate() override;
 		virtual void OnDestroy() override;
-		virtual void OnUpdate(float daltaTime) override;
+		virtual void OnUpdate(Timestep ts) override;
 
 
 		virtual void OnRender() override;

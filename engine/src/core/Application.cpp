@@ -70,17 +70,20 @@ namespace Kita {
 	{
 	}
 
+
 	void Application::MainLoop()
 	{
 
 		while (m_Active)
 		{
 		
+			const Timestep& timestep = m_TimeSystem.Tick();
+
 			if (!m_Minimized)
 			{
 				for (Layer* layer : m_LayerStack)
 				{
-					layer->OnUpdate(0.1f);
+					layer->OnUpdate(timestep);
 				}
 			}
 

@@ -149,7 +149,7 @@ namespace Kita {
 
 		ImGui::DestroyContext();
 	}
-	void ImGuiLayer::OnUpdate(float daltaTime)
+	void ImGuiLayer::OnUpdate(Timestep ts)
 	{
 
 	}

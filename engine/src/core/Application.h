@@ -7,6 +7,7 @@
 #include "event/ApplicationEvent.h"
 
 #include "render/VulkanContext.h"
+#include "system/TimeSystem.h"
 namespace Kita {
 
 	struct ApplicationDescriptor
@@ -48,6 +49,8 @@ namespace Kita {
 		inline VulkanContext& GetVulkanContext() { return *m_VulkanContext; }
 		inline const VulkanContext& GetVulkanContext() const { return *m_VulkanContext; }
 
+		inline TimeSystem& GetTimeSystem() { return m_TimeSystem; }
+		inline const TimeSystem& GetTimeSystem() const { return m_TimeSystem; }
 	private:
 		bool OnWindowClosed(WindowCloseEvent& event);
 		bool OnWindowResize(WindowResizeEvent& event);
@@ -60,6 +63,7 @@ namespace Kita {
 
 		Ref<Window> m_Window = nullptr;
 		Unique<VulkanContext> m_VulkanContext = nullptr;
+		TimeSystem m_TimeSystem;
 		LayerStack m_LayerStack;
 		ImGuiLayer* m_ImGuiLayer = nullptr;
 		bool m_Active = false;
