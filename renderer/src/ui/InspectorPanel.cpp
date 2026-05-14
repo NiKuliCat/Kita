@@ -5,17 +5,19 @@
 
 namespace Kita {
 	const float inspectorLabelColumn_LeftWidth = 130.0f;
+	const float inspectorResetColumn_Width = 40.0f;
+	const float inspectorCellInnerPaddingX = 12.0f;
+	const float inspectorValueRightInset = inspectorCellInnerPaddingX;
+	const float inspectorHeaderHeight = 24.0f;
 
-	const float rowHeight = 32.0f;
-	const float textPaddingX = 10.0f;
+	const float rowHeight = 30.0f;
 	const float itemSpacingX = 12.0f;
 	const ImVec2 inspectorControlFramePadding = ImVec2(6.0f, 2.0f);
 	const float inspectorControlFrameRounding = 3.0f;
 	const float inspectorControlFrameBorderSize = 1.0f;
 
-	const ImU32 separatorColor = ImGui::ColorConvertFloat4ToU32(ImVec4(0.22f, 0.22f, 0.22f, 1.0f));
-	const ImU32 tableBgColor_Dark = ImGui::ColorConvertFloat4ToU32(ImVec4(0.13f, 0.13f, 0.13f, 1.0f));
-	const ImU32 tableBgColor_Light = ImGui::ColorConvertFloat4ToU32(ImVec4(0.19f, 0.19f, 0.19f, 1.0f));
+	const ImU32 inspectorBorderColor = ImGui::ColorConvertFloat4ToU32(ImVec4(0.04f, 0.04f, 0.04f, 1.0f));
+	const ImU32 tableBgColor_Dark = ImGui::ColorConvertFloat4ToU32(ImVec4(0.16f, 0.16f, 0.16f, 1.0f));
 
 	float InspectorPanel::GetInspectorContentHeight()
 	{
@@ -56,45 +58,38 @@ namespace Kita {
 		}
 	}
 
-	const char* InspectorPanel::ObjectTypeToString(Type type)
-	{
-		switch (type)
-		{
-		case Type::StaticMesh: return "StaticMesh";
-		case Type::Curve:      return "Curve";
-		default:               return "Unknown";
-		}
-	}
-
 	bool InspectorPanel::BeginPropertyTable(const char* id)
 	{
 		const ImGuiTableFlags tableFlags =
 			ImGuiTableFlags_SizingStretchProp |
+			ImGuiTableFlags_BordersInnerH |
 			ImGuiTableFlags_BordersInnerV |
 			ImGuiTableFlags_BordersOuter |
 			ImGuiTableFlags_NoSavedSettings;
 
-		ImGui::PushStyleColor(ImGuiCol_TableBorderStrong, separatorColor);
-		ImGui::PushStyleColor(ImGuiCol_TableBorderLight, separatorColor);
-		ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.30f, 0.30f, 0.30f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_TableBorderStrong, inspectorBorderColor);
+		ImGui::PushStyleColor(ImGuiCol_TableBorderLight, inspectorBorderColor);
+		ImGui::PushStyleColor(ImGuiCol_Border, ImGui::ColorConvertU32ToFloat4(inspectorBorderColor));
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, inspectorControlFramePadding);
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, inspectorControlFrameRounding);
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, inspectorControlFrameBorderSize);
+		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(0.0f, 0.0f));
 
 		const float tableMinX = ImGui::GetWindowContentRegionMin().x;
 		const float tableMaxX = ImGui::GetWindowContentRegionMax().x;
 		ImGui::SetCursorPosX(tableMinX);
 
-		const bool open = ImGui::BeginTable(id, 2, tableFlags, ImVec2(tableMaxX - tableMinX, 0.0f));
+		const bool open = ImGui::BeginTable(id, 3, tableFlags, ImVec2(tableMaxX - tableMinX, 0.0f));
 		if (!open)
 		{
 			ImGui::PopStyleColor(3);
-			ImGui::PopStyleVar(3);
+			ImGui::PopStyleVar(4);
 			return false;
 		}
 
 		ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, inspectorLabelColumn_LeftWidth);
 		ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
+		ImGui::TableSetupColumn("Reset", ImGuiTableColumnFlags_WidthFixed, inspectorResetColumn_Width);
 		return true;
 	}
 
@@ -102,22 +97,21 @@ namespace Kita {
 	{
 		ImGui::EndTable();
 		ImGui::PopStyleColor(3);
-		ImGui::PopStyleVar(3);
+		ImGui::PopStyleVar(4);
 	}
 
 	void InspectorPanel::BeginPropertyRow(bool& isHighlight)
 	{
 		ImGui::TableNextRow(ImGuiTableRowFlags_None, rowHeight);
-		const ImU32 bgColor = isHighlight ? tableBgColor_Light : tableBgColor_Dark;
-		ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, bgColor);
-		isHighlight = !isHighlight;
+		ImGui::TableSetBgColor(ImGuiTableBgTarget_RowBg0, tableBgColor_Dark);
+		(void)isHighlight;
 	}
 
 	void InspectorPanel::DrawPropertyLabelCell(const char* label)
 	{
 		ImGui::TableSetColumnIndex(0);
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + GetInspectorLabelYOffset());
-		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + textPaddingX);
+		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + inspectorCellInnerPaddingX);
 		ImGui::TextUnformatted(label);
 	}
 
@@ -125,7 +119,41 @@ namespace Kita {
 	{
 		ImGui::TableSetColumnIndex(1);
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + yOffset);
-		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + textPaddingX);
+		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + inspectorCellInnerPaddingX);
+	}
+
+	void InspectorPanel::PreparePropertyResetCell(float yOffset)
+	{
+		ImGui::TableSetColumnIndex(2);
+		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + yOffset);
+		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 4.0f);
+	}
+
+	void InspectorPanel::DrawEmptyResetCell()
+	{
+		PreparePropertyResetCell(GetInspectorLabelYOffset());
+		ImGui::Dummy(ImVec2(0.0f, 0.0f));
+	}
+
+	bool InspectorPanel::DrawResetButtonCell(const char* id, bool enabled)
+	{
+		PreparePropertyResetCell(GetInspectorControlYOffset());
+		ImGui::PushID(id);
+		if (!enabled)
+		{
+			ImGui::BeginDisabled();
+		}
+
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
+		const bool clicked = ImGui::Button("R", ImVec2(inspectorResetColumn_Width - 8.0f, 0.0f));
+		ImGui::PopStyleVar();
+
+		if (!enabled)
+		{
+			ImGui::EndDisabled();
+		}
+		ImGui::PopID();
+		return enabled && clicked;
 	}
 
 	void InspectorPanel::DrawInfoRow(const char* label, const std::string& value, bool& isHighlight)
@@ -134,15 +162,16 @@ namespace Kita {
 		DrawPropertyLabelCell(label);
 		PreparePropertyValueCell(GetInspectorLabelYOffset());
 		ImGui::TextUnformatted(value.c_str());
+		DrawEmptyResetCell();
 	}
 
-	void InspectorPanel::DrawVec3Row(const char* label, glm::vec3& value, bool& isHighlight, float speed)
+	void InspectorPanel::DrawVec3Row(const char* label, glm::vec3& value, bool& isHighlight, float speed, const glm::vec3& defaultValue)
 	{
 		BeginPropertyRow(isHighlight);
 		DrawPropertyLabelCell(label);
 		PreparePropertyValueCell(GetInspectorControlYOffset());
 
-		const float availWidth = ImGui::GetContentRegionAvail().x - textPaddingX;
+		const float availWidth = ImGui::GetContentRegionAvail().x - inspectorValueRightInset;
 		const float itemWidth = (availWidth - itemSpacingX * 2.0f) / 3.0f;
 		const ImU32 axisColors[3] = {
 			IM_COL32(214, 53, 53, 255),
@@ -154,9 +183,9 @@ namespace Kita {
 		ImGui::PushID(label);
 		for (int i = 0; i < 3; i++)
 		{
-			ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.14f, 0.14f, 0.14f, 1.0f));
-			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.17f, 0.17f, 0.17f, 1.0f));
-			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.12f, 0.15f, 0.20f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.09f, 0.09f, 0.09f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.11f, 0.11f, 0.11f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.09f, 0.09f, 0.09f, 1.0f));
 			ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.30f, 0.30f, 0.30f, 1.0f));
 			ImGui::SetNextItemWidth(itemWidth);
 			ImGui::DragFloat(axisIds[i], (&value.x) + i, speed, 0.0f, 0.0f, "%.3f");
@@ -187,9 +216,15 @@ namespace Kita {
 			}
 		}
 		ImGui::PopID();
+
+		const bool canReset = value != defaultValue;
+		if (DrawResetButtonCell(label, canReset))
+		{
+			value = defaultValue;
+		}
 	}
 
-	void InspectorPanel::DrawFloatRow(const char* label, float& value, bool& isHighlight, float speed, float minValue, float maxValue)
+	void InspectorPanel::DrawFloatRow(const char* label, float& value, bool& isHighlight, float speed, float minValue, float maxValue, float defaultValue)
 	{
 		BeginPropertyRow(isHighlight);
 		DrawPropertyLabelCell(label);
@@ -200,13 +235,19 @@ namespace Kita {
 		ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.10f, 0.12f, 0.16f, 1.0f));
 		ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.12f, 0.15f, 0.20f, 1.0f));
 		ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.20f, 0.24f, 0.30f, 1.0f));
-		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - textPaddingX);
+		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - inspectorValueRightInset);
 		ImGui::DragFloat("##FloatValue", &value, speed, minValue, maxValue, "%.3f");
 		ImGui::PopStyleColor(4);
 		ImGui::PopID();
+
+		const bool canReset = value != defaultValue;
+		if (DrawResetButtonCell(label, canReset))
+		{
+			value = defaultValue;
+		}
 	}
 
-	void InspectorPanel::DrawColorRow(const char* label, glm::vec4& value, bool& isHighlight)
+	void InspectorPanel::DrawColorRow(const char* label, glm::vec4& value, bool& isHighlight, const glm::vec4& defaultValue)
 	{
 		BeginPropertyRow(isHighlight);
 		DrawPropertyLabelCell(label);
@@ -214,104 +255,84 @@ namespace Kita {
 
 		ImGui::PushID(label);
 		ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.20f, 0.24f, 0.30f, 1.0f));
-		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - textPaddingX);
+		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - inspectorValueRightInset);
 		ImGui::ColorEdit4("##ColorValue", &value.x,
 			ImGuiColorEditFlags_DisplayRGB |
 			ImGuiColorEditFlags_Float |
 			ImGuiColorEditFlags_AlphaBar);
 		ImGui::PopStyleColor();
 		ImGui::PopID();
+
+		const bool canReset = value != defaultValue;
+		if (DrawResetButtonCell(label, canReset))
+		{
+			value = defaultValue;
+		}
 	}
 
-	/*void InspectorPanel::DrawCurveTypeRow(const char* label, CurveType& curveType, bool& isHighlight)
+	void InspectorPanel::DrawAssetSelectionRow(const char* label, AssetHandle& value, const std::vector<AssetMetadata>& assets, bool& isHighlight, AssetHandle defaultValue)
 	{
 		BeginPropertyRow(isHighlight);
 		DrawPropertyLabelCell(label);
 		PreparePropertyValueCell(GetInspectorControlYOffset());
 
-		const char* items[] = { "Polyline", "BezierCubic" };
-		int currentIndex = static_cast<int>(curveType);
+		std::string selectedPath = "None";
+		if (Asset::IsValidHandle(value))
+		{
+			if (const AssetMetadata* metadata = AssetManager::GetInstance().GetMetadata(value))
+			{
+				selectedPath = metadata->relativePath.generic_string();
+			}
+		}
 
 		ImGui::PushID(label);
 		ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.07f, 0.09f, 0.12f, 1.0f));
 		ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.10f, 0.12f, 0.16f, 1.0f));
 		ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.12f, 0.15f, 0.20f, 1.0f));
 		ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.20f, 0.24f, 0.30f, 1.0f));
-		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - textPaddingX);
-		if (ImGui::Combo("##CurveType", &currentIndex, items, IM_ARRAYSIZE(items)))
+		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - inspectorValueRightInset);
+		if (ImGui::BeginCombo("##AssetSelector", selectedPath.c_str()))
 		{
-			curveType = static_cast<CurveType>(currentIndex);
+			const bool isNoneSelected = !Asset::IsValidHandle(value);
+			if (ImGui::Selectable("None", isNoneSelected))
+			{
+				value = InvalidAssetHandle;
+				selectedPath = "None";
+			}
+
+			if (isNoneSelected)
+			{
+				ImGui::SetItemDefaultFocus();
+			}
+
+			for (const auto& metadata : assets)
+			{
+				const std::string optionLabel = metadata.relativePath.generic_string();
+				const bool isSelected = value == metadata.handle;
+				if (ImGui::Selectable(optionLabel.c_str(), isSelected))
+				{
+					value = metadata.handle;
+					selectedPath = optionLabel;
+				}
+
+				if (isSelected)
+				{
+					ImGui::SetItemDefaultFocus();
+				}
+			}
+			ImGui::EndCombo();
 		}
 		ImGui::PopStyleColor(4);
 		ImGui::PopID();
-	}*/
 
-	/*void InspectorPanel::DrawAnchorRow(const char* label, glm::vec3& value, BezierHandleMode& handleMode, bool& isHighlight)
-	{
-		BeginPropertyRow(isHighlight);
-		DrawPropertyLabelCell(label);
-		PreparePropertyValueCell(GetInspectorControlYOffset());
-
-		const float availableWidth = ImGui::GetContentRegionAvail().x - textPaddingX;
-		const float comboWidth = 110.0f;
-		const float spacing = 10.0f;
-		const float vec3Width = availableWidth - comboWidth - spacing;
-		const float singleAxisSpacing = 8.0f;
-		const float itemWidth = (vec3Width - singleAxisSpacing * 2.0f) / 3.0f;
-		const ImU32 axisColors[3] = {
-			IM_COL32(214, 53, 53, 255),
-			IM_COL32(76, 175, 80, 255),
-			IM_COL32(66, 99, 235, 255)
-		};
-		const char* axisIds[3] = { "##X", "##Y", "##Z" };
-		const char* items[] = { "Free", "Aligned", "Mirrored" };
-		int currentIndex = static_cast<int>(handleMode);
-
-		ImGui::PushID(label);
-		for (int i = 0; i < 3; i++)
+		const bool canReset = value != defaultValue;
+		if (DrawResetButtonCell(label, canReset))
 		{
-			ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.14f, 0.14f, 0.14f, 1.0f));
-			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.17f, 0.17f, 0.17f, 1.0f));
-			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.12f, 0.15f, 0.20f, 1.0f));
-			ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.30f, 0.30f, 0.30f, 1.0f));
-			ImGui::SetNextItemWidth(itemWidth);
-			ImGui::DragFloat(axisIds[i], (&value.x) + i, 0.05f, 0.0f, 0.0f, "%.3f");
-
-			const ImVec2 itemMin = ImGui::GetItemRectMin();
-			const ImVec2 itemMax = ImGui::GetItemRectMax();
-			ImDrawList* drawList = ImGui::GetWindowDrawList();
-			const float markerRight = itemMin.x - 2.0f;
-			const float markerLeft = markerRight - 3.4f;
-			const float markerTop = itemMin.y + 0.8f;
-			const float markerBottom = itemMax.y - 0.2f;
-			const float markerLeftTopInset = 1.7f;
-			const float markerLeftBottomInset = 1.7f;
-			const ImVec2 markerPoints[4] = {
-				ImVec2(markerLeft, markerTop + markerLeftTopInset),
-				ImVec2(markerRight, markerTop),
-				ImVec2(markerRight, markerBottom),
-				ImVec2(markerLeft, markerBottom - markerLeftBottomInset)
-			};
-
-			drawList->AddConvexPolyFilled(markerPoints, 4, axisColors[i]);
-			drawList->AddPolyline(markerPoints, 4, IM_COL32(255, 255, 255, 36), ImDrawFlags_Closed, 1.2f);
-			ImGui::PopStyleColor(4);
-
-			ImGui::SameLine(0.0f, i < 2 ? singleAxisSpacing : spacing);
+			value = defaultValue;
 		}
+	}
 
-		ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.07f, 0.09f, 0.12f, 1.0f));
-		ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.10f, 0.12f, 0.16f, 1.0f));
-		ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.12f, 0.15f, 0.20f, 1.0f));
-		ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.20f, 0.24f, 0.30f, 1.0f));
-		ImGui::SetNextItemWidth(comboWidth);
-		if (ImGui::Combo("##HandleMode", &currentIndex, items, IM_ARRAYSIZE(items)))
-		{
-			handleMode = static_cast<BezierHandleMode>(currentIndex);
-		}
-		ImGui::PopStyleColor(4);
-		ImGui::PopID();
-	}*/
+	
 
 	void InspectorPanel::OnImGuiRender()
 	{
@@ -323,6 +344,7 @@ namespace Kita {
 		ImGuiWindowClass viewportWindowClass{};
 		viewportWindowClass.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoWindowMenuButton;
 		ImGui::SetNextWindowClass(&viewportWindowClass);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 
 		ImGui::Begin("Inspector");
 
@@ -331,11 +353,19 @@ namespace Kita {
 		DrawItemByType(itemType);
 	
 		ImGui::End();
+		ImGui::PopStyleVar();
 	}
 
 	void InspectorPanel::DrawSelectedObject(Object& selectedObject)
 	{
-		DrawObjectInfoSection(selectedObject);
+		DrawComponentSection<Transform>(
+			selectedObject,
+			"Transform",
+			[&](Transform& transform)
+			{
+				DrawTransformProperties(transform);
+			},
+			false);
 
 		DrawComponentSection<MeshRenderer>(
 			selectedObject,
@@ -358,46 +388,22 @@ namespace Kita {
 	{
 	}
 
-	void InspectorPanel::DrawObjectInfoSection(Object& selectedObject)
+	void InspectorPanel::DrawTransformProperties(Transform& transform)
 	{
-		if (!BeginPropertyTable("##InspectorObjectInfoTable"))
+		DrawComponentPropertyTable("##TransformComponentTable",
+			[&](bool& isHighlight)
 		{
-			return;
-		}
-
-		bool isHighlight = false;
-
-		if (selectedObject.HasComponent<Name>())
-		{
-			auto& name = selectedObject.GetComponent<Name>().Get();
-			DrawInfoRow("Name", name, isHighlight);
-		}
-
-		if (selectedObject.HasComponent<ObjectType>())
-		{
-			const Type& type = selectedObject.GetComponent<ObjectType>().Get();
-			DrawInfoRow("Type", ObjectTypeToString(type), isHighlight);
-		}
-
-		if (selectedObject.HasComponent<Transform>())
-		{
-			auto& transform = selectedObject.GetComponent<Transform>();
-			DrawVec3Row("Position", transform.GetPosition(), isHighlight);
-			DrawVec3Row("Rotation", transform.GetRotation(), isHighlight);
-			DrawVec3Row("Scale", transform.GetScale(), isHighlight);
-		}
-
-		EndPropertyTable();
+			DrawVec3Row("Position", transform.GetPosition(), isHighlight, 0.05f, glm::vec3(0.0f));
+			DrawVec3Row("Rotation", transform.GetRotation(), isHighlight, 0.05f, glm::vec3(0.0f));
+			DrawVec3Row("Scale", transform.GetScale(), isHighlight, 0.05f, glm::vec3(1.0f));
+		});
 	}
 
 	void InspectorPanel::DrawMeshRendererProperties(MeshRenderer& meshRenderer)
 	{
-		const float treeIndent = ImGui::GetTreeNodeToLabelSpacing();
-		ImGui::Unindent(treeIndent);
-
-		if (BeginPropertyTable("##MeshRendererComponentTable"))
+		DrawComponentPropertyTable("##MeshRendererComponentTable",
+			[&](bool& isHighlight)
 		{
-			bool isHighlight = false;
 			auto& assetManager = AssetManager::GetInstance();
 
 			std::string meshSource = "None";
@@ -432,144 +438,28 @@ namespace Kita {
 				}
 
 				DrawInfoRow(("Material " + std::to_string(i)).c_str(), "Slot", isHighlight);
-
-				std::string shaderPath = "None";
-				if (Asset::IsValidHandle(materialAsset->ShaderHandle))
-				{
-					if (auto shaderAsset = assetManager.GetShaderAsset(materialAsset->ShaderHandle))
-					{
-						shaderPath = shaderAsset->SourcePath.string();
-					}
-				}
-
-				BeginPropertyRow(isHighlight);
-				DrawPropertyLabelCell(("Shader " + std::to_string(i)).c_str());
-				PreparePropertyValueCell(GetInspectorControlYOffset());
-
-				ImGui::PushID(static_cast<int>(i * 2));
-				ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.07f, 0.09f, 0.12f, 1.0f));
-				ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.10f, 0.12f, 0.16f, 1.0f));
-				ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.12f, 0.15f, 0.20f, 1.0f));
-				ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.20f, 0.24f, 0.30f, 1.0f));
-				ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - textPaddingX);
-				if (ImGui::BeginCombo("##ShaderAssetSelector", shaderPath.c_str()))
-				{
-					const bool isNoneSelected = !Asset::IsValidHandle(materialAsset->ShaderHandle);
-					if (ImGui::Selectable("None", isNoneSelected))
-					{
-						materialAsset->ShaderHandle = InvalidAssetHandle;
-						shaderPath = "None";
-					}
-
-					if (isNoneSelected)
-					{
-						ImGui::SetItemDefaultFocus();
-					}
-
-					for (const auto& metadata : shaderAssets)
-					{
-						const std::string label = metadata.relativePath.generic_string();
-						const bool isSelected = materialAsset->ShaderHandle == metadata.handle;
-						if (ImGui::Selectable(label.c_str(), isSelected))
-						{
-							materialAsset->ShaderHandle = metadata.handle;
-							shaderPath = label;
-						}
-
-						if (isSelected)
-						{
-							ImGui::SetItemDefaultFocus();
-						}
-					}
-					ImGui::EndCombo();
-				}
-				ImGui::PopStyleColor(4);
-				ImGui::PopID();
-
-				std::string texturePath = "None";
-				if (Asset::IsValidHandle(materialAsset->AlbedoTextureHandle))
-				{
-					if (auto textureAsset = assetManager.GetTextureAsset(materialAsset->AlbedoTextureHandle))
-					{
-						texturePath = textureAsset->SourcePath.string();
-					}
-				}
-
-				DrawInfoRow(("Shader Handle " + std::to_string(i)).c_str(),
-					std::to_string(materialAsset->ShaderHandle), isHighlight);
-
-				BeginPropertyRow(isHighlight);
-				DrawPropertyLabelCell(("Albedo " + std::to_string(i)).c_str());
-				PreparePropertyValueCell(GetInspectorControlYOffset());
-
-				ImGui::PushID(static_cast<int>(i * 2 + 1));
-				ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.07f, 0.09f, 0.12f, 1.0f));
-				ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.10f, 0.12f, 0.16f, 1.0f));
-				ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.12f, 0.15f, 0.20f, 1.0f));
-				ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.20f, 0.24f, 0.30f, 1.0f));
-				ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - textPaddingX);
-				if (ImGui::BeginCombo("##TextureAssetSelector", texturePath.c_str()))
-				{
-					const bool isNoneSelected = !Asset::IsValidHandle(materialAsset->AlbedoTextureHandle);
-					if (ImGui::Selectable("None", isNoneSelected))
-					{
-						materialAsset->AlbedoTextureHandle = InvalidAssetHandle;
-						texturePath = "None";
-					}
-
-					if (isNoneSelected)
-					{
-						ImGui::SetItemDefaultFocus();
-					}
-
-					for (const auto& metadata : textureAssets)
-					{
-						const std::string label = metadata.relativePath.generic_string();
-						const bool isSelected = materialAsset->AlbedoTextureHandle == metadata.handle;
-						if (ImGui::Selectable(label.c_str(), isSelected))
-						{
-							materialAsset->AlbedoTextureHandle = metadata.handle;
-							texturePath = label;
-						}
-
-						if (isSelected)
-						{
-							ImGui::SetItemDefaultFocus();
-						}
-					}
-					ImGui::EndCombo();
-				}
-				ImGui::PopStyleColor(4);
-				ImGui::PopID();
-
-				DrawInfoRow(("Texture Handle " + std::to_string(i)).c_str(),
-					std::to_string(materialAsset->AlbedoTextureHandle), isHighlight);
+				DrawAssetSelectionRow(("Shader " + std::to_string(i)).c_str(),
+					materialAsset->ShaderHandle, shaderAssets, isHighlight, InvalidAssetHandle);
+				DrawAssetSelectionRow(("Albedo " + std::to_string(i)).c_str(),
+					materialAsset->AlbedoTextureHandle, textureAssets, isHighlight, InvalidAssetHandle);
 
 				glm::vec4 baseColor = materialAsset->BaseColor;
-				DrawColorRow(("Base Color " + std::to_string(i)).c_str(), baseColor, isHighlight);
+				DrawColorRow(("Base Color " + std::to_string(i)).c_str(), baseColor, isHighlight, glm::vec4(1.0f));
 				if (baseColor != materialAsset->BaseColor)
 				{
 					materialAsset->BaseColor = baseColor;
 				}
 			}
-
-			EndPropertyTable();
-		}
-
-		ImGui::Indent(treeIndent);
+		});
 	}
 
 	void InspectorPanel::DrawLightComponentProperties(LightComponent& lightComponent)
 	{
-		const float treeIndent = ImGui::GetTreeNodeToLabelSpacing();
-		ImGui::Unindent(treeIndent);
-
-		if (BeginPropertyTable("##LightComponentTable"))
+		DrawComponentPropertyTable("##LightComponentTable",
+			[&](bool& isHighlight)
 		{
-			bool isHighlight = false;
-
 			glm::vec4 lightColor = lightComponent.color;
-			DrawColorRow("Color", lightColor, isHighlight);
+			DrawColorRow("Color", lightColor, isHighlight, glm::vec4(1.0f));
 			if (lightColor.x != lightComponent.color.x ||
 				lightColor.y != lightComponent.color.y ||
 				lightColor.z != lightComponent.color.z ||
@@ -579,16 +469,12 @@ namespace Kita {
 			}
 
 			float intensity = lightComponent.intensity;
-			DrawFloatRow("Intensity", intensity, isHighlight, 0.05f, 0.0f, 10.0f);
+			DrawFloatRow("Intensity", intensity, isHighlight, 0.05f, 0.0f, 10.0f, 1.0f);
 			if (intensity != lightComponent.intensity)
 			{
 				lightComponent.intensity = intensity;
 			}
-
-			EndPropertyTable();
-		}
-
-		ImGui::Indent(treeIndent);
+		});
 	}
 
 }

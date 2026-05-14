@@ -17,7 +17,6 @@ namespace Kita {
 
 		void DrawItemByType(EditorSelectionItemType type);
 
-		static const char* ObjectTypeToString(Type type);
 		static float GetInspectorContentHeight();
 		static float GetInspectorLabelYOffset();
 		static float GetInspectorControlYOffset();
@@ -27,19 +26,23 @@ namespace Kita {
 		void BeginPropertyRow(bool& isHighlight);
 		void DrawPropertyLabelCell(const char* label);
 		void PreparePropertyValueCell(float yOffset);
+		void PreparePropertyResetCell(float yOffset);
+		void DrawEmptyResetCell();
+		bool DrawResetButtonCell(const char* id, bool enabled = true);
 
 		void DrawInspectorPanel();
 		void DrawSelectedObject(Object& selectedObject);
 		void DrawSelectedAsset(AssetHandle handle);
 
-		void DrawObjectInfoSection(Object& selectedObject);
+		void DrawTransformProperties(Transform& transform);
 		void DrawMeshRendererProperties(MeshRenderer& meshRenderer);
 		void DrawLightComponentProperties(LightComponent& lightComponent);
 
 		void DrawInfoRow(const char* label, const std::string& value, bool& isHighlight);
-		void DrawVec3Row(const char* label, glm::vec3& value, bool& isHighlight, float speed = 0.05f);
-		void DrawFloatRow(const char* label, float& value, bool& isHighlight, float speed = 0.05f, float minValue = 0.0f, float maxValue = 0.0f);
-		void DrawColorRow(const char* label, glm::vec4& value, bool& isHighlight);
+		void DrawVec3Row(const char* label, glm::vec3& value, bool& isHighlight, float speed = 0.05f, const glm::vec3& defaultValue = glm::vec3(0.0f));
+		void DrawFloatRow(const char* label, float& value, bool& isHighlight, float speed = 0.05f, float minValue = 0.0f, float maxValue = 0.0f, float defaultValue = 0.0f);
+		void DrawColorRow(const char* label, glm::vec4& value, bool& isHighlight, const glm::vec4& defaultValue = glm::vec4(1.0f));
+		void DrawAssetSelectionRow(const char* label, AssetHandle& value, const std::vector<AssetMetadata>& assets, bool& isHighlight, AssetHandle defaultValue = InvalidAssetHandle);
 
 		template<typename T, typename DrawFunc>
 		void DrawComponentSection(Object& object, const char* label, DrawFunc&& drawFunc, bool enableRemove = true)
@@ -58,19 +61,36 @@ namespace Kita {
 				ImGuiTreeNodeFlags_FramePadding;
 			const std::string popupId = std::string(label) + "##ComponentMoreOperation";
 
-			ImVec2 contentAvailable = ImGui::GetContentRegionAvail();
-			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 4,4 });
-			const ImGuiStyle& style = ImGui::GetStyle();
-			float lineHeight = ImGui::GetFontSize() + style.FramePadding.y * 2.0f;
-			ImGui::Separator();
-			bool open = ImGui::TreeNodeEx((void*)typeid(T).hash_code(), componentNodeFlags, label);
-			ImGui::PopStyleVar();
+			const float lineHeight = 30.0f;
+			const float contentMinX = ImGui::GetWindowContentRegionMin().x;
+			const float contentMaxX = ImGui::GetWindowContentRegionMax().x;
+			const float headerTextPaddingY = (lineHeight - ImGui::GetTextLineHeight()) * 0.5f;
 
-			ImGui::SameLine(contentAvailable.x - lineHeight * 0.5f);
+			ImGui::SetCursorPosX(contentMinX);
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 0.0f, headerTextPaddingY });
+			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
+			ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.23f, 0.23f, 0.23f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.23f, 0.23f, 0.23f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.23f, 0.23f, 0.23f, 1.0f));
+			bool open = ImGui::TreeNodeEx((void*)typeid(T).hash_code(), componentNodeFlags, label);
+			const ImVec2 headerMin = ImGui::GetItemRectMin();
+			const ImVec2 headerMax = ImGui::GetItemRectMax();
+			ImGui::PopStyleColor(3);
+			ImGui::PopStyleVar(2);
+
+			ImGui::SetCursorScreenPos(ImVec2(headerMax.x - lineHeight, headerMin.y));
+			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 0.0f, 0.0f });
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.23f, 0.23f, 0.23f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.27f, 0.27f, 0.27f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.27f, 0.27f, 0.27f, 1.0f));
 			if (ImGui::Button("+", ImVec2{ lineHeight, lineHeight }))
 			{
 				ImGui::OpenPopup(popupId.c_str());
 			}
+			ImGui::PopStyleColor(3);
+			ImGui::PopStyleVar(2);
+			ImGui::SetCursorScreenPos(ImVec2(headerMin.x, headerMax.y));
 
 			bool remove = false;
 			if (ImGui::BeginPopup(popupId.c_str()))
@@ -92,6 +112,22 @@ namespace Kita {
 			{
 				object.RemoveComponent<T>();
 			}
+		}
+
+		template<typename DrawFunc>
+		void DrawComponentPropertyTable(const char* id, DrawFunc&& drawFunc)
+		{
+			const float treeIndent = ImGui::GetTreeNodeToLabelSpacing();
+			ImGui::Unindent(treeIndent);
+
+			if (BeginPropertyTable(id))
+			{
+				bool isHighlight = false;
+				std::forward<DrawFunc>(drawFunc)(isHighlight);
+				EndPropertyTable();
+			}
+
+			ImGui::Indent(treeIndent);
 		}
 	private:
 		Ref<EditorSelectionContext> m_SelectionContext = nullptr;

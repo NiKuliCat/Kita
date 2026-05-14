@@ -48,6 +48,7 @@ namespace Kita {
 			if (m_ContentBrowserIconAtlas->Load(atlasJsonPath))
 			{
 				m_ContentBrowserPanel.SetIconAtlas(m_ContentBrowserIconAtlas.get());
+				m_SceneHierarchyPanel.SetIconAtlas(m_ContentBrowserIconAtlas.get());
 			}
 		}
 
@@ -61,6 +62,12 @@ namespace Kita {
 			meshrenderer.MeshAssetHandle = EditorProjectBootstrap::GetPreLoadMeshHandle("sphere");
 			meshrenderer.DefaultMaterialAssetHandle = EditorProjectBootstrap::GetPreLoadMaterialHandle("default");
 			meshrenderer.MaterialAssetHandles.clear();
+
+			m_Scene->CreateObject("obj - 0");
+			m_Scene->CreateObject("obj - 1");
+			m_Scene->CreateObject("obj - 2");
+			m_Scene->CreateObject("obj - 3");
+			m_Scene->CreateObject("obj - 4");
 		}
 	}
 
@@ -74,6 +81,7 @@ namespace Kita {
 
 	void EditorLayer::OnDestroy()
 	{
+		m_SceneHierarchyPanel.SetIconAtlas(nullptr);
 		m_ContentBrowserPanel.SetIconAtlas(nullptr);
 		m_ContentBrowserPanel.SetThumbnailCache(nullptr);
 		m_ContentBrowserIconAtlas.reset();
