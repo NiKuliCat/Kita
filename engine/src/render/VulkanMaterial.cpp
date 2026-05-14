@@ -22,6 +22,7 @@ namespace Kita {
         m_Context = &context;
         const uint32_t descriptorCount = std::max(1u, framesInFlight);
         m_DescriptorSets.resize(descriptorCount);
+        m_DescriptorDirtyFlags.assign(descriptorCount, 1);
 
         VulkanDescriptorSet::CreateInfo descInfo{};
         descInfo.Name = "Material_Set";
@@ -44,9 +45,56 @@ namespace Kita {
         if (!m_Context || !m_AlbedoTexture)
             return;
 
+        for (uint32_t i = 0; i < static_cast<uint32_t>(m_DescriptorSets.size()); ++i)
+        {
+            UpdateDescriptorSet(i);
+        }
+    }
+
+    void VulkanMaterial::UpdateDescriptorSet(uint32_t frameIndex)
+    {
+        if (!m_Context || !m_AlbedoTexture)
+            return;
+        if (frameIndex >= m_DescriptorSets.size())
+            return;
+
         const VkDescriptorImageInfo imageInfo = m_AlbedoTexture->GetDescriptorInfo();
-        for (auto& descriptorSet : m_DescriptorSets)
-            descriptorSet.WriteImageSampler(0, imageInfo);
+        m_DescriptorSets[frameIndex].WriteImageSampler(0, imageInfo);
+        if (frameIndex < m_DescriptorDirtyFlags.size())
+        {
+            m_DescriptorDirtyFlags[frameIndex] = 0;
+        }
+    }
+
+    void VulkanMaterial::MarkDescriptorSetsDirty()
+    {
+        if (m_DescriptorDirtyFlags.empty())
+            return;
+
+        std::fill(m_DescriptorDirtyFlags.begin(), m_DescriptorDirtyFlags.end(), static_cast<uint8_t>(1));
+    }
+
+    void VulkanMaterial::EnsureDescriptors(VulkanContext& context, uint32_t framesInFlight)
+    {
+        const uint32_t descriptorCount = std::max(1u, framesInFlight);
+        if (m_Context != &context || m_DescriptorSets.size() != descriptorCount)
+        {
+            InitDescriptors(context, descriptorCount);
+            return;
+        }
+
+        if (m_DescriptorSets.empty())
+        {
+            InitDescriptors(context, descriptorCount);
+        }
+    }
+
+    bool VulkanMaterial::IsDescriptorSetDirty(uint32_t frameIndex) const
+    {
+        if (frameIndex >= m_DescriptorDirtyFlags.size())
+            return false;
+
+        return m_DescriptorDirtyFlags[frameIndex] != 0;
     }
 
     void VulkanMaterial::Destroy()
@@ -54,6 +102,7 @@ namespace Kita {
         for (auto& descriptorSet : m_DescriptorSets)
             descriptorSet.Destroy();
         m_DescriptorSets.clear();
+        m_DescriptorDirtyFlags.clear();
         m_Context = nullptr;
     }
 

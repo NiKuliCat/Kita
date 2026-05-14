@@ -37,10 +37,14 @@ namespace Kita {
 
 		void InitDescriptors(VulkanContext& context, uint32_t framesInFlight);
 		void UpdateDescriptorSets();
+		void UpdateDescriptorSet(uint32_t frameIndex);
+		void MarkDescriptorSetsDirty();
+		void EnsureDescriptors(VulkanContext& context, uint32_t framesInFlight);
 		void Destroy();
 
 		const VulkanDescriptorSet& GetDescriptorSet(uint32_t frameIndex) const;
 		bool HasDescriptorSets() const { return !m_DescriptorSets.empty(); }
+		bool IsDescriptorSetDirty(uint32_t frameIndex) const;
 
 	private:
 		glm::vec4 m_BaseColor = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -49,6 +53,7 @@ namespace Kita {
 		Ref<VulkanTexture> m_AlbedoTexture = nullptr;
 		VulkanContext* m_Context = nullptr;
 		std::vector<VulkanDescriptorSet> m_DescriptorSets;
+		std::vector<uint8_t> m_DescriptorDirtyFlags;
 	};
 
 }

@@ -183,6 +183,12 @@ IF EXIST "C:\VulkanSDK\1.4.341.1\Bin\slang.dll"\ (xcopy /Q /E /Y /I "C:\VulkanSD
     <ClInclude Include="src\ui\SvgIconAtlas.h" />
     <ClInclude Include="src\ui\ThumbnailCache.h" />
     <ClInclude Include="src\ui\UIColorPanel.h" />
+    <ClInclude Include="src\ui\asset\AssetEditorManager.h" />
+    <ClInclude Include="src\ui\asset\AssetEditorUtils.h" />
+    <ClInclude Include="src\ui\asset\IAssetEditor.h" />
+    <ClInclude Include="src\ui\asset\MaterialAssetEditor.h" />
+    <ClInclude Include="src\ui\asset\MeshAssetEditor.h" />
+    <ClInclude Include="src\ui\asset\TextureAssetEditor.h" />
     <ClInclude Include="src\ui\viewport\EditorPickRegistry.h" />
     <ClInclude Include="src\ui\viewport\EditorViewportPanel.h" />
     <ClInclude Include="src\ui\viewport\EditorViewportSurface.h" />
@@ -207,6 +213,10 @@ IF EXIST "C:\VulkanSDK\1.4.341.1\Bin\slang.dll"\ (xcopy /Q /E /Y /I "C:\VulkanSD
     <ClCompile Include="src\ui\SvgIconAtlas.cpp" />
     <ClCompile Include="src\ui\ThumbnailCache.cpp" />
     <ClCompile Include="src\ui\UIColorPanel.cpp" />
+    <ClCompile Include="src\ui\asset\AssetEditorManager.cpp" />
+    <ClCompile Include="src\ui\asset\MaterialAssetEditor.cpp" />
+    <ClCompile Include="src\ui\asset\MeshAssetEditor.cpp" />
+    <ClCompile Include="src\ui\asset\TextureAssetEditor.cpp" />
     <ClCompile Include="src\ui\viewport\EditorPickRegistry.cpp" />
     <ClCompile Include="src\ui\viewport\EditorViewportPanel.cpp" />
     <ClCompile Include="src\ui\viewport\EditorViewportSurface.cpp" />

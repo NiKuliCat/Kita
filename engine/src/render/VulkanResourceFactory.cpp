@@ -183,7 +183,59 @@ namespace Kita {
 		}
 
 		if (outMaterial.GetAlbedoTexture())
-			outMaterial.InitDescriptors(m_Context, m_Context.GetFramesInFlight());
+		{
+			outMaterial.EnsureDescriptors(m_Context, m_Context.GetFramesInFlight());
+			outMaterial.MarkDescriptorSetsDirty();
+		}
+	}
+
+	void VulkanResourceFactory::RefreshMaterial(AssetHandle handle)
+	{
+		if (!Asset::IsValidHandle(handle))
+		{
+			return;
+		}
+
+		auto cacheIt = m_MaterialCache.find(handle);
+		if (cacheIt == m_MaterialCache.end() || !cacheIt->second)
+		{
+			return;
+		}
+
+		Ref<MaterialAsset> materialAsset = m_AssetManager.GetMaterialAsset(handle);
+		if (!materialAsset)
+		{
+			KITA_CORE_WARN("VulkanResourceFactory: material asset not found during refresh, handle={}", handle);
+			return;
+		}
+
+		ApplyMaterial(*materialAsset, *cacheIt->second);
+	}
+
+	void VulkanResourceFactory::RefreshMaterialFrameResources(AssetHandle handle, uint32_t frameIndex)
+	{
+		if (!Asset::IsValidHandle(handle))
+		{
+			return;
+		}
+
+		auto cacheIt = m_MaterialCache.find(handle);
+		if (cacheIt == m_MaterialCache.end() || !cacheIt->second)
+		{
+			return;
+		}
+
+		Ref<VulkanMaterial>& material = cacheIt->second;
+		if (!material->GetAlbedoTexture())
+		{
+			return;
+		}
+
+		material->EnsureDescriptors(m_Context, m_Context.GetFramesInFlight());
+		if (material->IsDescriptorSetDirty(frameIndex))
+		{
+			material->UpdateDescriptorSet(frameIndex);
+		}
 	}
 
 	std::vector<Ref<VulkanGeometry>> VulkanResourceFactory::GetOrCreateGeometries(AssetHandle handle)

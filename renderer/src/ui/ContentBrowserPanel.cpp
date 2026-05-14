@@ -1,6 +1,7 @@
 #include "renderer_pch.h"
 #include "ContentBrowserPanel.h"
 #include "SvgIconAtlas.h"
+#include "asset/AssetDragDrop.h"
 
 #include "imgui.h"
 #include <imgui_internal.h>
@@ -388,9 +389,34 @@ namespace Kita {
 					}
 				}
 
+				if (!isDirectory && entry.IsAsset && ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+				{
+					const AssetDragDropPayload payload{ entry.Handle, entry.Type };
+					ImGui::SetDragDropPayload(kAssetDragDropPayloadType, &payload, sizeof(payload));
+
+					if (thumbnail.IsValid())
+					{
+						ImGui::Image(thumbnail.TextureID, ImVec2(36.0f, 36.0f), ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f));
+						ImGui::SameLine();
+					}
+
+					ImGui::BeginGroup();
+					ImGui::TextUnformatted(entry.DisplayName.c_str());
+					ImGui::TextDisabled("%s", GetAssetTypeLabel(entry.Type));
+					ImGui::EndGroup();
+					ImGui::EndDragDropSource();
+				}
+
 				if (isDirectory && isHovered && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 				{
 					SetSelectedDirectory(entry.AbsolutePath);
+				}
+				else if (!isDirectory && entry.IsAsset && isHovered && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+				{
+					if (m_OpenAssetCallback)
+					{
+						m_OpenAssetCallback(entry.Handle);
+					}
 				}
 
 				if (isHovered && !isDirectory)

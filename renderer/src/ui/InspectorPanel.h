@@ -11,6 +11,7 @@ namespace Kita {
 			:m_SelectionContext(selectionContext){ }
 
 		void SetSelectionContext(const Ref<EditorSelectionContext>& selectionContext) { m_SelectionContext = selectionContext; }
+		void SetOpenAssetCallback(std::function<void(AssetHandle)> callback) { m_OpenAssetCallback = std::move(callback); }
 
 		void OnImGuiRender();
 	private:
@@ -33,10 +34,29 @@ namespace Kita {
 		void DrawInspectorPanel();
 		void DrawSelectedObject(Object& selectedObject);
 		void DrawSelectedAsset(AssetHandle handle);
+		void DrawComponentOverview(Object& selectedObject);
+		void DrawAddComponentMenu(Object& selectedObject);
 
 		void DrawTransformProperties(Transform& transform);
+		void DrawStaticMeshProperties(MeshRenderer& meshRenderer);
+		void DrawStaticMeshSlotRow(
+			const char* label,
+			AssetHandle& meshHandle,
+			const std::vector<AssetMetadata>& meshAssets,
+			bool& isHighlight,
+			AssetHandle defaultValue = InvalidAssetHandle);
 		void DrawMeshRendererProperties(MeshRenderer& meshRenderer);
 		void DrawLightComponentProperties(LightComponent& lightComponent);
+		void DrawMaterialSlotRow(
+			const char* label,
+			size_t slotIndex,
+			AssetHandle& slotMaterialHandle,
+			AssetHandle defaultMaterialHandle,
+			const std::vector<AssetMetadata>& materialAssets,
+			bool& isHighlight);
+		void OpenMaterialEditor(AssetHandle materialHandle);
+		static std::string GetAssetDisplayName(AssetHandle handle);
+		static std::string GetAssetPathLabel(AssetHandle handle);
 
 		void DrawInfoRow(const char* label, const std::string& value, bool& isHighlight);
 		void DrawVec3Row(const char* label, glm::vec3& value, bool& isHighlight, float speed = 0.05f, const glm::vec3& defaultValue = glm::vec3(0.0f));
@@ -45,7 +65,7 @@ namespace Kita {
 		void DrawAssetSelectionRow(const char* label, AssetHandle& value, const std::vector<AssetMetadata>& assets, bool& isHighlight, AssetHandle defaultValue = InvalidAssetHandle);
 
 		template<typename T, typename DrawFunc>
-		void DrawComponentSection(Object& object, const char* label, DrawFunc&& drawFunc, bool enableRemove = true)
+		void DrawComponentSection(Object& object, const char* label, DrawFunc&& drawFunc, bool enableRemove = true, bool showOptionsButton = true)
 		{
 			if (!object.HasComponent<T>())
 			{
@@ -72,28 +92,35 @@ namespace Kita {
 			ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.23f, 0.23f, 0.23f, 1.0f));
 			ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.23f, 0.23f, 0.23f, 1.0f));
 			ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.23f, 0.23f, 0.23f, 1.0f));
-			bool open = ImGui::TreeNodeEx((void*)typeid(T).hash_code(), componentNodeFlags, label);
+			bool open = ImGui::TreeNodeEx(label, componentNodeFlags);
 			const ImVec2 headerMin = ImGui::GetItemRectMin();
 			const ImVec2 headerMax = ImGui::GetItemRectMax();
 			ImGui::PopStyleColor(3);
 			ImGui::PopStyleVar(2);
 
-			ImGui::SetCursorScreenPos(ImVec2(headerMax.x - lineHeight, headerMin.y));
-			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
-			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 0.0f, 0.0f });
-			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.23f, 0.23f, 0.23f, 1.0f));
-			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.27f, 0.27f, 0.27f, 1.0f));
-			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.27f, 0.27f, 0.27f, 1.0f));
-			if (ImGui::Button("+", ImVec2{ lineHeight, lineHeight }))
+			if (showOptionsButton)
 			{
-				ImGui::OpenPopup(popupId.c_str());
+				ImGui::SetCursorScreenPos(ImVec2(headerMax.x - lineHeight, headerMin.y));
+				ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
+				ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 0.0f, 0.0f });
+				ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.23f, 0.23f, 0.23f, 1.0f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.27f, 0.27f, 0.27f, 1.0f));
+				ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.27f, 0.27f, 0.27f, 1.0f));
+				if (ImGui::Button("...", ImVec2{ lineHeight, lineHeight }))
+				{
+					ImGui::OpenPopup(popupId.c_str());
+				}
+				ImGui::PopStyleColor(3);
+				ImGui::PopStyleVar(2);
+				ImGui::SetCursorScreenPos(ImVec2(headerMin.x, headerMax.y));
 			}
-			ImGui::PopStyleColor(3);
-			ImGui::PopStyleVar(2);
-			ImGui::SetCursorScreenPos(ImVec2(headerMin.x, headerMax.y));
+			else
+			{
+				ImGui::SetCursorScreenPos(ImVec2(headerMin.x, headerMax.y));
+			}
 
 			bool remove = false;
-			if (ImGui::BeginPopup(popupId.c_str()))
+			if (showOptionsButton && ImGui::BeginPopup(popupId.c_str()))
 			{
 				if (ImGui::MenuItem("Remove Component", nullptr, false, enableRemove))
 				{
@@ -131,5 +158,6 @@ namespace Kita {
 		}
 	private:
 		Ref<EditorSelectionContext> m_SelectionContext = nullptr;
+		std::function<void(AssetHandle)> m_OpenAssetCallback = nullptr;
 	};
 }

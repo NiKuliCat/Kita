@@ -36,6 +36,7 @@ namespace Kita {
 
 		void SetContentRoot(const std::filesystem::path& contentRoot);
 		void SetEditorSelectionContext(const Ref<EditorSelectionContext>& selectionContext) { m_CurrentSelectionContext = selectionContext; }
+		void SetOpenAssetCallback(std::function<void(AssetHandle)> callback) { m_OpenAssetCallback = std::move(callback); }
 		void SetToolbarHeight(float toolbarHeight);
 		void SetThumbnailCache(ThumbnailCache* thumbnailCache) { m_ThumbnailCache = thumbnailCache; }
 		void SetIconAtlas(SvgIconAtlas* iconAtlas) { m_IconAtlas = iconAtlas; }
@@ -98,6 +99,7 @@ namespace Kita {
 		float m_TileSize = 92.0f;
 
 		Ref<EditorSelectionContext> m_CurrentSelectionContext = nullptr;
+		std::function<void(AssetHandle)> m_OpenAssetCallback = nullptr;
 		DirectoryCache  m_CurrentDirectoryCache;
 		ThumbnailCache* m_ThumbnailCache = nullptr;
 		SvgIconAtlas* m_IconAtlas = nullptr;

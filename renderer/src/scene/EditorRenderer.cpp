@@ -189,6 +189,10 @@ namespace Kita {
 				if (!material)
 					continue;
 
+				m_VulkanResFactory->RefreshMaterialFrameResources(
+					materialHandle,
+					m_Context->GetCurrentFrameIndex());
+
 				if (!material->GetAlbedoTexture())
 				{
 					KITA_CORE_WARN("EditorRenderer: material has no albedo texture, skipping draw.");

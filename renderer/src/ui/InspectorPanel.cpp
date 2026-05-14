@@ -332,6 +332,254 @@ namespace Kita {
 		}
 	}
 
+	std::string InspectorPanel::GetAssetDisplayName(AssetHandle handle)
+	{
+		if (!Asset::IsValidHandle(handle))
+		{
+			return "None";
+		}
+
+		if (const AssetMetadata* metadata = AssetManager::GetInstance().GetMetadata(handle))
+		{
+			const std::string filename = metadata->relativePath.filename().string();
+			if (!filename.empty())
+			{
+				return filename;
+			}
+
+			return metadata->relativePath.generic_string();
+		}
+
+		return "None";
+	}
+
+	std::string InspectorPanel::GetAssetPathLabel(AssetHandle handle)
+	{
+		if (!Asset::IsValidHandle(handle))
+		{
+			return "None";
+		}
+
+		if (const AssetMetadata* metadata = AssetManager::GetInstance().GetMetadata(handle))
+		{
+			return metadata->relativePath.generic_string();
+		}
+
+		return "None";
+	}
+
+	void InspectorPanel::OpenMaterialEditor(AssetHandle materialHandle)
+	{
+		if (m_OpenAssetCallback && Asset::IsValidHandle(materialHandle))
+		{
+			m_OpenAssetCallback(materialHandle);
+		}
+	}
+
+	void InspectorPanel::DrawMaterialSlotRow(
+		const char* label,
+		size_t slotIndex,
+		AssetHandle& slotMaterialHandle,
+		AssetHandle defaultMaterialHandle,
+		const std::vector<AssetMetadata>& materialAssets,
+		bool& isHighlight)
+	{
+		BeginPropertyRow(isHighlight);
+		DrawPropertyLabelCell(label);
+		PreparePropertyValueCell(GetInspectorControlYOffset());
+
+		ImGui::PushID(static_cast<int>(slotIndex));
+
+		const float valueWidth = ImGui::GetContentRegionAvail().x - inspectorValueRightInset;
+		const float tileSize = GetInspectorContentHeight() + 10.0f;
+		const float comboSpacing = 10.0f;
+		const float comboWidth = ImMax(80.0f, valueWidth - tileSize - comboSpacing);
+		const ImVec2 tileSizeVec(tileSize, tileSize);
+
+		ImGui::InvisibleButton("##MaterialThumbnail", tileSizeVec);
+		const ImRect thumbRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
+		ImDrawList* drawList = ImGui::GetWindowDrawList();
+		drawList->AddRectFilled(thumbRect.Min, thumbRect.Max, IM_COL32(72, 72, 72, 255));
+		drawList->AddRect(thumbRect.Min, thumbRect.Max, IM_COL32(20, 20, 20, 255), 0.0f, 0, 1.0f);
+		drawList->AddLine(
+			ImVec2(thumbRect.Min.x + 6.0f, thumbRect.Max.y - 6.0f),
+			ImVec2(thumbRect.Max.x - 6.0f, thumbRect.Min.y + 6.0f),
+			IM_COL32(105, 105, 105, 255),
+			1.0f);
+		drawList->AddText(
+			ImVec2(thumbRect.Min.x + 7.0f, thumbRect.Min.y + 7.0f),
+			IM_COL32(180, 180, 180, 255),
+			"MAT");
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::SetTooltip("TODO: Material thumbnail preview");
+		}
+
+		ImGui::SameLine(0.0f, comboSpacing);
+
+		const std::string materialName = GetAssetDisplayName(slotMaterialHandle);
+		const std::string materialPath = GetAssetPathLabel(slotMaterialHandle);
+
+		ImGui::BeginGroup();
+		ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.11f, 0.11f, 0.11f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.14f, 0.14f, 0.14f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.14f, 0.14f, 0.14f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.12f, 0.12f, 0.12f, 1.0f));
+		ImGui::SetNextItemWidth(comboWidth);
+		if (ImGui::BeginCombo("##MaterialSelector", materialName.c_str()))
+		{
+			const bool useDefaultMaterial = !Asset::IsValidHandle(slotMaterialHandle);
+			if (ImGui::Selectable("Use Default Material", useDefaultMaterial))
+			{
+				slotMaterialHandle = InvalidAssetHandle;
+			}
+
+			if (useDefaultMaterial)
+			{
+				ImGui::SetItemDefaultFocus();
+			}
+
+			for (const auto& metadata : materialAssets)
+			{
+				const std::string optionLabel = metadata.relativePath.filename().string().empty()
+					? metadata.relativePath.generic_string()
+					: metadata.relativePath.filename().string();
+				const bool isSelected = slotMaterialHandle == metadata.handle;
+				if (ImGui::Selectable(optionLabel.c_str(), isSelected))
+				{
+					slotMaterialHandle = metadata.handle;
+				}
+
+				if (isSelected)
+				{
+					ImGui::SetItemDefaultFocus();
+				}
+			}
+			ImGui::EndCombo();
+		}
+		ImGui::PopStyleColor(4);
+
+		if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+		{
+			OpenMaterialEditor(Asset::IsValidHandle(slotMaterialHandle) ? slotMaterialHandle : defaultMaterialHandle);
+		}
+
+		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.58f, 0.58f, 0.58f, 1.0f));
+		ImGui::TextUnformatted(materialPath.c_str());
+		ImGui::PopStyleColor();
+		ImGui::EndGroup();
+		ImGui::PopID();
+
+		const bool canReset = slotMaterialHandle != defaultMaterialHandle;
+		if (DrawResetButtonCell(label, canReset))
+		{
+			slotMaterialHandle = defaultMaterialHandle;
+		}
+	}
+
+	void InspectorPanel::DrawStaticMeshSlotRow(
+		const char* label,
+		AssetHandle& meshHandle,
+		const std::vector<AssetMetadata>& meshAssets,
+		bool& isHighlight,
+		AssetHandle defaultValue)
+	{
+		BeginPropertyRow(isHighlight);
+		DrawPropertyLabelCell(label);
+		PreparePropertyValueCell(GetInspectorControlYOffset());
+
+		ImGui::PushID(label);
+
+		const float valueWidth = ImGui::GetContentRegionAvail().x - inspectorValueRightInset;
+		const float tileSize = GetInspectorContentHeight() + 10.0f;
+		const float comboSpacing = 10.0f;
+		const float comboWidth = ImMax(80.0f, valueWidth - tileSize - comboSpacing);
+		const ImVec2 tileSizeVec(tileSize, tileSize);
+
+		ImGui::InvisibleButton("##MeshThumbnail", tileSizeVec);
+		const ImRect thumbRect(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
+		ImDrawList* drawList = ImGui::GetWindowDrawList();
+		drawList->AddRectFilled(thumbRect.Min, thumbRect.Max, IM_COL32(68, 68, 68, 255));
+		drawList->AddRect(thumbRect.Min, thumbRect.Max, IM_COL32(20, 20, 20, 255), 0.0f, 0, 1.0f);
+		drawList->AddTriangleFilled(
+			ImVec2(thumbRect.Min.x + tileSize * 0.30f, thumbRect.Max.y - tileSize * 0.28f),
+			ImVec2(thumbRect.Min.x + tileSize * 0.70f, thumbRect.Max.y - tileSize * 0.28f),
+			ImVec2(thumbRect.Min.x + tileSize * 0.50f, thumbRect.Min.y + tileSize * 0.26f),
+			IM_COL32(150, 150, 150, 255));
+		drawList->AddText(
+			ImVec2(thumbRect.Min.x + 6.0f, thumbRect.Min.y + 6.0f),
+			IM_COL32(185, 185, 185, 255),
+			"MSH");
+		if (ImGui::IsItemHovered())
+		{
+			ImGui::SetTooltip("TODO: Static mesh thumbnail preview");
+		}
+
+		ImGui::SameLine(0.0f, comboSpacing);
+
+		const std::string meshName = GetAssetDisplayName(meshHandle);
+		const std::string meshPath = GetAssetPathLabel(meshHandle);
+
+		ImGui::BeginGroup();
+		ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.11f, 0.11f, 0.11f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, ImVec4(0.14f, 0.14f, 0.14f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_FrameBgActive, ImVec4(0.14f, 0.14f, 0.14f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.12f, 0.12f, 0.12f, 1.0f));
+		ImGui::SetNextItemWidth(comboWidth);
+		if (ImGui::BeginCombo("##MeshSelector", meshName.c_str()))
+		{
+			const bool isNoneSelected = !Asset::IsValidHandle(meshHandle);
+			if (ImGui::Selectable("None", isNoneSelected))
+			{
+				meshHandle = InvalidAssetHandle;
+			}
+
+			if (isNoneSelected)
+			{
+				ImGui::SetItemDefaultFocus();
+			}
+
+			for (const auto& metadata : meshAssets)
+			{
+				const std::string optionLabel = metadata.relativePath.filename().string().empty()
+					? metadata.relativePath.generic_string()
+					: metadata.relativePath.filename().string();
+				const bool isSelected = meshHandle == metadata.handle;
+				if (ImGui::Selectable(optionLabel.c_str(), isSelected))
+				{
+					meshHandle = metadata.handle;
+				}
+
+				if (isSelected)
+				{
+					ImGui::SetItemDefaultFocus();
+				}
+			}
+			ImGui::EndCombo();
+		}
+		ImGui::PopStyleColor(4);
+
+		if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+		{
+			if (m_OpenAssetCallback && Asset::IsValidHandle(meshHandle))
+			{
+				m_OpenAssetCallback(meshHandle);
+			}
+		}
+
+		ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.58f, 0.58f, 0.58f, 1.0f));
+		ImGui::TextUnformatted(meshPath.c_str());
+		ImGui::PopStyleColor();
+		ImGui::EndGroup();
+		ImGui::PopID();
+
+		const bool canReset = meshHandle != defaultValue;
+		if (DrawResetButtonCell(label, canReset))
+		{
+			meshHandle = defaultValue;
+		}
+	}
+
 	
 
 	void InspectorPanel::OnImGuiRender()
@@ -358,6 +606,8 @@ namespace Kita {
 
 	void InspectorPanel::DrawSelectedObject(Object& selectedObject)
 	{
+		DrawComponentOverview(selectedObject);
+
 		DrawComponentSection<Transform>(
 			selectedObject,
 			"Transform",
@@ -369,11 +619,23 @@ namespace Kita {
 
 		DrawComponentSection<MeshRenderer>(
 			selectedObject,
-			"MeshRenderer",
+			"Static Mesh",
+			[&](MeshRenderer& meshRenderer)
+			{
+				DrawStaticMeshProperties(meshRenderer);
+			},
+			true,
+			false);
+
+		DrawComponentSection<MeshRenderer>(
+			selectedObject,
+			"Materials",
 			[&](MeshRenderer& meshRenderer)
 			{
 				DrawMeshRendererProperties(meshRenderer);
-			});
+			},
+			true,
+			false);
 
 		DrawComponentSection<LightComponent>(
 			selectedObject,
@@ -382,6 +644,180 @@ namespace Kita {
 			{
 				DrawLightComponentProperties(lightComponent);
 			});
+	}
+
+	void InspectorPanel::DrawComponentOverview(Object& selectedObject)
+	{
+		const float contentMinX = ImGui::GetWindowContentRegionMin().x;
+		const float contentMaxX = ImGui::GetWindowContentRegionMax().x;
+		const float fullWidth = contentMaxX - contentMinX;
+		const float headerRowHeight = 28.0f;
+		const float treeRowHeight = 24.0f;
+		const float overviewPadding = 8.0f;
+		int optionalComponentCount = 0;
+		if (selectedObject.HasComponent<MeshRenderer>())
+		{
+			optionalComponentCount++;
+		}
+		if (selectedObject.HasComponent<LightComponent>())
+		{
+			optionalComponentCount++;
+		}
+
+		const float childHeight =
+			overviewPadding * 2.0f +
+			headerRowHeight +
+			4.0f +
+			treeRowHeight +
+			(optionalComponentCount > 0 ? optionalComponentCount * treeRowHeight : treeRowHeight);
+
+		ImGui::SetCursorPosX(contentMinX);
+		ImGui::Dummy(ImVec2(0.0f, 2.0f));
+
+		ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.14f, 0.14f, 0.14f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.04f, 0.04f, 0.04f, 1.0f));
+		ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 0.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_ChildBorderSize, 1.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8.0f, overviewPadding));
+		ImGui::SetCursorPosX(contentMinX);
+		if (ImGui::BeginChild("##InspectorComponentOverview", ImVec2(fullWidth, childHeight), ImGuiChildFlags_Borders))
+		{
+			auto drawComponentNode = [&](const char* nodeLabel, bool& removeFlag)
+			{
+				ImGui::PushID(nodeLabel);
+				ImGui::SetNextItemOpen(false, ImGuiCond_Always);
+				ImGui::TreeNodeEx(nodeLabel,
+					ImGuiTreeNodeFlags_Leaf |
+					ImGuiTreeNodeFlags_NoTreePushOnOpen |
+					ImGuiTreeNodeFlags_SpanAvailWidth);
+
+				if (ImGui::BeginPopupContextItem("##ComponentNodeContext"))
+				{
+					if (ImGui::MenuItem("Remove"))
+					{
+						removeFlag = true;
+					}
+					ImGui::EndPopup();
+				}
+
+				ImGui::PopID();
+			};
+
+			bool removeMeshRenderer = false;
+			bool removeLight = false;
+			const std::string objectName = selectedObject.GetName();
+
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0.0f, 4.0f));
+			ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.18f, 0.18f, 0.18f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.18f, 0.18f, 0.18f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.18f, 0.18f, 0.18f, 1.0f));
+			ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 1.0f);
+			ImGui::TextUnformatted(objectName.c_str());
+			ImGui::PopStyleColor(3);
+			ImGui::PopStyleVar();
+
+			const float buttonWidth = 150.0f;
+			const float cursorY = ImGui::GetCursorPosY();
+			ImGui::SameLine();
+			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImMax(0.0f, fullWidth - buttonWidth - 24.0f - ImGui::CalcTextSize(objectName.c_str()).x));
+			ImGui::SetCursorPosY(cursorY - 2.0f);
+			ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 0.0f);
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10.0f, 4.0f));
+			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.18f, 0.18f, 0.18f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.22f, 0.22f, 0.22f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.22f, 0.22f, 0.22f, 1.0f));
+			ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0.05f, 0.05f, 0.05f, 1.0f));
+			if (ImGui::Button("Add Component", ImVec2(buttonWidth, headerRowHeight)))
+			{
+				ImGui::OpenPopup("##InspectorAddComponentMenu");
+			}
+			ImGui::PopStyleColor(4);
+			ImGui::PopStyleVar(3);
+
+			DrawAddComponentMenu(selectedObject);
+			ImGui::Dummy(ImVec2(0.0f, 6.0f));
+
+			const ImGuiTreeNodeFlags rootNodeFlags =
+				ImGuiTreeNodeFlags_DefaultOpen |
+				ImGuiTreeNodeFlags_OpenOnArrow |
+				ImGuiTreeNodeFlags_SpanAvailWidth;
+			const bool rootOpen = ImGui::TreeNodeEx("##InspectorObjectRoot", rootNodeFlags, "%s", objectName.c_str());
+			bool anyNodeDrawn = false;
+
+			if (rootOpen)
+			{
+				if (selectedObject.HasComponent<MeshRenderer>())
+				{
+					drawComponentNode("MeshRenderer", removeMeshRenderer);
+					anyNodeDrawn = true;
+				}
+
+				if (selectedObject.HasComponent<LightComponent>())
+				{
+					drawComponentNode("Light", removeLight);
+					anyNodeDrawn = true;
+				}
+
+				if (!anyNodeDrawn)
+				{
+					ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.55f, 0.55f, 0.55f, 1.0f));
+					ImGui::TreeNodeEx("No optional components",
+						ImGuiTreeNodeFlags_Leaf |
+						ImGuiTreeNodeFlags_NoTreePushOnOpen |
+						ImGuiTreeNodeFlags_SpanAvailWidth);
+					ImGui::PopStyleColor();
+				}
+
+				ImGui::TreePop();
+			}
+
+			if (removeMeshRenderer)
+			{
+				selectedObject.RemoveComponent<MeshRenderer>();
+			}
+			if (removeLight)
+			{
+				selectedObject.RemoveComponent<LightComponent>();
+			}
+		}
+		ImGui::EndChild();
+		ImGui::PopStyleVar(3);
+		ImGui::PopStyleColor(2);
+		ImGui::Dummy(ImVec2(0.0f, 6.0f));
+	}
+
+	void InspectorPanel::DrawAddComponentMenu(Object& selectedObject)
+	{
+		(void)selectedObject;
+
+		if (!ImGui::BeginPopup("##InspectorAddComponentMenu"))
+		{
+			return;
+		}
+
+		ImGui::TextUnformatted("Add Component");
+		ImGui::Separator();
+
+		if (ImGui::BeginMenu("Rendering"))
+		{
+			if (ImGui::MenuItem("Mesh Renderer"))
+			{
+				// TODO: Add MeshRenderer component to the selected object.
+			}
+			ImGui::EndMenu();
+		}
+
+		if (ImGui::BeginMenu("Lighting"))
+		{
+			if (ImGui::MenuItem("Light"))
+			{
+				// TODO: Add LightComponent to the selected object.
+			}
+			ImGui::EndMenu();
+		}
+
+		ImGui::EndPopup();
 	}
 
 	void InspectorPanel::DrawSelectedAsset(AssetHandle handle)
@@ -399,56 +835,49 @@ namespace Kita {
 		});
 	}
 
-	void InspectorPanel::DrawMeshRendererProperties(MeshRenderer& meshRenderer)
+	void InspectorPanel::DrawStaticMeshProperties(MeshRenderer& meshRenderer)
 	{
-		DrawComponentPropertyTable("##MeshRendererComponentTable",
+		DrawComponentPropertyTable("##StaticMeshComponentTable",
 			[&](bool& isHighlight)
 		{
 			auto& assetManager = AssetManager::GetInstance();
+			const auto meshAssets = assetManager.GetAssetsByType(AssetType::Mesh);
+			DrawStaticMeshSlotRow("Static Mesh",
+				meshRenderer.MeshAssetHandle,
+				meshAssets,
+				isHighlight,
+				InvalidAssetHandle);
+		});
+	}
 
-			std::string meshSource = "None";
-			size_t subMeshCount = 0;
-			if (Asset::IsValidHandle(meshRenderer.MeshAssetHandle))
+	void InspectorPanel::DrawMeshRendererProperties(MeshRenderer& meshRenderer)
+	{
+		DrawComponentPropertyTable("##MaterialsComponentTable",
+			[&](bool& isHighlight)
+		{
+			auto& assetManager = AssetManager::GetInstance();
+			auto& materialHandles = meshRenderer.MaterialAssetHandles;
+			const auto materialAssets = assetManager.GetAssetsByType(AssetType::Material);
+			if (materialHandles.empty())
 			{
-				if (const AssetMetadata* metadata = assetManager.GetMetadata(meshRenderer.MeshAssetHandle))
-				{
-					meshSource = metadata->relativePath.generic_string();
-				}
-
-				if (Ref<MeshAsset> meshAsset = assetManager.GetMeshAsset(meshRenderer.MeshAssetHandle))
-				{
-					subMeshCount = meshAsset->MeshRawData.size();
-				}
+				DrawMaterialSlotRow("Element 0",
+					0,
+					meshRenderer.DefaultMaterialAssetHandle,
+					meshRenderer.DefaultMaterialAssetHandle,
+					materialAssets,
+					isHighlight);
+				return;
 			}
 
-			DrawInfoRow("Mesh Source", meshSource, isHighlight);
-			DrawInfoRow("SubMesh Count", std::to_string(subMeshCount), isHighlight);
-
-			auto& materialHandles = meshRenderer.MaterialAssetHandles;
-			const auto shaderAssets = assetManager.GetAssetsByType(AssetType::Shader);
-			const auto textureAssets = assetManager.GetAssetsByType(AssetType::Texture);
 			for (size_t i = 0; i < materialHandles.size(); ++i)
 			{
-				const AssetHandle materialHandle = materialHandles[i];
-				Ref<MaterialAsset> materialAsset = assetManager.GetMaterialAsset(materialHandle);
-				if (!materialAsset)
-				{
-					DrawInfoRow(("Material " + std::to_string(i)).c_str(), "None", isHighlight);
-					continue;
-				}
-
-				DrawInfoRow(("Material " + std::to_string(i)).c_str(), "Slot", isHighlight);
-				DrawAssetSelectionRow(("Shader " + std::to_string(i)).c_str(),
-					materialAsset->ShaderHandle, shaderAssets, isHighlight, InvalidAssetHandle);
-				DrawAssetSelectionRow(("Albedo " + std::to_string(i)).c_str(),
-					materialAsset->AlbedoTextureHandle, textureAssets, isHighlight, InvalidAssetHandle);
-
-				glm::vec4 baseColor = materialAsset->BaseColor;
-				DrawColorRow(("Base Color " + std::to_string(i)).c_str(), baseColor, isHighlight, glm::vec4(1.0f));
-				if (baseColor != materialAsset->BaseColor)
-				{
-					materialAsset->BaseColor = baseColor;
-				}
+				DrawMaterialSlotRow(
+					("Element " + std::to_string(i)).c_str(),
+					i,
+					materialHandles[i],
+					meshRenderer.DefaultMaterialAssetHandle,
+					materialAssets,
+					isHighlight);
 			}
 		});
 	}

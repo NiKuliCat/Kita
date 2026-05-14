@@ -30,6 +30,10 @@ namespace Kita {
 		m_EditorSelectionContext = CreateRef<EditorSelectionContext>();
 		m_SceneHierarchyPanel = SceneHierarchyPanel(m_Scene, m_EditorSelectionContext);
 		m_InspectorPanel = InspectorPanel(m_EditorSelectionContext);
+		m_InspectorPanel.SetOpenAssetCallback([this](AssetHandle handle)
+		{
+			m_AssetEditorManager.OpenEditor(handle);
+		});
 
 
 		const auto project = Project::GetActive();
@@ -41,6 +45,12 @@ namespace Kita {
 
 			m_ContentBrowserThumbnailCache = CreateUnique<ThumbnailCache>(*m_EditorVulkanResourceFactory);
 			m_ContentBrowserPanel.SetThumbnailCache(m_ContentBrowserThumbnailCache.get());
+			m_AssetEditorManager.SetThumbnailCache(m_ContentBrowserThumbnailCache.get());
+			m_AssetEditorManager.SetResourceFactory(m_EditorVulkanResourceFactory.get());
+			m_ContentBrowserPanel.SetOpenAssetCallback([this](AssetHandle handle)
+			{
+				m_AssetEditorManager.OpenEditor(handle);
+			});
 
 			m_ContentBrowserIconAtlas = CreateUnique<SvgIconAtlas>();
 			const std::filesystem::path atlasJsonPath =
@@ -147,7 +157,16 @@ namespace Kita {
 		if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
 		{
 			ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
+			EnsureMainDockLayout(dockspace_id, ImGui::GetMainViewport()->WorkSize);
 			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
+			m_AssetEditorManager.SetDockSpaceId(m_AssetEditorDockNodeId != 0 ? m_AssetEditorDockNodeId : dockspace_id);
+		}
+		else
+		{
+			m_MainDockLayoutInitialized = false;
+			m_MainDockSpaceId = 0;
+			m_AssetEditorDockNodeId = 0;
+			m_AssetEditorManager.SetDockSpaceId(0);
 		}
 		style.WindowMinSize = minWindowSize;
 
@@ -227,6 +246,7 @@ namespace Kita {
 		m_SceneHierarchyPanel.OnImGuiRender();
 		m_InspectorPanel.OnImGuiRender();
 		m_ContentBrowserPanel.OnImGuiRender();
+		m_AssetEditorManager.OnImGuiRender();
 
 		for (auto& viewport : m_SceneViewportPanels)
 			viewport.OnImGuiRender();
@@ -234,6 +254,69 @@ namespace Kita {
 		RenderTimeSystemPanel();
 
 		ImGui::End();
+	}
+
+	void EditorLayer::EnsureMainDockLayout(ImGuiID dockspaceId, const ImVec2& dockspaceSize)
+	{
+		ImGuiDockNode* dockspaceNode = ImGui::DockBuilderGetNode(dockspaceId);
+		if (m_MainDockLayoutInitialized && m_MainDockSpaceId == dockspaceId)
+		{
+			if (m_AssetEditorDockNodeId != 0 && ImGui::DockBuilderGetNode(m_AssetEditorDockNodeId))
+			{
+				return;
+			}
+
+			if (ImGuiDockNode* centralNode = ImGui::DockBuilderGetCentralNode(dockspaceId))
+			{
+				m_AssetEditorDockNodeId = centralNode->ID;
+			}
+			return;
+		}
+
+		const bool hasExistingLayout =
+			dockspaceNode &&
+			(dockspaceNode->IsSplitNode() || dockspaceNode->Windows.Size > 0 || dockspaceNode->CentralNode != nullptr);
+		if (hasExistingLayout)
+		{
+			m_MainDockLayoutInitialized = true;
+			m_MainDockSpaceId = dockspaceId;
+			if (ImGuiDockNode* centralNode = ImGui::DockBuilderGetCentralNode(dockspaceId))
+			{
+				m_AssetEditorDockNodeId = centralNode->ID;
+			}
+			return;
+		}
+
+		ImGui::DockBuilderRemoveNode(dockspaceId);
+		ImGui::DockBuilderAddNode(dockspaceId, ImGuiDockNodeFlags_DockSpace);
+		ImGui::DockBuilderSetNodeSize(dockspaceId, dockspaceSize);
+
+		ImGuiID hierarchyDockId = 0;
+		ImGuiID inspectorDockId = 0;
+		ImGuiID contentDockId = 0;
+		ImGuiID centerDockId = dockspaceId;
+
+		ImGui::DockBuilderSplitNode(centerDockId, ImGuiDir_Left, 0.18f, &hierarchyDockId, &centerDockId);
+		ImGui::DockBuilderSplitNode(centerDockId, ImGuiDir_Right, 0.22f, &inspectorDockId, &centerDockId);
+		ImGui::DockBuilderSplitNode(centerDockId, ImGuiDir_Down, 0.28f, &contentDockId, &centerDockId);
+
+		ImGuiID viewportDockId = 0;
+		ImGuiID assetDocumentDockId = 0;
+		ImGui::DockBuilderSplitNode(centerDockId, ImGuiDir_Up, 0.62f, &viewportDockId, &assetDocumentDockId);
+
+		ImGui::DockBuilderDockWindow("Hierarchy", hierarchyDockId);
+		ImGui::DockBuilderDockWindow("Inspector", inspectorDockId);
+		ImGui::DockBuilderDockWindow("Content", contentDockId);
+		ImGui::DockBuilderDockWindow("Viewport", viewportDockId);
+		ImGui::DockBuilderFinish(dockspaceId);
+
+		m_MainDockLayoutInitialized = true;
+		m_MainDockSpaceId = dockspaceId;
+		m_AssetEditorDockNodeId = assetDocumentDockId;
+		if (ImGuiDockNode* centralNode = ImGui::DockBuilderGetCentralNode(dockspaceId))
+		{
+			m_AssetEditorDockNodeId = centralNode->ID;
+		}
 	}
 
 	void EditorLayer::OnEvent(Event& event)

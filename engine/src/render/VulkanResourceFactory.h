@@ -40,6 +40,8 @@ namespace Kita {
 		Ref<VulkanMaterial> CreateMaterial(const MaterialAsset& materialAsset);
 
 		void ApplyMaterial(const MaterialAsset& materialAsset, VulkanMaterial& outMaterial);
+		void RefreshMaterial(AssetHandle handle);
+		void RefreshMaterialFrameResources(AssetHandle handle, uint32_t frameIndex);
 
 		std::vector<Ref<VulkanGeometry>> GetOrCreateGeometries(AssetHandle handle);
 		std::vector<Ref<VulkanGeometry>> GetOrCreateGeometries(const MeshAsset& meshAsset);
