@@ -8,6 +8,11 @@
 
 namespace Kita {
 
+	namespace
+	{
+		constexpr float kMaxPitch = glm::radians(89.0f);
+	}
+
 	ViewportCamera::ViewportCamera()
 		: ViewportCamera(45.0f, 16.0f / 9.0f, 0.1f, 1000.0f)
 	{
@@ -16,9 +21,10 @@ namespace Kita {
 	ViewportCamera::ViewportCamera(const float fov, const float aspect, const float nearPlane, const float farPlane)
 		:m_FOV(fov), m_Aspect(aspect), m_Near(nearPlane), m_Far(farPlane)
 	{
-		UpdateViewMatrix();
 		m_ProjectionMatrix = glm::perspectiveRH_ZO(glm::radians(m_FOV), m_Aspect, m_Near, m_Far);
 		m_ProjectionMatrix[1][1] *= -1.0f;
+		m_Position = CalculatePosition();
+		UpdateViewMatrix();
 	}
 
 
@@ -28,21 +34,31 @@ namespace Kita {
 		glm::vec2 delta = (mouse - m_MousePosition) * 0.003f;
 		m_MousePosition = mouse;
 
-		if (Input::IsMouseButtonPressed(Mouse::ButtonRight) && !Input::IsKeyPressed(Key::LeftAlt))
+		const bool altDown = Input::IsKeyPressed(Key::LeftAlt) || Input::IsKeyPressed(Key::RightAlt);
+		const bool rightMouseDown = Input::IsMouseButtonPressed(Mouse::ButtonRight);
+		const bool middleMouseDown = Input::IsMouseButtonPressed(Mouse::ButtonMiddle);
+		const bool leftMouseDown = Input::IsMouseButtonPressed(Mouse::ButtonLeft);
+
+		if (rightMouseDown && !altDown)
 		{
 			FlightRotate(delta);
 			FlightMove(deltaTime);
 			UpdateViewMatrix();
 		}
-		else if (Input::IsKeyPressed(Key::LeftAlt))
+		else if (altDown)
 		{
-			if (Input::IsMouseButtonPressed(Mouse::ButtonMiddle))
-				MousePan(delta);
-			else if (Input::IsMouseButtonPressed(Mouse::ButtonLeft))
+			if (leftMouseDown)
 				MouseRotate(delta);
-			else if (Input::IsMouseButtonPressed(Mouse::ButtonRight))
+			else if (middleMouseDown)
+				MousePan(delta);
+			else if (rightMouseDown)
 				MouseZoom(delta.y);
 
+			UpdateViewMatrix();
+		}
+		else if (middleMouseDown)
+		{
+			MousePan(delta);
 			UpdateViewMatrix();
 		}
 
@@ -52,6 +68,25 @@ namespace Kita {
 	{
 		EventDisPatcher dispatcher(event);
 		dispatcher.Dispatcher<MouseScrolledEvent>(BIND_EVENT_FUNC(ViewportCamera::OnMouseScroll));
+	}
+
+	void ViewportCamera::SetFocusTarget(const glm::vec3& target)
+	{
+		m_FocusePosition = target;
+		m_Position = CalculatePosition();
+		UpdateViewMatrix();
+	}
+
+	void ViewportCamera::FocusOnPoint(const glm::vec3& target, float radius)
+	{
+		m_FocusePosition = target;
+
+		const float safeRadius = std::max(radius, 0.5f);
+		const float framedDistance = std::max(safeRadius * 2.5f, 2.0f);
+		m_Distance = framedDistance;
+
+		m_Position = CalculatePosition();
+		UpdateViewMatrix();
 	}
 
 	glm::vec3 ViewportCamera::GetUpDirection() const
@@ -71,7 +106,9 @@ namespace Kita {
 
 	glm::quat ViewportCamera::GetOrientation() const
 	{
-		return glm::quat(glm::vec3(-m_Pitch, -m_Yaw, 0.0f));
+		const glm::quat yawRotation = glm::angleAxis(-m_Yaw, glm::vec3(0.0f, 1.0f, 0.0f));
+		const glm::quat pitchRotation = glm::angleAxis(-m_Pitch, glm::vec3(1.0f, 0.0f, 0.0f));
+		return glm::normalize(yawRotation * pitchRotation);
 	}
 
 	void ViewportCamera::UpdateProjectionMatrix()
@@ -83,7 +120,6 @@ namespace Kita {
 
 	void ViewportCamera::UpdateViewMatrix()
 	{
-		m_Position = CalculatePosition();
 		glm::quat orientation = GetOrientation();
 		glm::mat4 transform = glm::translate(glm::mat4(1.0f), m_Position) * glm::toMat4(orientation);
 		m_ViewMatrix = glm::inverse(transform);
@@ -102,13 +138,14 @@ namespace Kita {
 		auto [xSpeed, ySpeed] = PanSpeed();
 		m_FocusePosition += -GetRightDirection() * delta.x * xSpeed * m_Distance;
 		m_FocusePosition += GetUpDirection() * delta.y * ySpeed * m_Distance;
+		m_Position = CalculatePosition();
 	}
 
 	void ViewportCamera::MouseRotate(const glm::vec2& delta)
 	{
-		float yawSign = GetUpDirection().y < 0 ? -1.0f : 1.0f;
-		m_Yaw += yawSign * delta.x * RotationSpeed();
-		m_Pitch += delta.y * RotationSpeed();
+		m_Yaw += delta.x * RotationSpeed();
+		m_Pitch = glm::clamp(m_Pitch - delta.y * RotationSpeed(), -kMaxPitch, kMaxPitch);
+		m_Position = CalculatePosition();
 	}
 
 	void ViewportCamera::MouseZoom(float delta)
@@ -119,13 +156,15 @@ namespace Kita {
 			m_FocusePosition += GetForwardDirection();
 			m_Distance = 1.0f;
 		}
+
+		m_Position = CalculatePosition();
 	}
 
 	void ViewportCamera::FlightRotate(const glm::vec2& delta)
 	{
-		float yawSign = GetUpDirection().y < 0 ? -1.0f : 1.0f;
-		m_Yaw += yawSign * delta.x * RotationSpeed();
-		m_Pitch += delta.y * RotationSpeed();
+		m_Yaw += delta.x * RotationSpeed();
+		m_Pitch = glm::clamp(m_Pitch - delta.y * RotationSpeed(), -kMaxPitch, kMaxPitch);
+		m_FocusePosition = m_Position + GetForwardDirection() * m_Distance;
 	}
 
 	void ViewportCamera::FlightMove(float deltaTime)
@@ -141,15 +180,16 @@ namespace Kita {
 			velocity += GetRightDirection();
 		if (Input::IsKeyPressed(Key::A))
 			velocity -= GetRightDirection();
-		if (Input::IsKeyPressed(Key::E))
-			velocity += GetUpDirection();
 		if (Input::IsKeyPressed(Key::Q))
-			velocity -= GetUpDirection();
+			velocity += glm::vec3(0.0f, 1.0f, 0.0f);
+		if (Input::IsKeyPressed(Key::E))
+			velocity -= glm::vec3(0.0f, 1.0f, 0.0f);
 
 		if (glm::dot(velocity, velocity) > 0.0f)
 			velocity = glm::normalize(velocity);
 
-		m_FocusePosition += velocity * speed;
+		m_Position += velocity * speed;
+		m_FocusePosition = m_Position + GetForwardDirection() * m_Distance;
 	}
 
 	glm::vec3 ViewportCamera::CalculatePosition() const
@@ -170,7 +210,7 @@ namespace Kita {
 
 	float ViewportCamera::RotationSpeed() const
 	{
-		return 0.8f;
+		return m_RotationSpeedValue;
 	}
 
 	float ViewportCamera::ZoomSpeed() const
@@ -179,12 +219,12 @@ namespace Kita {
 		distance = std::max(distance, 0.0f);
 		float speed = distance * distance;
 		speed = std::min(speed, 100.0f);
-		return speed;
+		return speed * m_ZoomSpeedScale;
 	}
 
 	float ViewportCamera::FlightSpeed() const
 	{
-		float speed = std::max(m_Distance, 1.0f) * 0.01f;
+		float speed = std::max(m_Distance, 1.0f) * 0.06f * m_FlightSpeedScale;
 		if (Input::IsKeyPressed(Key::LeftShift) || Input::IsKeyPressed(Key::RightShift))
 			speed *= 2.5f;
 		return speed;

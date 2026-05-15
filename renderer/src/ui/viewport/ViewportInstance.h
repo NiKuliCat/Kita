@@ -49,6 +49,11 @@ namespace Kita {
 		Object FindSceneObjectByUUID(UUID uuid) const;
 		void ProcessPendingPickRequest();
 		void ApplyPickResult(uint32_t pickId);
+		void SyncCameraFocusTargetFromSelection();
+		void FocusCameraOnSelectedObject();
+		void SyncViewportOverlaySettings();
+		static glm::vec3 GetObjectFocusPoint(Object object);
+		static float GetObjectFocusRadius(Object object);
 
 	private:
 		VulkanContext* m_Context = nullptr;
@@ -58,6 +63,7 @@ namespace Kita {
 		Unique<EditorViewportPanel> m_Panel = nullptr;
 		Unique<EditorViewportSurface> m_Surface = nullptr;
 		Unique<EditorRenderer> m_Renderer = nullptr;
+		uint64_t m_LastFocusSelectionUUID = 0;
 	};
 
 }

@@ -16,6 +16,7 @@ namespace Kita {
 			const VulkanShader* VertexShader = nullptr;
 			const VulkanShader* FragmentShader = nullptr;
 			const VulkanGeometry* Geometry = nullptr;
+			bool UseVertexInput = true;
 
 			VkExtent2D Extent{};
 

@@ -251,7 +251,6 @@ namespace Kita {
 		for (auto& viewport : m_SceneViewportPanels)
 			viewport.OnImGuiRender();
 
-		RenderTimeSystemPanel();
 
 		ImGui::End();
 	}

@@ -207,6 +207,7 @@
     <ClInclude Include="src\render\font\FontManager.h" />
     <ClInclude Include="src\render\mesh\Mesh.h" />
     <ClInclude Include="src\render\pass\ForwardOpaquePass.h" />
+    <ClInclude Include="src\render\pass\FullscreenPassBase.h" />
     <ClInclude Include="src\render\pass\RenderContext.h" />
     <ClInclude Include="src\render\pass\RenderDataStruct.h" />
     <ClInclude Include="src\render\pass\RenderPass.h" />
@@ -684,6 +685,7 @@
     <ClCompile Include="src\render\font\FontManager.cpp" />
     <ClCompile Include="src\render\mesh\Mesh.cpp" />
     <ClCompile Include="src\render\pass\ForwardOpaquePass.cpp" />
+    <ClCompile Include="src\render\pass\FullscreenPassBase.cpp" />
     <ClCompile Include="src\render\pass\RenderContext.cpp" />
     <ClCompile Include="src\render\pass\RenderPass.cpp" />
     <ClCompile Include="src\render\pass\SceneBindings.cpp" />

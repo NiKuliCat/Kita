@@ -32,6 +32,9 @@
       <Filter>project</Filter>
     </ClInclude>
     <ClInclude Include="src\renderer_pch.h" />
+    <ClInclude Include="src\scene\EditorGridPass.h">
+      <Filter>scene</Filter>
+    </ClInclude>
     <ClInclude Include="src\scene\EditorRenderer.h">
       <Filter>scene</Filter>
     </ClInclude>
@@ -62,8 +65,14 @@
     <ClInclude Include="src\ui\ThumbnailCache.h">
       <Filter>ui</Filter>
     </ClInclude>
+    <ClInclude Include="src\ui\UIAttributeUtil.h">
+      <Filter>ui</Filter>
+    </ClInclude>
     <ClInclude Include="src\ui\UIColorPanel.h">
       <Filter>ui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ui\asset\AssetDragDrop.h">
+      <Filter>ui\asset</Filter>
     </ClInclude>
     <ClInclude Include="src\ui\asset\AssetEditorManager.h">
       <Filter>ui\asset</Filter>
@@ -109,6 +118,9 @@
       <Filter>project</Filter>
     </ClCompile>
     <ClCompile Include="src\renderer_pch.cpp" />
+    <ClCompile Include="src\scene\EditorGridPass.cpp">
+      <Filter>scene</Filter>
+    </ClCompile>
     <ClCompile Include="src\scene\EditorRenderer.cpp">
       <Filter>scene</Filter>
     </ClCompile>
@@ -134,6 +146,9 @@
       <Filter>ui</Filter>
     </ClCompile>
     <ClCompile Include="src\ui\ThumbnailCache.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\UIAttributeUtil.cpp">
       <Filter>ui</Filter>
     </ClCompile>
     <ClCompile Include="src\ui\UIColorPanel.cpp">

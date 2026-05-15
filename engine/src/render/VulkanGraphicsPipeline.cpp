@@ -101,7 +101,9 @@ namespace Kita {
 		KITA_CORE_ASSERT(m_Context, "VulkanGraphicsPipeline context is null");
 		KITA_CORE_ASSERT(createInfo.VertexShader, "VulkanGraphicsPipeline vertex shader is null");
 		KITA_CORE_ASSERT(createInfo.FragmentShader, "VulkanGraphicsPipeline fragment shader is null");
-		KITA_CORE_ASSERT(createInfo.Geometry, "VulkanGraphicsPipeline geometry is null");
+		KITA_CORE_ASSERT(
+			!createInfo.UseVertexInput || createInfo.Geometry,
+			"VulkanGraphicsPipeline geometry is null when vertex input is enabled");
 		KITA_CORE_ASSERT(createInfo.ColorFormat != VK_FORMAT_UNDEFINED, "VulkanGraphicsPipeline color format is invalid");
 
 		std::array<VkPipelineShaderStageCreateInfo, 2> shaderStages =
@@ -110,17 +112,26 @@ namespace Kita {
 			createInfo.FragmentShader->GetStageCreateInfo()
 		};
 
-		VkVertexInputBindingDescription bindingDescription =
-			createInfo.Geometry->GetBindingDescription(0);
-		std::vector<VkVertexInputAttributeDescription> attributeDescriptions =
-			createInfo.Geometry->GetAttributeDescriptions(0, 0);
-
 		VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
 		vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-		vertexInputInfo.vertexBindingDescriptionCount = 1;
-		vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
-		vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
-		vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+		VkVertexInputBindingDescription bindingDescription{};
+		std::vector<VkVertexInputAttributeDescription> attributeDescriptions{};
+		if (createInfo.UseVertexInput)
+		{
+			bindingDescription = createInfo.Geometry->GetBindingDescription(0);
+			attributeDescriptions = createInfo.Geometry->GetAttributeDescriptions(0, 0);
+			vertexInputInfo.vertexBindingDescriptionCount = 1;
+			vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+			vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+			vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+		}
+		else
+		{
+			vertexInputInfo.vertexBindingDescriptionCount = 0;
+			vertexInputInfo.pVertexBindingDescriptions = nullptr;
+			vertexInputInfo.vertexAttributeDescriptionCount = 0;
+			vertexInputInfo.pVertexAttributeDescriptions = nullptr;
+		}
 
 		VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
 		inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;

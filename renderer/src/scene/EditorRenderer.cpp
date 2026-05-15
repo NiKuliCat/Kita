@@ -29,7 +29,9 @@ namespace Kita {
 		Init();
 		m_SceneBindings.Init(context, context.GetFramesInFlight());
 		m_ForwardOpaquePass = CreateUnique<ForwardOpaquePass>(m_SceneBindings, MakeForwardOpaquePassDesc(rt));
+		m_EditorGridPass = CreateUnique<EditorGridPass>(m_SceneBindings, MakeEditorGridPassDesc(rt));
 		m_ViewportPickingPass = CreateUnique<ViewportPickingPass>(m_SceneBindings,MakeViewportPickingPassDesc(pickingRt));
+		InitGridResources();
 	}
 
 	void EditorRenderer::Init()
@@ -39,7 +41,9 @@ namespace Kita {
 
 	void EditorRenderer::OnDestroy()
 	{
-
+		m_GridDepthDescriptorSet.reset();
+		m_GridVertexShader.reset();
+		m_GridFragmentShader.reset();
 	}
 
 	void EditorRenderer::InitRenderSceneData(ScenePassData& sceneData)
@@ -60,7 +64,48 @@ namespace Kita {
 		sceneData.BeginInfo.ClearDepth = 1.0f;
 		sceneData.BeginInfo.ClearStencil = 0;
 		sceneData.BeginInfo.TransitionSampledColors = true;
-		sceneData.BeginInfo.TransitionSampledDepth = false;
+		sceneData.BeginInfo.TransitionSampledDepth = true;
+	}
+
+	void EditorRenderer::InitGridResources()
+	{
+		if (!m_Context || !m_EditorGridPass)
+			return;
+
+		VulkanDescriptorSet::CreateInfo descriptorInfo{};
+		descriptorInfo.Name = "EditorGridDepthSet";
+		descriptorInfo.Bindings = {
+			{ 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT }
+		};
+		m_GridDepthDescriptorSet = CreateUnique<VulkanDescriptorSet>(*m_Context, descriptorInfo);
+		m_EditorGridPass->SetDepthDescriptorSet(m_GridDepthDescriptorSet.get());
+
+		const AssetHandle gridShaderHandle = EditorProjectBootstrap::GetPreLoadShaderHandle("grid");
+		if (!Asset::IsValidHandle(gridShaderHandle))
+		{
+			KITA_CORE_WARN("EditorRenderer: preload shader handle 'grid' is invalid.");
+			return;
+		}
+
+		VulkanResourceFactory::ShaderBundle shaderBundle = m_VulkanResFactory->GetOrCreateShaderBundle(gridShaderHandle);
+		if (!shaderBundle.IsValid())
+		{
+			KITA_CORE_WARN("EditorRenderer: failed to create shader bundle for preload shader 'grid'.");
+			return;
+		}
+
+		m_GridVertexShader = shaderBundle.VertexShader;
+		m_GridFragmentShader = shaderBundle.FragmentShader;
+	}
+
+	void EditorRenderer::UpdateGridDepthBinding(VulkanRenderTarget& rt)
+	{
+		if (!m_GridDepthDescriptorSet || !rt.HasDepthAttachment())
+			return;
+
+		m_GridDepthDescriptorSet->WriteImageSampler(
+			0,
+			rt.GetDepthDescriptorInfo(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL));
 	}
 
 	VulkanGraphicsPipeline* EditorRenderer::GetPipeline(VulkanRenderTarget& rt, Ref<VulkanGeometry>& geometry, Ref<VulkanMaterial>& material)
@@ -94,6 +139,37 @@ namespace Kita {
 		VulkanGraphicsPipeline* pipeline = m_PipelineFactory->GetOrCreate(request);
 
 		return pipeline;
+	}
+
+	VulkanGraphicsPipeline* EditorRenderer::GetGridPipeline(VulkanRenderTarget& rt)
+	{
+		if (!m_GridVertexShader || !m_GridFragmentShader)
+			return nullptr;
+
+		PipelineRequest request{};
+		request.Pass = PassType::PostProcess;
+		request.UseVertexInput = false;
+		request.VertexShader = m_GridVertexShader.get();
+		request.FragmentShader = m_GridFragmentShader.get();
+		request.ColorFormat = rt.GetColorFormat(0);
+		request.DepthFormat = rt.HasDepthAttachment() ? rt.GetDepthFormat() : VK_FORMAT_UNDEFINED;
+		request.Samples = VK_SAMPLE_COUNT_1_BIT;
+		request.DescriptorSetLayouts = {
+			m_SceneBindings.GetDescriptorSet(0).GetLayout()
+		};
+		if (m_GridDepthDescriptorSet)
+			request.DescriptorSetLayouts.push_back(m_GridDepthDescriptorSet->GetLayout());
+		request.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+		request.PolygonMode = VK_POLYGON_MODE_FILL;
+		request.CullMode = VK_CULL_MODE_NONE;
+		request.FrontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+		request.EnableDepthTest = false;
+		request.EnableDepthWrite = false;
+		request.EnableBlending = true;
+		request.PushConstantStages = VK_SHADER_STAGE_FRAGMENT_BIT;
+		request.PushConstantSize = EditorGridPass::PushConstantSize;
+
+		return m_PipelineFactory->GetOrCreate(request);
 	}
 
 	VulkanGraphicsPipeline* EditorRenderer::GetPickingPipeline(VulkanRenderTarget& rt, Ref<VulkanGeometry>& geometry)
@@ -139,6 +215,15 @@ namespace Kita {
 		InitRenderSceneData(sceneData);
 
 		m_ForwardOpaquePass->SetSceneData(sceneData);
+		if (m_EditorGridPass)
+		{
+			ScenePassData gridSceneData = sceneData;
+			gridSceneData.BeginInfo.ClearColors = false;
+			gridSceneData.BeginInfo.ClearDepthAttachment = false;
+			gridSceneData.BeginInfo.TransitionSampledColors = true;
+			gridSceneData.BeginInfo.TransitionSampledDepth = false;
+			m_EditorGridPass->SetSceneData(gridSceneData);
+		}
 		if (m_ViewportPickingPass)
 		{
 			ScenePassData pickingSceneData = sceneData;
@@ -231,6 +316,14 @@ namespace Kita {
 		RenderPassContext pickingPassContext(*m_Context, cmd, pickingRt);
 
 		m_ForwardOpaquePass->Execute(passContext);
+		if (m_EditorGridPass)
+		{
+			UpdateGridDepthBinding(rt);
+			m_EditorGridPass->SetPipeline(GetGridPipeline(rt));
+			m_EditorGridPass->SetPushConstants(m_GridPushConstants);
+			if (m_IsGridEnabled)
+				m_EditorGridPass->Execute(passContext);
+		}
 		if (m_ViewportPickingPass)
 		{
 			m_ViewportPickingPass->Execute(pickingPassContext);

@@ -172,6 +172,7 @@ IF EXIST "C:\VulkanSDK\1.4.341.1\Bin\slang.dll"\ (xcopy /Q /E /Y /I "C:\VulkanSD
     <ClInclude Include="src\file\Project.h" />
     <ClInclude Include="src\project\EditorProjectBootstrap.h" />
     <ClInclude Include="src\renderer_pch.h" />
+    <ClInclude Include="src\scene\EditorGridPass.h" />
     <ClInclude Include="src\scene\EditorRenderer.h" />
     <ClInclude Include="src\scene\ViewportCamera.h" />
     <ClInclude Include="src\scene\ViewportPickingPass.h" />
@@ -182,7 +183,9 @@ IF EXIST "C:\VulkanSDK\1.4.341.1\Bin\slang.dll"\ (xcopy /Q /E /Y /I "C:\VulkanSD
     <ClInclude Include="src\ui\SceneSelectionContext.h" />
     <ClInclude Include="src\ui\SvgIconAtlas.h" />
     <ClInclude Include="src\ui\ThumbnailCache.h" />
+    <ClInclude Include="src\ui\UIAttributeUtil.h" />
     <ClInclude Include="src\ui\UIColorPanel.h" />
+    <ClInclude Include="src\ui\asset\AssetDragDrop.h" />
     <ClInclude Include="src\ui\asset\AssetEditorManager.h" />
     <ClInclude Include="src\ui\asset\AssetEditorUtils.h" />
     <ClInclude Include="src\ui\asset\IAssetEditor.h" />
@@ -203,6 +206,7 @@ IF EXIST "C:\VulkanSDK\1.4.341.1\Bin\slang.dll"\ (xcopy /Q /E /Y /I "C:\VulkanSD
     <ClCompile Include="src\renderer_pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="src\scene\EditorGridPass.cpp" />
     <ClCompile Include="src\scene\EditorRenderer.cpp" />
     <ClCompile Include="src\scene\ViewportCamera.cpp" />
     <ClCompile Include="src\scene\ViewportPickingPass.cpp" />
@@ -212,6 +216,7 @@ IF EXIST "C:\VulkanSDK\1.4.341.1\Bin\slang.dll"\ (xcopy /Q /E /Y /I "C:\VulkanSD
     <ClCompile Include="src\ui\SceneHierarchyPanel.cpp" />
     <ClCompile Include="src\ui\SvgIconAtlas.cpp" />
     <ClCompile Include="src\ui\ThumbnailCache.cpp" />
+    <ClCompile Include="src\ui\UIAttributeUtil.cpp" />
     <ClCompile Include="src\ui\UIColorPanel.cpp" />
     <ClCompile Include="src\ui\asset\AssetEditorManager.cpp" />
     <ClCompile Include="src\ui\asset\MaterialAssetEditor.cpp" />

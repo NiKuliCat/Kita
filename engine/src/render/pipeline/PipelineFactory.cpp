@@ -20,7 +20,9 @@ namespace Kita {
         void ValidateRequest(const PipelineRequest& request)
         {
             KITA_CORE_ASSERT(request.Pass != PassType::Unknown, "PipelineRequest Pass is Unknown");
-            KITA_CORE_ASSERT(request.Geometry, "PipelineRequest Geometry is null");
+            KITA_CORE_ASSERT(
+                !request.UseVertexInput || request.Geometry,
+                "PipelineRequest Geometry is null when vertex input is enabled");
             KITA_CORE_ASSERT(request.VertexShader, "PipelineRequest VertexShader is null");
             KITA_CORE_ASSERT(request.FragmentShader, "PipelineRequest FragmentShader is null");
             KITA_CORE_ASSERT(request.ColorFormat != VK_FORMAT_UNDEFINED, "PipelineRequest ColorFormat is invalid");
@@ -114,7 +116,8 @@ namespace Kita {
         key.FragmentModule = request.FragmentShader ? request.FragmentShader->GetShaderModule() : VK_NULL_HANDLE;
         key.DescriptorSetLayoutHash = BuildDescriptorSetLayoutHash(request.DescriptorSetLayouts);
 
-        key.VertexLayoutHash = BuildVertexLayoutHash(*request.Geometry);
+        key.VertexLayoutHash = request.UseVertexInput ? BuildVertexLayoutHash(*request.Geometry) : 0;
+        key.UseVertexInput = request.UseVertexInput;
 
         key.PushConstantStages = request.PushConstantStages;
         key.PushConstantSize = request.PushConstantSize;
@@ -156,6 +159,7 @@ namespace Kita {
         createInfo.VertexShader = request.VertexShader;
         createInfo.FragmentShader = request.FragmentShader;
         createInfo.Geometry = request.Geometry;
+        createInfo.UseVertexInput = request.UseVertexInput;
 
         createInfo.PushConstantStages = request.PushConstantStages;
         createInfo.PushConstantSize = request.PushConstantSize;
@@ -200,6 +204,7 @@ namespace Kita {
         HashCombine(seed, key.DescriptorSetLayoutHash);
 
         HashCombine(seed, key.VertexLayoutHash);
+        HashCombine(seed, key.UseVertexInput);
         HashCombine(seed, static_cast<uint32_t>(key.PushConstantStages));
         HashCombine(seed, key.PushConstantSize);
 

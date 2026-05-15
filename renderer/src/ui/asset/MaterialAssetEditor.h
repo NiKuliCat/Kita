@@ -2,6 +2,7 @@
 
 #include "IAssetEditor.h"
 #include "ui/ThumbnailCache.h"
+#include "ui/UIAttributeUtil.h"
 
 namespace Kita {
 
@@ -25,8 +26,6 @@ namespace Kita {
 		void DrawToolbar();
 		void DrawPreview();
 		void DrawDetails();
-		bool BeginPropertyTable(const char* id);
-		void EndPropertyTable();
 		void DrawAssetRow(const char* label, const char* comboId, AssetHandle& handle, AssetType type, AssetHandle resetValue);
 		void DrawTextureSlotRow(const char* label, size_t slotIndex, AssetHandle& handle, AssetHandle resetValue);
 		void DrawColorRow(const char* label, const char* colorId, glm::vec4& value, const glm::vec4& resetValue);
@@ -42,6 +41,7 @@ namespace Kita {
 		MaterialAsset m_SavedCopy{};
 		ThumbnailCache* m_ThumbnailCache = nullptr;
 		VulkanResourceFactory* m_ResourceFactory = nullptr;
+		UIAttributeUtil::TableStyle m_TableStyle = UIAttributeUtil::CreateDefaultTableStyle();
 	};
 
 }

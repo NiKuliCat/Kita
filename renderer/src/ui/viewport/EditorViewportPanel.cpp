@@ -11,6 +11,9 @@ namespace  Kita {
 
 	namespace
 	{
+		constexpr float kOverlayPadding = 10.0f;
+		constexpr float kOverlayButtonSize = 28.0f;
+
 		void DrawMissingTexturePlaceholder(const ImVec2& min, const ImVec2& max)
 		{
 			ImDrawList* drawList = ImGui::GetWindowDrawList();
@@ -105,6 +108,7 @@ namespace  Kita {
 
 		m_IsHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows);
 		m_IsFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
+		m_IsOverlayHovered = false;
 
 		const ImVec2 contentSize = ImGui::GetContentRegionAvail();
 		if (contentSize.x > 1.0f && contentSize.y > 1.0f)
@@ -137,6 +141,9 @@ namespace  Kita {
 		const ImVec2 itemMax = ImGui::GetItemRectMax();
 		m_ViewportBounds[0] = { itemMin.x, itemMin.y };
 		m_ViewportBounds[1] = { itemMax.x, itemMax.y };
+		DrawViewportOverlay();
+		if (m_IsOverlayHovered)
+			m_IsImageHovered = false;
 
 		if (m_IsActive &&
 			m_IsImageHovered &&
@@ -204,6 +211,95 @@ namespace  Kita {
 	bool EditorViewportPanel::OnMouseButtonPressed(MouseButtonPressedEvent& event)
 	{
 		return false;
+	}
+
+	void EditorViewportPanel::DrawViewportOverlay()
+	{
+		ImGui::SetCursorScreenPos(ImVec2(
+			m_ViewportBounds[0].x + kOverlayPadding,
+			m_ViewportBounds[0].y + kOverlayPadding));
+
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 6.0f);
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.10f, 0.11f, 0.13f, 0.92f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.18f, 0.20f, 0.24f, 0.96f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.22f, 0.24f, 0.28f, 0.98f));
+
+		if (ImGui::Button(m_OverlaySettings.ShowGrid ? "[#]" : "[ ]", ImVec2(kOverlayButtonSize, kOverlayButtonSize)))
+			m_OverlaySettings.ShowGrid = !m_OverlaySettings.ShowGrid;
+		m_IsOverlayHovered |= ImGui::IsItemHovered();
+		if (ImGui::IsItemHovered())
+			ImGui::SetTooltip("Toggle Grid");
+
+		ImGui::SameLine(0.0f, 6.0f);
+		ImGui::Button("[=]", ImVec2(kOverlayButtonSize, kOverlayButtonSize));
+		const bool settingsHovered = ImGui::IsItemHovered();
+		m_IsOverlayHovered |= settingsHovered;
+		if (settingsHovered)
+			ImGui::SetTooltip("Viewport Settings");
+
+		const ImVec2 buttonMin = ImGui::GetItemRectMin();
+		const ImVec2 buttonMax = ImGui::GetItemRectMax();
+		const ImVec2 menuPos(buttonMin.x, buttonMax.y + 6.0f);
+		const double currentTime = ImGui::GetTime();
+
+		if (settingsHovered)
+		{
+			m_ShowOverlaySettingsMenu = true;
+			m_OverlaySettingsKeepAliveUntil = currentTime + 0.20;
+		}
+
+		ImGui::SetNextWindowPos(menuPos, ImGuiCond_Always);
+		ImGui::SetNextWindowBgAlpha(0.96f);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 8.0f);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10.0f, 10.0f));
+		ImGui::PushStyleColor(ImGuiCol_PopupBg, ImVec4(0.08f, 0.09f, 0.11f, 0.96f));
+		const ImGuiWindowFlags menuFlags =
+			ImGuiWindowFlags_NoDecoration |
+			ImGuiWindowFlags_AlwaysAutoResize |
+			ImGuiWindowFlags_NoSavedSettings |
+			ImGuiWindowFlags_NoNav;
+		bool menuVisible = false;
+		bool menuHovered = false;
+		if (m_ShowOverlaySettingsMenu)
+		{
+			menuVisible = ImGui::Begin("ViewportOverlaySettingsMenu", &m_ShowOverlaySettingsMenu, menuFlags);
+			menuHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
+			m_IsOverlayHovered |= menuHovered;
+			if (menuHovered)
+				m_OverlaySettingsKeepAliveUntil = currentTime + 0.20;
+
+			if (menuVisible)
+			{
+				ImGui::TextUnformatted("Viewport");
+				ImGui::Separator();
+				ImGui::Checkbox("Show Grid", &m_OverlaySettings.ShowGrid);
+				ImGui::SliderFloat("Flight Speed", &m_OverlaySettings.FlightSpeedScale, 0.1f, 8.0f, "%.2f");
+				ImGui::SliderFloat("Rotation Speed", &m_OverlaySettings.RotationSpeed, 0.1f, 3.0f, "%.2f");
+				ImGui::SliderFloat("Zoom Speed", &m_OverlaySettings.ZoomSpeedScale, 0.1f, 4.0f, "%.2f");
+
+				ImGui::Separator();
+				ImGui::TextUnformatted("Grid");
+				ImGui::SliderFloat("Minor Cell", &m_OverlaySettings.MinorCellSize, 0.1f, 10.0f, "%.2f");
+				ImGui::SliderFloat("Major Cell", &m_OverlaySettings.MajorCellSize, 1.0f, 100.0f, "%.2f");
+				ImGui::SliderFloat("Minor Width", &m_OverlaySettings.MinorLineWidth, 0.5f, 4.0f, "%.2f");
+				ImGui::SliderFloat("Major Width", &m_OverlaySettings.MajorLineWidth, 0.5f, 6.0f, "%.2f");
+				ImGui::SliderFloat("Fade Near", &m_OverlaySettings.FadeNear, 0.0f, 20.0f, "%.2f");
+				ImGui::SliderFloat("Fade Far", &m_OverlaySettings.FadeFar, 10.0f, 500.0f, "%.2f");
+				ImGui::SliderFloat("Angle Fade", &m_OverlaySettings.FadeAngleStart, 0.001f, 0.2f, "%.3f");
+				ImGui::SliderFloat("Depth Bias", &m_OverlaySettings.DepthBias, 0.0001f, 0.05f, "%.4f");
+			}
+
+			ImGui::End();
+		}
+		ImGui::PopStyleColor();
+		ImGui::PopStyleVar(2);
+
+		const bool keepAlive = currentTime < m_OverlaySettingsKeepAliveUntil;
+		if (!settingsHovered && !menuHovered && !keepAlive)
+			m_ShowOverlaySettingsMenu = false;
+
+		ImGui::PopStyleColor(3);
+		ImGui::PopStyleVar();
 	}
 
 	void EditorViewportPanel::RequestPickAtMousePosition()

@@ -21,7 +21,7 @@ namespace Kita {
 		{
 			KITA_CORE_ASSERT(renderTarget.GetColorFormat(i) == m_Desc.ColorFormats[i],"RenderPass color attachment format does not match render target");
 		}
-		if (m_Desc.DepthFormat != VK_FORMAT_UNDEFINED)
+		if (m_Desc.UseDepthAttachment && m_Desc.DepthFormat != VK_FORMAT_UNDEFINED)
 		{
 			KITA_CORE_ASSERT(renderTarget.HasDepthAttachment(),"RenderPass requires depth attachment, but render target has none");
 
@@ -55,13 +55,16 @@ namespace Kita {
 				beginInfo.ClearStencil);
 
 		const VkClearValue* depthClearPtr = nullptr;
-		if (rt.HasDepthAttachment())
+		if (m_Desc.UseDepthAttachment && rt.HasDepthAttachment())
 			depthClearPtr = &depthClearValue;
 
 		rt.BeginRendering(
 			context.GetCommandBuffer(),
 			colorClearValues,
-			depthClearPtr);
+			depthClearPtr,
+			m_Desc.UseDepthAttachment,
+			beginInfo.ClearColors,
+			beginInfo.ClearDepthAttachment);
 
 		VulkanRenderCommand::SetViewport(
 			context.GetCommandBuffer(),

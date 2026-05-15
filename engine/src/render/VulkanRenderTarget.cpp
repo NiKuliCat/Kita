@@ -107,7 +107,10 @@ namespace Kita {
 	void VulkanRenderTarget::BeginRendering(
 		VkCommandBuffer commandBuffer,
 		const std::vector<VkClearValue>& colorClearValues,
-		const VkClearValue* depthClearValue)
+		const VkClearValue* depthClearValue,
+		bool useDepthAttachment,
+		bool clearColors,
+		bool clearDepthAttachment)
 	{
 		KITA_CORE_ASSERT(m_Context, "VulkanRenderTarget context is null");
 		KITA_CORE_ASSERT(commandBuffer != VK_NULL_HANDLE, "VulkanRenderTarget BeginRendering commandBuffer is null");
@@ -126,7 +129,7 @@ namespace Kita {
 			attachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
 			attachmentInfo.imageView = colorAttachment.Image.GetView();
 			attachmentInfo.imageLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-			attachmentInfo.loadOp = colorAttachment.Desc.LoadOp;
+			attachmentInfo.loadOp = clearColors ? colorAttachment.Desc.LoadOp : VK_ATTACHMENT_LOAD_OP_LOAD;
 			attachmentInfo.storeOp = colorAttachment.Desc.StoreOp;
 			attachmentInfo.clearValue = (i < colorClearValues.size())
 				? colorClearValues[i]
@@ -153,14 +156,14 @@ namespace Kita {
 		VkRenderingAttachmentInfo* depthPtr = nullptr;
 		VkRenderingAttachmentInfo* stencilPtr = nullptr;
 
-		if (m_DepthAttachment)
+		if (useDepthAttachment && m_DepthAttachment)
 		{
 			m_DepthAttachment->TransitionLayout(commandBuffer, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 
 			depthAttachmentInfo.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO;
 			depthAttachmentInfo.imageView = m_DepthAttachment->GetView();
 			depthAttachmentInfo.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-			depthAttachmentInfo.loadOp = m_CreateInfo.DepthAttachment.LoadOp;
+			depthAttachmentInfo.loadOp = clearDepthAttachment ? m_CreateInfo.DepthAttachment.LoadOp : VK_ATTACHMENT_LOAD_OP_LOAD;
 			depthAttachmentInfo.storeOp = m_CreateInfo.DepthAttachment.StoreOp;
 			depthAttachmentInfo.clearValue = depthClearValue
 				? *depthClearValue

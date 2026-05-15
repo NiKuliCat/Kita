@@ -86,7 +86,7 @@ namespace Kita {
 			rtInfo.DepthAttachment.Enabled = true;
 			rtInfo.DepthAttachment.Name = createInfo.Name + "_Depth";
 			rtInfo.DepthAttachment.Format = createInfo.DepthFormat;
-			rtInfo.DepthAttachment.CreateSampler = false;
+			rtInfo.DepthAttachment.CreateSampler = true;
 
 			return rtInfo;
 		}

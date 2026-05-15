@@ -89,7 +89,10 @@ namespace Kita {
 		void BeginRendering(
 			VkCommandBuffer commandBuffer,
 			const std::vector<VkClearValue>& colorClearValues,
-			const VkClearValue* depthClearValue = nullptr);
+			const VkClearValue* depthClearValue = nullptr,
+			bool useDepthAttachment = true,
+			bool clearColors = true,
+			bool clearDepthAttachment = true);
 
 		void EndRendering(
 			VkCommandBuffer commandBuffer,

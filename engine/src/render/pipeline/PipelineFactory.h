@@ -34,6 +34,7 @@ namespace Kita {
         PassType Pass = PassType::Unknown;
 
         const VulkanGeometry* Geometry = nullptr;
+        bool UseVertexInput = true;
         const VulkanShader* VertexShader = nullptr;
         const VulkanShader* FragmentShader = nullptr;
 
@@ -79,6 +80,7 @@ namespace Kita {
         uint64_t DescriptorSetLayoutHash = 0;
 
         uint64_t VertexLayoutHash = 0;
+        bool UseVertexInput = true;
 
         VkShaderStageFlags PushConstantStages = 0;
         uint32_t PushConstantSize = 0;
@@ -100,6 +102,7 @@ namespace Kita {
                 FragmentModule == other.FragmentModule &&
                 DescriptorSetLayoutHash == other.DescriptorSetLayoutHash &&
                 VertexLayoutHash == other.VertexLayoutHash &&
+                UseVertexInput == other.UseVertexInput &&
                 PushConstantStages == other.PushConstantStages &&
                 PushConstantSize == other.PushConstantSize;
         }

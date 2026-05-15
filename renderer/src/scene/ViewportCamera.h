@@ -15,6 +15,11 @@ namespace Kita {
 
 		void OnUpdate(float deltaTime);
 		void OnEvent(Event& event);
+		void SetFocusTarget(const glm::vec3& target);
+		void FocusOnPoint(const glm::vec3& target, float radius = 1.0f);
+		void SetFlightSpeedScale(float value) { m_FlightSpeedScale = value; }
+		void SetRotationSpeedValue(float value) { m_RotationSpeedValue = value; }
+		void SetZoomSpeedScale(float value) { m_ZoomSpeedScale = value; }
 
 
 	public:
@@ -32,10 +37,14 @@ namespace Kita {
 		glm::vec3 GetRightDirection() const;
 
 		const glm::vec3& GetPosition() const { return m_Position; }
+		const glm::vec3& GetFocusPosition() const { return m_FocusePosition; }
 		glm::quat GetOrientation() const;
 
 		float GetPitch() const { return m_Pitch; }
 		float GetYaw() const { return m_Yaw; }
+		float GetFlightSpeedScale() const { return m_FlightSpeedScale; }
+		float GetRotationSpeedValue() const { return m_RotationSpeedValue; }
+		float GetZoomSpeedScale() const { return m_ZoomSpeedScale; }
 
 
 	private:
@@ -70,6 +79,9 @@ namespace Kita {
 
 		float m_Distance = 10.0f;
 		float m_Pitch = glm::radians(35.0f), m_Yaw = glm::radians(-35.0f);
+		float m_FlightSpeedScale = 1.0f;
+		float m_RotationSpeedValue = 0.9f;
+		float m_ZoomSpeedScale = 1.0f;
 
 		float  m_ViewportWidth = 1280.0f, m_ViewportHeight = 720.0f;
 		glm::mat4 m_ViewMatrix, m_ProjectionMatrix;

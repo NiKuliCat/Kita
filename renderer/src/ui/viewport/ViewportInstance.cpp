@@ -1,5 +1,7 @@
 #include "renderer_pch.h"
 #include "ViewportInstance.h"
+#include "component/Transform.h"
+#include "core/Input.h"
 
 namespace Kita {
 
@@ -53,6 +55,16 @@ namespace Kita {
 
 	void ViewportInstance::OnUpdate(Timestep ts)
 	{
+		SyncViewportOverlaySettings();
+		SyncCameraFocusTargetFromSelection();
+
+		if (m_Panel &&
+			m_Panel->IsWindowFocused() &&
+			Input::IsKeyPressed(Key::F))
+		{
+			FocusCameraOnSelectedObject();
+		}
+
 		if (m_Panel)
 			m_Panel->OnUpdata(ts);
 	}
@@ -166,6 +178,7 @@ namespace Kita {
 
 			m_SelectionContext->SetSelectionType(EditorSelectionItemType::SceneObject);
 			m_SelectionContext->SetSelctionObject(selectedObject);
+			SyncCameraFocusTargetFromSelection();
 			return;
 		}
 
@@ -185,8 +198,106 @@ namespace Kita {
 		case EditorSelectionItemType::None:
 		default:
 			m_SelectionContext->Clear();
+			m_LastFocusSelectionUUID = 0;
 			return;
 		}
+	}
+
+	void ViewportInstance::SyncCameraFocusTargetFromSelection()
+	{
+		if (!m_Panel || !m_SelectionContext)
+			return;
+
+		if (m_SelectionContext->GetSelectionType() != EditorSelectionItemType::SceneObject)
+		{
+			m_LastFocusSelectionUUID = 0;
+			return;
+		}
+
+		Object selectedObject = m_SelectionContext->GetSelectionItemHandle().m_SelectionObject;
+		if (!selectedObject || !selectedObject.HasComponent<Transform>())
+		{
+			m_LastFocusSelectionUUID = 0;
+			return;
+		}
+
+		const uint64_t selectedUUID = selectedObject.GetUUID();
+		if (m_LastFocusSelectionUUID == selectedUUID)
+			return;
+
+		if (ViewportCamera* camera = m_Panel->GetViewportCamera())
+			camera->SetFocusTarget(GetObjectFocusPoint(selectedObject));
+
+		m_LastFocusSelectionUUID = selectedUUID;
+	}
+
+	void ViewportInstance::FocusCameraOnSelectedObject()
+	{
+		if (!m_Panel || !m_SelectionContext)
+			return;
+
+		if (m_SelectionContext->GetSelectionType() != EditorSelectionItemType::SceneObject)
+			return;
+
+		Object selectedObject = m_SelectionContext->GetSelectionItemHandle().m_SelectionObject;
+		if (!selectedObject || !selectedObject.HasComponent<Transform>())
+			return;
+
+		if (ViewportCamera* camera = m_Panel->GetViewportCamera())
+		{
+			camera->FocusOnPoint(
+				GetObjectFocusPoint(selectedObject),
+				GetObjectFocusRadius(selectedObject));
+		}
+	}
+
+	void ViewportInstance::SyncViewportOverlaySettings()
+	{
+		if (!m_Panel)
+			return;
+
+		const ViewportOverlaySettings& settings = m_Panel->GetOverlaySettings();
+
+		if (ViewportCamera* camera = m_Panel->GetViewportCamera())
+		{
+			camera->SetFlightSpeedScale(settings.FlightSpeedScale);
+			camera->SetRotationSpeedValue(settings.RotationSpeed);
+			camera->SetZoomSpeedScale(settings.ZoomSpeedScale);
+		}
+
+		if (m_Renderer)
+		{
+			m_Renderer->SetGridEnabled(settings.ShowGrid);
+
+			EditorGridPass::PushConstants pushConstants = m_Renderer->GetGridPushConstants();
+			pushConstants.GridParams = glm::vec4(
+				settings.MinorCellSize,
+				std::max(settings.MajorCellSize, settings.MinorCellSize),
+				settings.MinorLineWidth,
+				std::max(settings.MajorLineWidth, settings.MinorLineWidth));
+			pushConstants.FadeParams = glm::vec4(
+				settings.FadeNear,
+				std::max(settings.FadeFar, settings.FadeNear + 1.0f),
+				settings.FadeAngleStart,
+				settings.DepthBias);
+			m_Renderer->SetGridPushConstants(pushConstants);
+		}
+	}
+
+	glm::vec3 ViewportInstance::GetObjectFocusPoint(Object object)
+	{
+		return object.HasComponent<Transform>()
+			? object.GetComponent<Transform>().GetPosition()
+			: glm::vec3(0.0f);
+	}
+
+	float ViewportInstance::GetObjectFocusRadius(Object object)
+	{
+		if (!object.HasComponent<Transform>())
+			return 1.0f;
+
+		const glm::vec3 scale = object.GetComponent<Transform>().GetScale();
+		return std::max(std::max(std::abs(scale.x), std::abs(scale.y)), std::abs(scale.z));
 	}
 
 }

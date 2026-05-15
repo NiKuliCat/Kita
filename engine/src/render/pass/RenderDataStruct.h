@@ -27,6 +27,7 @@ namespace Kita {
         std::vector<VkFormat> ColorFormats;
         VkFormat DepthFormat = VK_FORMAT_UNDEFINED;
         VkSampleCountFlagBits Samples = VK_SAMPLE_COUNT_1_BIT;
+        bool UseDepthAttachment = true;
     };
 
     struct RenderPassBeginInfo
@@ -34,6 +35,9 @@ namespace Kita {
         glm::vec4 ClearColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
         float ClearDepth = 1.0f;
         uint32_t ClearStencil = 0;
+
+        bool ClearColors = true;
+        bool ClearDepthAttachment = true;
 
         bool TransitionSampledColors = true;
         bool TransitionSampledDepth = false;

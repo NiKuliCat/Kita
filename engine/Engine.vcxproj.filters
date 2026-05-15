@@ -234,6 +234,9 @@
     <ClInclude Include="src\render\pass\ForwardOpaquePass.h">
       <Filter>src\render\pass</Filter>
     </ClInclude>
+    <ClInclude Include="src\render\pass\FullscreenPassBase.h">
+      <Filter>src\render\pass</Filter>
+    </ClInclude>
     <ClInclude Include="src\render\pass\RenderContext.h">
       <Filter>src\render\pass</Filter>
     </ClInclude>
@@ -1653,6 +1656,9 @@
       <Filter>src\render\mesh</Filter>
     </ClCompile>
     <ClCompile Include="src\render\pass\ForwardOpaquePass.cpp">
+      <Filter>src\render\pass</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\pass\FullscreenPassBase.cpp">
       <Filter>src\render\pass</Filter>
     </ClCompile>
     <ClCompile Include="src\render\pass\RenderContext.cpp">
