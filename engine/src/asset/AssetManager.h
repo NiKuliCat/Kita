@@ -37,6 +37,9 @@ namespace Kita {
 		Ref<MaterialAsset> GetMaterialAsset(AssetHandle handle);
 		Ref<MeshAsset> GetMeshAsset(AssetHandle handle);
 
+		bool GetTextureImportSettings(AssetHandle handle, TextureImportSettings& outSettings) const;
+		bool SaveTextureImportSettings(AssetHandle handle, const TextureImportSettings& settings);
+
 		const std::filesystem::path& GetAssetRoot() const { return m_AssetRoot; }
 
 		void Clear();
@@ -55,6 +58,10 @@ namespace Kita {
 
 		bool ReadMetaFile(const std::filesystem::path& metaPath, AssetMetadata& outMetadata) const;
 		bool WriteMetaFile(const std::filesystem::path& metaPath, const AssetMetadata& metadata) const;
+
+
+		bool ReadTextureImportSettings(const std::filesystem::path& metaPath, TextureImportSettings& outSettings) const;
+		bool WriteTextureImportSettings(const std::filesystem::path& metaPath, const TextureImportSettings& settings) const;
 
 	private:
 		std::filesystem::path m_AssetRoot;

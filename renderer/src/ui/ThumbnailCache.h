@@ -41,14 +41,23 @@ namespace Kita {
 			ImTextureID TextureID = 0;
 		};
 
+		struct RetiredThumbnail
+		{
+			CachedThumbnail Thumbnail{};
+			uint64_t ReleaseAfterFrame = 0;
+		};
+
 	private:
 		ThumbnailHandle GetOrCreateTextureThumbnail(AssetHandle handle);
 		void ReleaseThumbnail(CachedThumbnail& thumbnail);
+		void RetireThumbnail(CachedThumbnail& thumbnail);
+		void ProcessPendingReleases();
 
 
 	private:
 		VulkanResourceFactory& m_ResourceFactory;
 		std::unordered_map<AssetHandle, CachedThumbnail> m_Cache;
+		std::vector<RetiredThumbnail> m_RetiredThumbnails;
 
 	};
 

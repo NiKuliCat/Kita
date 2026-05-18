@@ -28,11 +28,129 @@ namespace Kita {
 				|| extension == ".jpeg"
 				|| extension == ".tga"
 				|| extension == ".bmp"
+				|| extension == ".hdr"
+				|| extension == ".exr"
 				|| extension == ".fbx"
 				|| extension == ".obj"
 				|| extension == ".dae"
 				|| extension == ".gltf"
 				|| extension == ".glb";
+		}
+
+		bool ReadJsonFile(const std::filesystem::path& path, json& outRoot)
+		{
+			std::ifstream input(path);
+			if (!input.is_open())
+			{
+				return false;
+			}
+
+			try
+			{
+				input >> outRoot;
+			}
+			catch (...)
+			{
+				return false;
+			}
+
+			return outRoot.is_object();
+		}
+
+		bool WriteJsonFile(const std::filesystem::path& path, const json& root)
+		{
+			std::ofstream output(path);
+			if (!output.is_open())
+			{
+				return false;
+			}
+
+			output << root.dump(4);
+			return true;
+		}
+
+		const char* TextureShapeToString(TextureShape shape)
+		{
+			switch (shape)
+			{
+			case TextureShape::Texture2D:   return "Texture2D";
+			case TextureShape::TextureCube: return "TextureCube";
+			default:                        return "Texture2D";
+			}
+		}
+
+		bool TryParseTextureShape(const json& value, TextureShape& outShape)
+		{
+			if (!value.is_string())
+			{
+				return false;
+			}
+
+			const std::string text = value.get<std::string>();
+			if (text == "Texture2D")
+			{
+				outShape = TextureShape::Texture2D;
+				return true;
+			}
+
+			if (text == "TextureCube")
+			{
+				outShape = TextureShape::TextureCube;
+				return true;
+			}
+
+			return false;
+		}
+
+		const char* TextureColorSpaceToString(TextureColorSpace colorSpace)
+		{
+			switch (colorSpace)
+			{
+			case TextureColorSpace::SRGB:   return "SRGB";
+			case TextureColorSpace::Linear: return "Linear";
+			default:                        return "SRGB";
+			}
+		}
+
+		bool TryParseTextureColorSpace(const json& value, TextureColorSpace& outColorSpace)
+		{
+			if (!value.is_string())
+			{
+				return false;
+			}
+
+			const std::string text = value.get<std::string>();
+			if (text == "SRGB")
+			{
+				outColorSpace = TextureColorSpace::SRGB;
+				return true;
+			}
+
+			if (text == "Linear")
+			{
+				outColorSpace = TextureColorSpace::Linear;
+				return true;
+			}
+
+			return false;
+		}
+
+		bool IsHdrTexturePath(const std::filesystem::path& path)
+		{
+			std::string ext = path.extension().string();
+			std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+			return ext == ".hdr" || ext == ".exr";
+		}
+
+		TextureImportSettings MakeDefaultTextureImportSettings(const std::filesystem::path& path)
+		{
+			TextureImportSettings settings{};
+			if (IsHdrTexturePath(path))
+			{
+				settings.ColorSpace = TextureColorSpace::Linear;
+			}
+
+			return settings;
 		}
 
 		void ScanAssetDirectoryRecursive(
@@ -154,6 +272,15 @@ namespace Kita {
 			{
 				KITA_CORE_WARN("ImportAsset failed to write meta file: {}", metaPath.string());
 				return InvalidAssetHandle;
+			}
+
+			if (type == AssetType::Texture)
+			{
+				if (!WriteTextureImportSettings(metaPath, MakeDefaultTextureImportSettings(normalizedPath)))
+				{
+					KITA_CORE_WARN("ImportAsset failed to write texture import settings: {}", metaPath.string());
+					return InvalidAssetHandle;
+				}
 			}
 		}
 
@@ -318,6 +445,80 @@ namespace Kita {
 		return GetAsset<MeshAsset>(handle);
 	}
 
+	bool AssetManager::GetTextureImportSettings(AssetHandle handle, TextureImportSettings& outSettings) const
+	{
+		outSettings = TextureImportSettings{};
+
+		const AssetMetadata* metadata = GetMetadata(handle);
+		if (!metadata || metadata->type != AssetType::Texture)
+		{
+			return false;
+		}
+
+		const std::filesystem::path assetPath = ResolveAssetPath(metadata->relativePath);
+		const std::filesystem::path metaPath = GetMetaPath(assetPath);
+		const TextureImportSettings defaultSettings = MakeDefaultTextureImportSettings(assetPath);
+		outSettings = defaultSettings;
+
+		if (!std::filesystem::exists(metaPath))
+		{
+			return true;
+		}
+
+		if (!ReadTextureImportSettings(metaPath, outSettings))
+		{
+			return false;
+		}
+
+		if (IsHdrTexturePath(assetPath))
+		{
+			outSettings.ColorSpace = TextureColorSpace::Linear;
+		}
+
+		return true;
+	}
+
+	bool AssetManager::SaveTextureImportSettings(AssetHandle handle, const TextureImportSettings& settings)
+	{
+		const AssetMetadata* metadata = GetMetadata(handle);
+		if (!metadata || metadata->type != AssetType::Texture)
+		{
+			return false;
+		}
+
+		const std::filesystem::path assetPath = ResolveAssetPath(metadata->relativePath);
+		const std::filesystem::path metaPath = GetMetaPath(assetPath);
+		TextureImportSettings settingsToSave = settings;
+		if (IsHdrTexturePath(assetPath))
+		{
+			settingsToSave.ColorSpace = TextureColorSpace::Linear;
+		}
+
+		if (!std::filesystem::exists(metaPath))
+		{
+			if (!WriteMetaFile(metaPath, *metadata))
+			{
+				return false;
+			}
+		}
+
+		if (!WriteTextureImportSettings(metaPath, settingsToSave))
+		{
+			return false;
+		}
+
+		auto loadedIt = m_LoadedAssets.find(handle);
+		if (loadedIt != m_LoadedAssets.end())
+		{
+			if (Ref<TextureAsset> textureAsset = std::dynamic_pointer_cast<TextureAsset>(loadedIt->second))
+			{
+				textureAsset->ImportSettings = settingsToSave;
+			}
+		}
+
+		return true;
+	}
+
 	void AssetManager::Clear()
 	{
 		m_MetadataRegistry.clear();
@@ -399,7 +600,7 @@ namespace Kita {
 			return AssetType::Shader;
 		}
 
-		if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".tga" || ext == ".bmp")
+		if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".tga" || ext == ".bmp" || ext == ".hdr" || ext == ".exr")
 		{
 			return AssetType::Texture;
 		}
@@ -440,18 +641,89 @@ namespace Kita {
 
 	bool AssetManager::WriteMetaFile(const std::filesystem::path& metaPath, const AssetMetadata& metadata) const
 	{
-		std::ofstream output(metaPath);
-		if (!output.is_open())
+		json root = json::object();
+
+		if (std::filesystem::exists(metaPath))
+		{
+			json existingRoot;
+			if (ReadJsonFile(metaPath, existingRoot) && existingRoot.is_object())
+			{
+				root = std::move(existingRoot);
+			}
+		}
+
+		root["handle"] = metadata.handle;
+		root["type"] = static_cast<uint32_t>(metadata.type);
+		root["version"] = 2;
+
+		return WriteJsonFile(metaPath, root);
+	}
+	bool AssetManager::ReadTextureImportSettings(const std::filesystem::path& metaPath, TextureImportSettings& outSettings) const
+	{
+		outSettings = TextureImportSettings{};
+
+		json root;
+		if (!ReadJsonFile(metaPath, root))
 		{
 			return false;
 		}
 
-		json root;
-		root["handle"] = metadata.handle;
-		root["type"] = static_cast<uint32_t>(metadata.type);
-		root["version"] = 1;
+		auto textureImportIt = root.find("textureImport");
+		if (textureImportIt == root.end())
+		{
+			return true;
+		}
 
-		output << root.dump(4);
+		if (!textureImportIt->is_object())
+		{
+			return false;
+		}
+
+		const json& textureImport = *textureImportIt;
+
+		TextureShape shape = outSettings.Shape;
+		if (textureImport.contains("shape") && TryParseTextureShape(textureImport["shape"], shape))
+		{
+			outSettings.Shape = shape;
+		}
+
+		TextureColorSpace colorSpace = outSettings.ColorSpace;
+		if (textureImport.contains("colorSpace") && TryParseTextureColorSpace(textureImport["colorSpace"], colorSpace))
+		{
+			outSettings.ColorSpace = colorSpace;
+		}
+
+		if (textureImport.contains("generateMipmaps") && textureImport["generateMipmaps"].is_boolean())
+		{
+			outSettings.GenerateMipmaps = textureImport["generateMipmaps"].get<bool>();
+		}
+
 		return true;
+	}
+	bool AssetManager::WriteTextureImportSettings(const std::filesystem::path& metaPath, const TextureImportSettings& settings) const
+	{
+		json root = json::object();
+
+		if (std::filesystem::exists(metaPath))
+		{
+			json existingRoot;
+			if (!ReadJsonFile(metaPath, existingRoot))
+			{
+				return false;
+			}
+
+			if (existingRoot.is_object())
+			{
+				root = std::move(existingRoot);
+			}
+		}
+
+		root["textureImport"] = {
+			{ "shape", TextureShapeToString(settings.Shape) },
+			{ "colorSpace", TextureColorSpaceToString(settings.ColorSpace) },
+			{ "generateMipmaps", settings.GenerateMipmaps }
+		};
+
+		return WriteJsonFile(metaPath, root);
 	}
 }

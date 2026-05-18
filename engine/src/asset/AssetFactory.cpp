@@ -1,5 +1,6 @@
 #include "kita_pch.h"
 #include "AssetFactory.h"
+#include "AssetManager.h"
 #include "core/Log.h"
 #include "serialize/MaterialSerializer.h"
 #include "render/ShaderCompiler.h"
@@ -49,6 +50,7 @@ namespace Kita{
 			Ref<TextureAsset> textureAsset = CreateRef<TextureAsset>();
 			textureAsset->m_Handle = metadata.handle;
 			textureAsset->SourcePath = assetPath.lexically_normal();
+			AssetManager::GetInstance().GetTextureImportSettings(metadata.handle, textureAsset->ImportSettings);
 
 			if (!AssetBuilder::LoadPixel(*textureAsset))
 			{
@@ -146,6 +148,7 @@ namespace Kita{
 		textureAsset.TexRawData.Width = width;
 		textureAsset.TexRawData.Height = height;
 		textureAsset.TexRawData.Channels = 4;
+		textureAsset.TexRawData.Format = TexturePixelFormat::R8G8B8A8;
 
 		textureAsset.TexRawData.Pixels.assign(pixels, pixels + pixelBytes);
 

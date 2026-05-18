@@ -8,12 +8,21 @@ namespace Kita {
 
     class VulkanContext;
 
+    enum class TextureType
+    {
+        None = 0,
+        Texture2D,
+        TextureCube
+    };
+
+
     class VulkanTexture
     {
     public:
         struct CreateInfo
         {
             std::string Name;
+            TextureType Type = TextureType::Texture2D;
 
             uint32_t Width = 1;
             uint32_t Height = 1;
@@ -52,6 +61,8 @@ namespace Kita {
         uint32_t GetHeight() const { return m_Height; }
         VkFormat GetFormat() const { return m_Format; }
         uint32_t GetMipLevels() const { return m_MipLevels; }
+        TextureType GetType() const { return m_Type; }
+        uint32_t GetArrayLayers() const { return m_ArrayLayers; }
         const std::string& GetName() const { return m_Name; }
 
         VulkanImage& GetImage() { return m_Image; }
@@ -75,7 +86,9 @@ namespace Kita {
         uint32_t m_Width = 0;
         uint32_t m_Height = 0;
         uint32_t m_MipLevels = 1;
+        uint32_t m_ArrayLayers = 1;
         VkFormat m_Format = VK_FORMAT_UNDEFINED;
+        TextureType m_Type = TextureType::None;
 
         VulkanImage m_Image;
     };

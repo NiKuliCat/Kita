@@ -64,12 +64,62 @@ namespace Kita {
 		std::vector<uint32_t> Indices;
 	};
 
+
+	enum class TextureShape : uint8_t
+	{
+		Texture2D = 0,
+		TextureCube
+	};
+
+	enum class TextureColorSpace : uint8_t
+	{
+		SRGB = 0,
+		Linear
+	};
+
+	enum class TexturePixelFormat : uint8_t
+	{
+		Unknown = 0,
+		R8G8B8A8,
+		R16G16B16A16_Float,
+		R32G32B32A32_Float
+	};
+
+	struct TextureImportSettings
+	{
+		TextureShape Shape = TextureShape::Texture2D;
+		TextureColorSpace ColorSpace = TextureColorSpace::SRGB;
+		bool GenerateMipmaps = true;
+	};
+
 	struct TexturePrimitiveData
 	{
 		uint32_t Width = 0;
 		uint32_t Height = 0;
 		uint32_t Channels = 0;
+		TexturePixelFormat Format = TexturePixelFormat::Unknown;
 		std::vector<uint8_t> Pixels;
+
+		bool IsValid() const
+		{
+			return Width > 0 && Height > 0 && !Pixels.empty() && Format != TexturePixelFormat::Unknown;
+		}
+
+		bool IsHDR() const
+		{
+			return Format == TexturePixelFormat::R16G16B16A16_Float
+				|| Format == TexturePixelFormat::R32G32B32A32_Float;
+		}
+
+		void Reset()
+		{
+			Width = 0;
+			Height = 0;
+			Channels = 0;
+			Format = TexturePixelFormat::Unknown;
+			Pixels.clear();
+		}
+
 	};
 
 	struct ShaderAsset : public Asset
@@ -91,7 +141,33 @@ namespace Kita {
 	{
 		virtual AssetType GetType() const override { return AssetType::Texture; }
 		std::filesystem::path SourcePath;
+		TextureImportSettings ImportSettings;
 		TexturePrimitiveData  TexRawData;
+
+		bool IsCube() const
+		{
+			return ImportSettings.Shape == TextureShape::TextureCube;
+		}
+
+		bool IsTexture2D() const
+		{
+			return ImportSettings.Shape == TextureShape::Texture2D;
+		}
+
+		bool IsHDRSource() const
+		{
+			return TexRawData.IsHDR();
+		}
+
+		bool IsValidSource() const
+		{
+			return !SourcePath.empty() && TexRawData.IsValid();
+		}
+
+		void ResetSourceData()
+		{
+			TexRawData.Reset();
+		}
 	};
 
 

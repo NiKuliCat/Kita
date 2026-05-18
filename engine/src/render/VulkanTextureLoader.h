@@ -12,7 +12,7 @@ namespace Kita {
 	class VulkanTextureLoader
 	{
 	public:
-		static Ref<VulkanTexture> LoadTexture2D(
+		static Ref<VulkanTexture> LoadTexture(
 			VulkanContext& context,
 			const TextureAsset& texAsset);
 	};

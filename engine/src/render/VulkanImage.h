@@ -25,6 +25,7 @@ namespace Kita {
             VkImageUsageFlags   Usage         = 0;
             VkImageLayout       InitialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
             VkSharingMode       SharingMode   = VK_SHARING_MODE_EXCLUSIVE;
+            VkImageCreateFlags  Flags         = 0;
 
             // ---- Memory ----
             VkMemoryPropertyFlags MemoryProperties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;

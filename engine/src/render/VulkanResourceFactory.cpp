@@ -99,7 +99,7 @@ namespace Kita {
 			return {};
 		}
 
-		Ref<VulkanTexture> vulkanTexture = VulkanTextureLoader::LoadTexture2D(m_Context, *textureAsset);
+		Ref<VulkanTexture> vulkanTexture = VulkanTextureLoader::LoadTexture(m_Context, *textureAsset);
 		if (!vulkanTexture)
 		{
 			KITA_CORE_WARN("Failed to create runtime VulkanTexture for asset: {}", textureAsset->SourcePath.string());
@@ -172,7 +172,16 @@ namespace Kita {
 			Ref<VulkanTexture> texture = GetOrCreateTexture(materialAsset.AlbedoTextureHandle);
 			if (texture)
 			{
-				outMaterial.SetAlbedoTexture(texture);
+				if (texture->GetType() == TextureType::Texture2D)
+				{
+					outMaterial.SetAlbedoTexture(texture);
+				}
+				else
+				{
+					KITA_CORE_WARN(
+						"VulkanResourceFactory: material albedo expects Texture2D, but texture handle={} is not 2D",
+						materialAsset.AlbedoTextureHandle);
+				}
 			}
 			else
 			{

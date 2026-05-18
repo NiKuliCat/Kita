@@ -184,6 +184,7 @@ namespace Kita {
         imageCI.usage         = createInfo.Usage;
         imageCI.sharingMode   = createInfo.SharingMode;
         imageCI.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        imageCI.flags         = createInfo.Flags;
 
         if (createInfo.Type == VK_IMAGE_TYPE_3D)
         {

@@ -132,7 +132,7 @@ namespace Kita {
 		switch (metadata.type)
 		{
 		case AssetType::Texture:
-			return CreateUnique<TextureAssetEditor>(metadata.handle, m_ThumbnailCache);
+			return CreateUnique<TextureAssetEditor>(metadata.handle, m_ThumbnailCache, m_ResourceFactory);
 		case AssetType::Mesh:
 			return CreateUnique<MeshAssetEditor>(metadata.handle);
 		case AssetType::Material:

@@ -24,13 +24,17 @@ namespace Kita {
         , m_Width(other.m_Width)
         , m_Height(other.m_Height)
         , m_MipLevels(other.m_MipLevels)
+        , m_ArrayLayers(other.m_ArrayLayers)
         , m_Format(other.m_Format)
+        , m_Type(other.m_Type)
         , m_Image(std::move(other.m_Image))
     {
         other.m_Width = 0;
         other.m_Height = 0;
         other.m_MipLevels = 1;
+        other.m_ArrayLayers = 1;
         other.m_Format = VK_FORMAT_UNDEFINED;
+        other.m_Type = TextureType::None;
     }
 
     VulkanTexture& VulkanTexture::operator=(VulkanTexture&& other) noexcept
@@ -44,13 +48,17 @@ namespace Kita {
         m_Width = other.m_Width;
         m_Height = other.m_Height;
         m_MipLevels = other.m_MipLevels;
+        m_ArrayLayers = other.m_ArrayLayers;
         m_Format = other.m_Format;
+        m_Type = other.m_Type;
         m_Image = std::move(other.m_Image);
 
         other.m_Width = 0;
         other.m_Height = 0;
         other.m_MipLevels = 1;
+        other.m_ArrayLayers = 1;
         other.m_Format = VK_FORMAT_UNDEFINED;
+        other.m_Type = TextureType::None;
 
         return *this;
     }
@@ -67,6 +75,14 @@ namespace Kita {
         m_Width = createInfo.Width;
         m_Height = createInfo.Height;
         m_Format = createInfo.Format;
+        m_Type = createInfo.Type;
+
+        KITA_CORE_ASSERT(
+            m_Type == TextureType::Texture2D || m_Type == TextureType::TextureCube,
+            "VulkanTexture type must be Texture2D or TextureCube");
+
+        const bool isCubeTexture = m_Type == TextureType::TextureCube;
+        m_ArrayLayers = isCubeTexture ? 6u : 1u;
 
         if (createInfo.EnableMipmaps)
             m_MipLevels = std::max(1u, CalculateMipLevels(createInfo.Width, createInfo.Height));
@@ -76,23 +92,24 @@ namespace Kita {
         VulkanImage::CreateInfo imageInfo{};
         imageInfo.Name = m_Name;
         imageInfo.Type = VK_IMAGE_TYPE_2D;
-        imageInfo.ViewType = VK_IMAGE_VIEW_TYPE_2D;
+        imageInfo.ViewType = isCubeTexture ? VK_IMAGE_VIEW_TYPE_CUBE : VK_IMAGE_VIEW_TYPE_2D;
         imageInfo.Format = createInfo.Format;
         imageInfo.Extent = { createInfo.Width, createInfo.Height, 1 };
         imageInfo.MipLevels = m_MipLevels;
-        imageInfo.ArrayLayers = 1;
+        imageInfo.ArrayLayers = m_ArrayLayers;
         imageInfo.Samples = VK_SAMPLE_COUNT_1_BIT;
         imageInfo.Tiling = VK_IMAGE_TILING_OPTIMAL;
         imageInfo.Usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
         imageInfo.AspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
+        imageInfo.Flags = isCubeTexture ? VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT : 0;
 
         imageInfo.CreateSampler = createInfo.CreateSampler;
         imageInfo.MinFilter = createInfo.Filter;
         imageInfo.MagFilter = createInfo.Filter;
         imageInfo.MipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-        imageInfo.AddressModeU = createInfo.AddressMode;
-        imageInfo.AddressModeV = createInfo.AddressMode;
-        imageInfo.AddressModeW = createInfo.AddressMode;
+        imageInfo.AddressModeU = isCubeTexture ? VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE : createInfo.AddressMode;
+        imageInfo.AddressModeV = isCubeTexture ? VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE : createInfo.AddressMode;
+        imageInfo.AddressModeW = isCubeTexture ? VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE : createInfo.AddressMode;
         imageInfo.MaxAnisotropy = createInfo.MaxAnisotropy;
         imageInfo.MinLod = 0.0f;
         imageInfo.MaxLod = static_cast<float>(m_MipLevels);
@@ -105,6 +122,9 @@ namespace Kita {
             KITA_CORE_ASSERT(
                 m_MipLevels == 1,
                 "Current VulkanTexture implementation only supports initial upload for a single mip level");
+            KITA_CORE_ASSERT(
+                !isCubeTexture,
+                "Current VulkanTexture implementation does not support direct initial upload for cubemaps");
             imageInfo.InitialData = createInfo.PixelData;
             imageInfo.InitialDataSize = createInfo.PixelDataSize;
         }
@@ -112,10 +132,12 @@ namespace Kita {
         m_Image.Init(context, imageInfo);
 
         KITA_CORE_INFO(
-            "Created VulkanTexture '{0}' ({1}x{2}, mipLevels={3})",
+            "Created VulkanTexture '{0}' ({1}x{2}, type={3}, layers={4}, mipLevels={5})",
             m_Name,
             m_Width,
             m_Height,
+            isCubeTexture ? "Cube" : "2D",
+            m_ArrayLayers,
             m_MipLevels);
     }
 
@@ -126,7 +148,9 @@ namespace Kita {
         m_Width = 0;
         m_Height = 0;
         m_MipLevels = 1;
+        m_ArrayLayers = 1;
         m_Format = VK_FORMAT_UNDEFINED;
+        m_Type = TextureType::None;
     }
 
     uint32_t VulkanTexture::CalculateMipLevels(uint32_t width, uint32_t height)
