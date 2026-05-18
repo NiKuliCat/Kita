@@ -29,7 +29,7 @@ namespace Kita {
 	struct ViewportOverlaySettings
 	{
 		bool ShowGrid = true;
-		float FlightSpeedScale = 1.0f;
+		float FlightSpeedScale = 8.0f;
 		float RotationSpeed = 0.9f;
 		float ZoomSpeedScale = 1.0f;
 		float MinorCellSize = 1.0f;
@@ -37,7 +37,7 @@ namespace Kita {
 		float MinorLineWidth = 1.15f;
 		float MajorLineWidth = 1.85f;
 		float FadeNear = 1.0f;
-		float FadeFar = 120.0f;
+		float FadeFar = 190.0f;
 		float FadeAngleStart = 0.02f;
 		float DepthBias = 0.005f;
 	};

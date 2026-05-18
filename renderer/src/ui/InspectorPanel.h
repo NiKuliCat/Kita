@@ -19,10 +19,8 @@ namespace Kita {
 		void OnImGuiRender();
 
 	private:
-		void DrawItemByType(EditorSelectionItemType type);
 		void DrawInspectorPanel();
 		void DrawSelectedObject(Object& selectedObject);
-		void DrawSelectedAsset(AssetHandle handle);
 		void DrawObjectHeader(Object& selectedObject);
 		void DrawAddComponentMenu(Object& selectedObject);
 		bool DrawPropertyGroupHeader(const char* label);
@@ -32,16 +30,12 @@ namespace Kita {
 		void DrawMaterialProperties(MeshRenderer& meshRenderer);
 		void DrawLightProperties(LightComponent& lightComponent);
 
-		void DrawInfoRow(const char* label, const std::string& value);
 		void DrawVec3Row(const char* label, glm::vec3& value, float speed = 0.05f, const glm::vec3& defaultValue = glm::vec3(0.0f));
 		void DrawFloatRow(const char* label, float& value, float speed = 0.05f, float minValue = 0.0f, float maxValue = 0.0f, float defaultValue = 0.0f);
 		void DrawColorRow(const char* label, glm::vec4& value, const glm::vec4& defaultValue = glm::vec4(1.0f));
 		void DrawStaticMeshSlotRow(const char* label, AssetHandle& meshHandle, const std::vector<AssetMetadata>& meshAssets, AssetHandle defaultValue = InvalidAssetHandle);
 		void DrawMaterialSlotRow(const char* label, size_t slotIndex, AssetHandle& slotMaterialHandle, AssetHandle defaultMaterialHandle, const std::vector<AssetMetadata>& materialAssets);
 		void OpenMaterialEditor(AssetHandle materialHandle);
-
-		static std::string GetAssetDisplayName(AssetHandle handle);
-		static std::string GetAssetPathLabel(AssetHandle handle);
 
 	private:
 		UIAttributeUtil::TableStyle m_TableStyle = UIAttributeUtil::CreateDefaultTableStyle();

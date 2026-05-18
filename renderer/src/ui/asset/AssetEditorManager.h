@@ -45,6 +45,7 @@ namespace Kita {
 		ImGuiID m_DockSpaceId = 0;
 		ImGuiID m_FloatingDockRootId = 0;
 		bool m_ShowFloatingHostWindow = false;
+		bool m_RequestHostWindowFocus = false;
 		ThumbnailCache* m_ThumbnailCache = nullptr;
 		VulkanResourceFactory* m_ResourceFactory = nullptr;
 	};

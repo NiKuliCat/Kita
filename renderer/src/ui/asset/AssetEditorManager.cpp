@@ -37,6 +37,11 @@ namespace Kita {
 			return title;
 		}
 
+		std::string BuildTabContextMenuId(AssetHandle handle)
+		{
+			return "AssetEditorTabContextMenu##" + std::to_string(handle);
+		}
+
 	}
 
 	bool AssetEditorManager::OpenEditor(AssetHandle handle)
@@ -50,6 +55,7 @@ namespace Kita {
 		{
 			existingEditor->IsOpen = true;
 			existingEditor->RequestFocus = true;
+			m_RequestHostWindowFocus = true;
 			m_ActiveAssetHandle = handle;
 			return true;
 		}
@@ -72,6 +78,7 @@ namespace Kita {
 		entry.IsOpen = true;
 		entry.RequestFocus = true;
 		entry.PendingInitialDock = true;
+		m_RequestHostWindowFocus = true;
 		if (m_OpenEditors.empty())
 		{
 			entry.OpenAsFloatingRoot = true;
@@ -89,6 +96,18 @@ namespace Kita {
 		DrawFloatingHostWindow();
 
 		std::vector<AssetHandle> editorsToClose;
+		const auto enqueueClose = [&editorsToClose](AssetHandle handle)
+		{
+			if (!Asset::IsValidHandle(handle))
+			{
+				return;
+			}
+
+			if (std::find(editorsToClose.begin(), editorsToClose.end(), handle) == editorsToClose.end())
+			{
+				editorsToClose.push_back(handle);
+			}
+		};
 		for (auto& entry : m_OpenEditors)
 		{
 			if (!entry.Editor || !entry.IsOpen)
@@ -134,6 +153,53 @@ namespace Kita {
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
 			if (ImGui::Begin(title.c_str(), nullptr, ImGuiWindowFlags_NoCollapse))
 			{
+				ImGuiWindow* window = ImGui::GetCurrentWindow();
+				const ImRect titleBarRect = window->TitleBarRect();
+				const std::string contextMenuId = BuildTabContextMenuId(entry.Editor->GetAssetHandle());
+				if (ImGui::IsMouseHoveringRect(titleBarRect.Min, titleBarRect.Max, false) &&
+					ImGui::IsMouseClicked(ImGuiMouseButton_Right))
+				{
+					ImGui::OpenPopup(contextMenuId.c_str());
+				}
+
+				if (ImGui::BeginPopup(contextMenuId.c_str()))
+				{
+					if (ImGui::MenuItem("Close"))
+					{
+						enqueueClose(entry.Editor->GetAssetHandle());
+					}
+
+					if (ImGui::MenuItem("Close Others"))
+					{
+						const AssetHandle currentHandle = entry.Editor->GetAssetHandle();
+						for (const auto& otherEntry : m_OpenEditors)
+						{
+							if (!otherEntry.Editor)
+							{
+								continue;
+							}
+
+							const AssetHandle otherHandle = otherEntry.Editor->GetAssetHandle();
+							if (otherHandle != currentHandle)
+							{
+								enqueueClose(otherHandle);
+							}
+						}
+					}
+
+					if (ImGui::MenuItem("Close All"))
+					{
+						for (const auto& otherEntry : m_OpenEditors)
+						{
+							if (otherEntry.Editor)
+							{
+								enqueueClose(otherEntry.Editor->GetAssetHandle());
+							}
+						}
+					}
+					ImGui::EndPopup();
+				}
+
 				m_ActiveAssetHandle = entry.Editor->GetAssetHandle();
 				entry.Editor->OnImGuiRender();
 			}
@@ -265,6 +331,10 @@ namespace Kita {
 		ImGui::SetNextWindowPos(floatingPos, ImGuiCond_FirstUseEver);
 		ImGui::SetNextWindowSize(floatingSize, ImGuiCond_FirstUseEver);
 		ImGui::SetNextWindowSizeConstraints(kMinAssetEditorWindowSize, ImVec2(FLT_MAX, FLT_MAX));
+		if (m_RequestHostWindowFocus)
+		{
+			ImGui::SetNextWindowFocus();
+		}
 
 		ImGuiWindowFlags hostFlags =
 			ImGuiWindowFlags_NoDocking |
@@ -286,6 +356,7 @@ namespace Kita {
 			ImGui::DockSpace(dockspaceId, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_AutoHideTabBar);
 		}
 		ImGui::End();
+		m_RequestHostWindowFocus = false;
 		ImGui::PopStyleVar(2);
 		ImGui::PopStyleColor(7);
 
@@ -301,6 +372,7 @@ namespace Kita {
 				ImGui::DockBuilderRemoveNode(m_FloatingDockRootId);
 				m_FloatingDockRootId = 0;
 			}
+			m_RequestHostWindowFocus = false;
 		}
 	}
 

@@ -4,6 +4,12 @@ struct VSOutput
     float2 uv : TEXCOORD0;
 };
 
+struct PSOutput
+{
+    float4 color : SV_Target0;
+    float depth : SV_Depth;
+};
+
 struct SceneCameraData
 {
     float4x4 Matrix_V;
@@ -26,12 +32,6 @@ ConstantBuffer<SceneCameraData> gCamera;
 
 [[vk::binding(1, 0)]]
 ConstantBuffer<SceneDirectionalLightData> gMainLight;
-
-[[vk::binding(0, 1)]]
-Texture2D<float> gDepthTexture;
-
-[[vk::binding(0, 1)]]
-SamplerState gDepthSampler;
 
 struct GridPushConstants
 {
@@ -70,6 +70,15 @@ float3 ReconstructWorldPosition(float2 uv, float depth)
     return world.xyz / max(world.w, 1e-6);
 }
 
+float3 ReconstructWorldRayDirection(float2 uv)
+{
+    float4 ndc = float4(uv * float2(2.0, 2.0) - 1.0, 1.0, 1.0);
+    float4 view = mul(gCamera.Matrix_I_P, ndc);
+    float3 viewDir = normalize(view.xyz / max(view.w, 1e-6));
+    float3 worldDir = mul((float3x3)gCamera.Matrix_I_V, viewDir);
+    return normalize(worldDir);
+}
+
 float GridCoverage(float2 worldXZ, float cellSize, float lineWidthPx)
 {
     float2 grid = worldXZ / cellSize;
@@ -89,18 +98,33 @@ float AxisCoverage(float axisCoord, float axisWidthPx, float derivative)
 }
 
 [shader("fragment")]
-float4 PSMain(VSOutput input) : SV_Target0
+PSOutput PSMain(VSOutput input)
 {
+    PSOutput output;
+
     // The renderer applies Vulkan Y-flip in the viewport state. For fullscreen
     // passes, the interpolated triangle UV therefore needs to be flipped back
-    // to sample the depth texture in the same screen-space orientation.
+    // to match the camera matrices in screen-space orientation.
     float2 uv = float2(input.uv.x, 1.0 - input.uv.y);
-    float sceneDepth = gDepthTexture.SampleLevel(gDepthSampler, uv, 0.0);
+    float3 cameraPos = gCamera.CameraPosWS.xyz;
+    float3 rayDir = ReconstructWorldRayDirection(uv);
 
-    if (sceneDepth <= 0.0 || sceneDepth >= 1.0)
+    if (abs(rayDir.y) <= 1e-5)
         discard;
 
-    float3 worldPos = ReconstructWorldPosition(uv, sceneDepth);
+    const float gridPlaneY = 0.0;
+    float rayDistance = (gridPlaneY - cameraPos.y) / rayDir.y;
+    if (rayDistance <= 0.0)
+        discard;
+
+    float3 worldPos = cameraPos + rayDir * rayDistance;
+    float4 clipPos = mul(gCamera.Matrix_VP, float4(worldPos, 1.0));
+    if (clipPos.w <= 1e-5)
+        discard;
+
+    float gridDepth = clipPos.z / clipPos.w;
+    if (gridDepth <= 0.0 || gridDepth >= 1.0)
+        discard;
 
     float minorCellSize = max(gGrid.GridParams.x, 1e-4);
     float majorCellSize = max(gGrid.GridParams.y, minorCellSize);
@@ -116,10 +140,13 @@ float4 PSMain(VSOutput input) : SV_Target0
 
     float fadeStart = gGrid.FadeParams.x;
     float fadeEnd = max(gGrid.FadeParams.y, fadeStart + 1.0);
-    float distanceFade = 1.0 - smoothstep(fadeStart, fadeEnd, distance(gCamera.CameraPosWS.xyz, worldPos));
+    float planarDistance = distance(cameraPos.xz, worldPos.xz);
+    float distanceFade = 1.0 - smoothstep(fadeStart, fadeEnd, planarDistance);
+    distanceFade *= distanceFade;
 
-    float viewDotUp = abs(dot(normalize(worldPos - gCamera.CameraPosWS.xyz), float3(0.0, 1.0, 0.0)));
-    float angleFade = saturate(viewDotUp + gGrid.FadeParams.z);
+    float angleFadeRange = max(gGrid.FadeParams.z, 1e-4);
+    float angleFade = smoothstep(0.0, angleFadeRange, abs(rayDir.y));
+    angleFade *= angleFade;
 
     float minorWeight = minor * (1.0 - major);
     float majorWeight = major;
@@ -131,8 +158,10 @@ float4 PSMain(VSOutput input) : SV_Target0
 
     color.a *= distanceFade * angleFade;
 
-    if (color.a <= gGrid.FadeParams.w && axisWeight <= 0.0 && majorWeight <= 0.0 && minorWeight <= 0.0)
+    if (color.a <= 1e-4 && axisWeight <= 1e-4 && majorWeight <= 1e-4 && minorWeight <= 1e-4)
         discard;
 
-    return color;
+    output.color = color;
+    output.depth = gridDepth;
+    return output;
 }

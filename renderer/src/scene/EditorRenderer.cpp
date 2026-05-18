@@ -260,7 +260,7 @@ namespace Kita {
 			skyboxSceneData.BeginInfo.ClearColors = false;
 			skyboxSceneData.BeginInfo.ClearDepthAttachment = false;
 			skyboxSceneData.BeginInfo.TransitionSampledColors = true;
-			skyboxSceneData.BeginInfo.TransitionSampledDepth = true;
+			skyboxSceneData.BeginInfo.TransitionSampledDepth = false;
 			m_SkyboxPass->SetSceneData(skyboxSceneData);
 		}
 

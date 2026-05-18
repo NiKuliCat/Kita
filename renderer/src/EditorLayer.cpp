@@ -346,7 +346,34 @@ namespace Kita {
 
 	bool EditorLayer::OnKeyPressed(KeyPressedEvent& event)
 	{
-		return false;
+		if (event.IsRepeat())
+		{
+			return false;
+		}
+
+		switch (event.GetKeyCode())
+		{
+		case Key::Q:
+		case Key::W:
+		case Key::E:
+		case Key::R:
+			break;
+		default:
+			return false;
+		}
+
+		ImGuiIO& io = ImGui::GetIO();
+		if (io.WantTextInput)
+		{
+			return false;
+		}
+
+		if (m_ActiveViewportIndex < 0 || m_ActiveViewportIndex >= static_cast<int32_t>(m_SceneViewportPanels.size()))
+		{
+			return false;
+		}
+
+		return m_SceneViewportPanels[static_cast<size_t>(m_ActiveViewportIndex)].HandleGizmoShortcut(event);
 	}
 
 	bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& event)

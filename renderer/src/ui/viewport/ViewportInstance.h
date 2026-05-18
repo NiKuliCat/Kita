@@ -38,6 +38,7 @@ namespace Kita {
 		void OnRender();
 		void OnImGuiRender();
 		void OnEvent(Event& event);
+		bool HandleGizmoShortcut(KeyPressedEvent& event);
 
 		void SetActive(bool isActive);
 
@@ -55,7 +56,6 @@ namespace Kita {
 		EditorGizmoContext BuildGizmoContext() const;
 		void ProcessPendingPickRequest();
 		void ApplyPickResult(uint32_t pickId);
-		void SyncCameraFocusTargetFromSelection();
 		void FocusCameraOnSelectedObject();
 		void SyncViewportOverlaySettings();
 		static glm::vec3 GetObjectFocusPoint(Object object);
@@ -71,7 +71,6 @@ namespace Kita {
 		Unique<EditorViewportPanel> m_Panel = nullptr;
 		Unique<EditorViewportSurface> m_Surface = nullptr;
 		Unique<EditorRenderer> m_Renderer = nullptr;
-		uint64_t m_LastFocusSelectionUUID = 0;
 	};
 
 }

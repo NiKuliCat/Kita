@@ -25,25 +25,14 @@ namespace Kita {
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 
 		ImGui::Begin("Inspector");
-		DrawItemByType(m_SelectionContext ? m_SelectionContext->GetSelectionType() : EditorSelectionItemType::None);
+		Object selectedObject = m_SelectionContext ? m_SelectionContext->GetSelectionItemHandle().m_SelectionObject : Object{};
+		if (selectedObject)
+		{
+			DrawSelectedObject(selectedObject);
+		}
 		ImGui::End();
 
 		ImGui::PopStyleVar();
-	}
-
-	void InspectorPanel::DrawItemByType(EditorSelectionItemType type)
-	{
-		switch (type)
-		{
-		case EditorSelectionItemType::SceneObject:
-			DrawSelectedObject(m_SelectionContext->GetSelectionItemHandle().m_SelectionObject);
-			return;
-		case EditorSelectionItemType::Asset:
-			DrawSelectedAsset(m_SelectionContext->GetSelectionItemHandle().m_SelectedAssetHandle);
-			return;
-		default:
-			return;
-		}
 	}
 
 	void InspectorPanel::DrawSelectedObject(Object& selectedObject)
@@ -79,21 +68,6 @@ namespace Kita {
 				DrawLightProperties(selectedObject.GetComponent<LightComponent>());
 				ImGui::TreePop();
 			}
-		}
-	}
-
-	void InspectorPanel::DrawSelectedAsset(AssetHandle handle)
-	{
-		if (!Asset::IsValidHandle(handle))
-		{
-			return;
-		}
-
-		if (UIAttributeUtil::BeginPropertyTable("##InspectorSelectedAssetTable", m_TableStyle))
-		{
-			DrawInfoRow("Asset", GetAssetDisplayName(handle));
-			DrawInfoRow("Path", GetAssetPathLabel(handle));
-			UIAttributeUtil::EndPropertyTable();
 		}
 	}
 
@@ -255,15 +229,6 @@ namespace Kita {
 
 			UIAttributeUtil::EndPropertyTable();
 		}
-	}
-
-	void InspectorPanel::DrawInfoRow(const char* label, const std::string& value)
-	{
-		UIAttributeUtil::BeginPropertyRow(m_TableStyle);
-		UIAttributeUtil::DrawPropertyLabelCell(label, m_TableStyle);
-		UIAttributeUtil::PreparePropertyValueCell(m_TableStyle, UIAttributeUtil::GetLabelYOffset(m_TableStyle));
-		ImGui::TextUnformatted(value.c_str());
-		UIAttributeUtil::DrawEmptyResetCell(m_TableStyle);
 	}
 
 	void InspectorPanel::DrawVec3Row(const char* label, glm::vec3& value, float speed, const glm::vec3& defaultValue)
@@ -484,37 +449,6 @@ namespace Kita {
 		{
 			m_OpenAssetCallback(materialHandle);
 		}
-	}
-
-	std::string InspectorPanel::GetAssetDisplayName(AssetHandle handle)
-	{
-		if (!Asset::IsValidHandle(handle))
-		{
-			return "None";
-		}
-
-		if (const AssetMetadata* metadata = AssetManager::GetInstance().GetMetadata(handle))
-		{
-			const std::string filename = metadata->relativePath.filename().string();
-			return filename.empty() ? metadata->relativePath.generic_string() : filename;
-		}
-
-		return "None";
-	}
-
-	std::string InspectorPanel::GetAssetPathLabel(AssetHandle handle)
-	{
-		if (!Asset::IsValidHandle(handle))
-		{
-			return "None";
-		}
-
-		if (const AssetMetadata* metadata = AssetManager::GetInstance().GetMetadata(handle))
-		{
-			return metadata->relativePath.generic_string();
-		}
-
-		return "None";
 	}
 
 }

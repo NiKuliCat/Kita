@@ -61,7 +61,6 @@ namespace Kita {
 			m_ViewportCamera->OnUpdate(ts.GetSecondsF());
 
 		SyncViewportOverlaySettings();
-		SyncCameraFocusTargetFromSelection();
 
 		if (m_Panel &&
 			m_Panel->IsWindowFocused() &&
@@ -130,6 +129,39 @@ namespace Kita {
 			return;
 
 		m_ViewportCamera->OnEvent(event);
+	}
+
+	bool ViewportInstance::HandleGizmoShortcut(KeyPressedEvent& event)
+	{
+		if (!m_GizmoController || !m_Panel || !m_Panel->IsOpen() || event.IsRepeat())
+		{
+			return false;
+		}
+
+		const bool rightMouseDown = Input::IsMouseButtonPressed(Mouse::ButtonRight);
+		const bool altDown = Input::IsKeyPressed(Key::LeftAlt) || Input::IsKeyPressed(Key::RightAlt);
+		if (rightMouseDown || altDown)
+		{
+			return false;
+		}
+
+		switch (event.GetKeyCode())
+		{
+		case Key::Q:
+			m_GizmoController->SetOperation(GizmoOperation::None);
+			return true;
+		case Key::W:
+			m_GizmoController->SetOperation(GizmoOperation::Translate);
+			return true;
+		case Key::E:
+			m_GizmoController->SetOperation(GizmoOperation::Rotate);
+			return true;
+		case Key::R:
+			m_GizmoController->SetOperation(GizmoOperation::Scale);
+			return true;
+		default:
+			return false;
+		}
 	}
 
 	void ViewportInstance::SetActive(bool isActive)
@@ -253,7 +285,6 @@ namespace Kita {
 
 			m_SelectionContext->SetSelectionType(EditorSelectionItemType::SceneObject);
 			m_SelectionContext->SetSelctionObject(selectedObject);
-			SyncCameraFocusTargetFromSelection();
 			return;
 		}
 
@@ -283,37 +314,8 @@ namespace Kita {
 		default:
 			KITA_CORE_INFO("Viewport pick resolve: pickId={} -> selection type none", pickId);
 			m_SelectionContext->Clear();
-			m_LastFocusSelectionUUID = 0;
 			return;
 		}
-	}
-
-	void ViewportInstance::SyncCameraFocusTargetFromSelection()
-	{
-		if (!m_Panel || !m_SelectionContext)
-			return;
-
-		if (m_SelectionContext->GetSelectionType() != EditorSelectionItemType::SceneObject)
-		{
-			m_LastFocusSelectionUUID = 0;
-			return;
-		}
-
-		Object selectedObject = m_SelectionContext->GetSelectionItemHandle().m_SelectionObject;
-		if (!selectedObject || !selectedObject.HasComponent<Transform>())
-		{
-			m_LastFocusSelectionUUID = 0;
-			return;
-		}
-
-		const uint64_t selectedUUID = selectedObject.GetUUID();
-		if (m_LastFocusSelectionUUID == selectedUUID)
-			return;
-
-		if (m_ViewportCamera)
-			m_ViewportCamera->SetFocusTarget(GetObjectFocusPoint(selectedObject));
-
-		m_LastFocusSelectionUUID = selectedUUID;
 	}
 
 	void ViewportInstance::FocusCameraOnSelectedObject()
