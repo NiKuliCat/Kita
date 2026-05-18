@@ -29,7 +29,9 @@ namespace Kita {
 
 
 		const glm::mat4& GetViewMatrix() const { return m_ViewMatrix; }
+
 		const glm::mat4& GetProjectionMatrix() const { return m_ProjectionMatrix; }
+		const glm::mat4& GetGizmoProjection() const;
 		glm::mat4 GetViewProjectionMatrix() const { return m_ProjectionMatrix * m_ViewMatrix; }
 
 		glm::vec3 GetUpDirection() const;
@@ -84,6 +86,6 @@ namespace Kita {
 		float m_ZoomSpeedScale = 1.0f;
 
 		float  m_ViewportWidth = 1280.0f, m_ViewportHeight = 720.0f;
-		glm::mat4 m_ViewMatrix, m_ProjectionMatrix;
+		glm::mat4 m_ViewMatrix, m_ProjectionMatrix, m_GizmoProjectionMatrix;
 	};
 }

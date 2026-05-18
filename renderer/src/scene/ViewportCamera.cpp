@@ -23,6 +23,8 @@ namespace Kita {
 	{
 		m_ProjectionMatrix = glm::perspectiveRH_ZO(glm::radians(m_FOV), m_Aspect, m_Near, m_Far);
 		m_ProjectionMatrix[1][1] *= -1.0f;
+		m_GizmoProjectionMatrix = m_ProjectionMatrix;
+		m_GizmoProjectionMatrix[1][1] *= -1.0f;
 		m_Position = CalculatePosition();
 		UpdateViewMatrix();
 	}
@@ -89,6 +91,11 @@ namespace Kita {
 		UpdateViewMatrix();
 	}
 
+	const glm::mat4& ViewportCamera::GetGizmoProjection() const
+	{
+		return m_GizmoProjectionMatrix;
+	}
+
 	glm::vec3 ViewportCamera::GetUpDirection() const
 	{
 		return glm::rotate(GetOrientation(), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -116,6 +123,8 @@ namespace Kita {
 		m_Aspect = m_ViewportWidth / m_ViewportHeight;
 		m_ProjectionMatrix = glm::perspectiveRH_ZO(glm::radians(m_FOV), m_Aspect, m_Near, m_Far);
 		m_ProjectionMatrix[1][1] *= -1.0f;
+		m_GizmoProjectionMatrix = m_ProjectionMatrix;
+		m_GizmoProjectionMatrix[1][1] *= -1.0f;
 	}
 
 	void ViewportCamera::UpdateViewMatrix()

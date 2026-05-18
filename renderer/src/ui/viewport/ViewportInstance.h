@@ -1,7 +1,11 @@
 #pragma once
 
 #include <EngineCore.h>
+
 #include "scene/EditorRenderer.h"
+#include "scene/ViewportCamera.h"
+
+#include "ui/viewport/EditorGizmoController.h"
 #include "ui/viewport/EditorPickRegistry.h"
 #include "ui/viewport/EditorViewportPanel.h"
 #include "ui/viewport/EditorViewportSurface.h"
@@ -44,9 +48,11 @@ namespace Kita {
 		EditorViewportPanel* GetPanel() const { return m_Panel.get(); }
 		EditorViewportSurface* GetSurface() const { return m_Surface.get(); }
 		EditorRenderer* GetRenderer() const { return m_Renderer.get(); }
+		ViewportCamera* GetViewportCamera() const { return m_ViewportCamera.get(); }
 
 	private:
 		Object FindSceneObjectByUUID(UUID uuid) const;
+		EditorGizmoContext BuildGizmoContext() const;
 		void ProcessPendingPickRequest();
 		void ApplyPickResult(uint32_t pickId);
 		void SyncCameraFocusTargetFromSelection();
@@ -58,7 +64,9 @@ namespace Kita {
 	private:
 		VulkanContext* m_Context = nullptr;
 		Ref<Scene> m_SceneContext = nullptr;
+		Unique<ViewportCamera> m_ViewportCamera = nullptr;
 		Ref<EditorSelectionContext> m_SelectionContext = nullptr;
+		Unique<EditorGizmoController> m_GizmoController = nullptr;
 		Unique<EditorPickRegistry> m_PickRegistry = nullptr;
 		Unique<EditorViewportPanel> m_Panel = nullptr;
 		Unique<EditorViewportSurface> m_Surface = nullptr;

@@ -10,7 +10,7 @@
 #include "ui/ThumbnailCache.h"
 #include "ui/UIColorPanel.h"
 #include "ui/viewport/ViewportInstance.h"
-namespace Kita {
+namespace Kita{
 
 	class EditorLayer :public Layer{
 

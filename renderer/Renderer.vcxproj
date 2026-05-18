@@ -192,6 +192,7 @@ IF EXIST "C:\VulkanSDK\1.4.341.1\Bin\slang.dll"\ (xcopy /Q /E /Y /I "C:\VulkanSD
     <ClInclude Include="src\ui\asset\MaterialAssetEditor.h" />
     <ClInclude Include="src\ui\asset\MeshAssetEditor.h" />
     <ClInclude Include="src\ui\asset\TextureAssetEditor.h" />
+    <ClInclude Include="src\ui\viewport\EditorGizmoController.h" />
     <ClInclude Include="src\ui\viewport\EditorPickRegistry.h" />
     <ClInclude Include="src\ui\viewport\EditorViewportPanel.h" />
     <ClInclude Include="src\ui\viewport\EditorViewportSurface.h" />
@@ -222,6 +223,7 @@ IF EXIST "C:\VulkanSDK\1.4.341.1\Bin\slang.dll"\ (xcopy /Q /E /Y /I "C:\VulkanSD
     <ClCompile Include="src\ui\asset\MaterialAssetEditor.cpp" />
     <ClCompile Include="src\ui\asset\MeshAssetEditor.cpp" />
     <ClCompile Include="src\ui\asset\TextureAssetEditor.cpp" />
+    <ClCompile Include="src\ui\viewport\EditorGizmoController.cpp" />
     <ClCompile Include="src\ui\viewport\EditorPickRegistry.cpp" />
     <ClCompile Include="src\ui\viewport\EditorViewportPanel.cpp" />
     <ClCompile Include="src\ui\viewport\EditorViewportSurface.cpp" />

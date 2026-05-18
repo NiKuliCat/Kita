@@ -1,7 +1,7 @@
-#include "renderer_pch.h"
-#include "ViewportInstance.h"
-#include "component/Transform.h"
-#include "core/Input.h"
+	#include "renderer_pch.h"
+	#include "ViewportInstance.h"
+	#include "component/Transform.h"
+	#include "core/Input.h"
 
 namespace Kita {
 
@@ -15,17 +15,18 @@ namespace Kita {
 		: m_Context(&context)
 		, m_SceneContext(scene)
 		, m_SelectionContext(selectionContext)
+		, m_ViewportCamera(CreateUnique<ViewportCamera>())
 	{
+		m_GizmoController = CreateUnique<EditorGizmoController>();
 		m_PickRegistry = CreateUnique<EditorPickRegistry>();
 		m_Panel = CreateUnique<EditorViewportPanel>(std::move(windowName));
 
 		EditorViewportSurface::CreateInfo surfaceInfo{};
-		if (m_Panel)
-			surfaceInfo.Name = m_Panel->GetViewportCamera() ? "EditorViewportSurface" : "EditorViewportSurface";
+		surfaceInfo.Name = "EditorViewportSurface";
 
 		m_Surface = CreateUnique<EditorViewportSurface>(context, surfaceInfo);
 
-		if (m_Panel && m_Surface && m_Panel->GetViewportCamera())
+		if (m_Surface && m_ViewportCamera)
 		{
 			m_Renderer = CreateUnique<EditorRenderer>(
 				context,
@@ -34,7 +35,7 @@ namespace Kita {
 				resFactory,
 				pipelineFactory,
 				scene,
-				*m_Panel->GetViewportCamera(),
+				*m_ViewportCamera,
 				*m_PickRegistry);
 		}
 	}
@@ -50,11 +51,15 @@ namespace Kita {
 		m_Renderer.reset();
 		m_Surface.reset();
 		m_Panel.reset();
+		m_GizmoController.reset();
 		m_PickRegistry.reset();
 	}
 
 	void ViewportInstance::OnUpdate(Timestep ts)
 	{
+		if (m_ViewportCamera)
+			m_ViewportCamera->OnUpdate(ts.GetSecondsF());
+
 		SyncViewportOverlaySettings();
 		SyncCameraFocusTargetFromSelection();
 
@@ -71,12 +76,13 @@ namespace Kita {
 
 	void ViewportInstance::OnRender()
 	{
-		if (!m_Panel || !m_Surface || !m_Renderer)
+		if (!m_Panel || !m_Surface || !m_Renderer || !m_ViewportCamera)
 			return;
 
 		ProcessPendingPickRequest();
 
-		const glm::vec2& desiredSize = m_Panel->GetDesiredViewportSize();
+		const glm::vec2& desiredSize = m_Panel->GetFrameState().ViewportSize;
+		m_ViewportCamera->SetViewport(desiredSize.x, desiredSize.y);
 		m_Surface->EnsureSize(
 			static_cast<uint32_t>(std::max(1.0f, desiredSize.x)),
 			static_cast<uint32_t>(std::max(1.0f, desiredSize.y)));
@@ -92,13 +98,38 @@ namespace Kita {
 		if (!m_Panel)
 			return;
 
-		m_Panel->OnImGuiRender();
+		m_Panel->OnImGuiRender([this](const ViewportPanelFrameState&)
+		{
+			if (!m_GizmoController)
+				return;
+
+			m_GizmoController->OnImGuiRender(BuildGizmoContext());
+			m_Panel->SetGizmoInteractionState(
+				m_GizmoController->IsOver(),
+				m_GizmoController->IsUsing());
+		});
 	}
 
 	void ViewportInstance::OnEvent(Event& event)
 	{
 		if (m_Panel)
 			m_Panel->OnEvent(event);
+
+		const EditorGizmoContext gizmoContext = BuildGizmoContext();
+		if (m_GizmoController)
+			m_GizmoController->OnEvent(event, gizmoContext);
+
+		const bool gizmoCapturingMouse =
+			m_GizmoController &&
+			event.IsInCategory(EventCategory::EventMouse) &&
+			m_GizmoController->WantsCaptureMouse();
+		if (gizmoCapturingMouse)
+			return;
+
+		if (!m_ViewportCamera || !m_Panel || !m_Panel->ShouldHandleEvent(event))
+			return;
+
+		m_ViewportCamera->OnEvent(event);
 	}
 
 	void ViewportInstance::SetActive(bool isActive)
@@ -140,16 +171,49 @@ namespace Kita {
 		return {};
 	}
 
+	EditorGizmoContext ViewportInstance::BuildGizmoContext() const
+	{
+		EditorGizmoContext context{};
+		context.Camera = m_ViewportCamera.get();
+		context.ViewportActive = m_Panel != nullptr;
+
+		if (m_Panel)
+		{
+			const ViewportPanelFrameState& frameState = m_Panel->GetFrameState();
+			context.ViewportBoundsMin = frameState.BoundsMin;
+			context.ViewportBoundsMax = frameState.BoundsMax;
+			context.ViewportFocused = frameState.IsFocused;
+			context.ViewportHovered = frameState.IsImageHovered;
+			context.ViewportActive = frameState.IsOpen;
+		}
+
+		if (m_SelectionContext &&
+			m_SelectionContext->GetSelectionType() == EditorSelectionItemType::SceneObject)
+		{
+			context.SelectedObject = m_SelectionContext->GetSelectionItemHandle().m_SelectionObject;
+		}
+
+		return context;
+	}
+
 	void ViewportInstance::ProcessPendingPickRequest()
 	{
 		if (!m_Panel || !m_Surface || !m_SelectionContext)
 			return;
 
-		if (!m_Panel->HasPendingPickRequest())
+		if (m_GizmoController && m_GizmoController->WantsCaptureMouse())
+			return;
+
+		if (!m_Panel->GetFrameState().WantsPick)
 			return;
 
 		const ViewportPickRequest request = m_Panel->ConsumePickRequest();
 		const uint32_t pickId = m_Surface->ReadPickingPixel(request.PixelX, request.PixelY);
+		KITA_CORE_INFO(
+			"Viewport pick readback: pixel=({}, {}), pickId={}",
+			request.PixelX,
+			request.PixelY,
+			pickId);
 		ApplyPickResult(pickId);
 	}
 
@@ -161,6 +225,7 @@ namespace Kita {
 		EditorPickEntry entry{};
 		if (!m_PickRegistry || !m_PickRegistry->TryGetEntry(pickId, entry))
 		{
+			KITA_CORE_INFO("Viewport pick resolve: pickId={} -> no registry entry", pickId);
 			m_SelectionContext->Clear();
 			return;
 		}
@@ -172,9 +237,19 @@ namespace Kita {
 			Object selectedObject = FindSceneObjectByUUID(entry.SceneObjectUUID);
 			if (!selectedObject)
 			{
+				KITA_CORE_INFO(
+					"Viewport pick resolve: pickId={} -> scene UUID={} but object not found",
+					pickId,
+					static_cast<uint64_t>(entry.SceneObjectUUID));
 				m_SelectionContext->Clear();
 				return;
 			}
+
+			KITA_CORE_INFO(
+				"Viewport pick resolve: pickId={} -> scene UUID={} -> entity={}",
+				pickId,
+				static_cast<uint64_t>(entry.SceneObjectUUID),
+				static_cast<uint32_t>(static_cast<entt::entity>(selectedObject)));
 
 			m_SelectionContext->SetSelectionType(EditorSelectionItemType::SceneObject);
 			m_SelectionContext->SetSelctionObject(selectedObject);
@@ -186,9 +261,18 @@ namespace Kita {
 		{
 			if (!Asset::IsValidHandle(entry.SelectedAssetHandle))
 			{
+				KITA_CORE_INFO(
+					"Viewport pick resolve: pickId={} -> asset handle={} but invalid",
+					pickId,
+					entry.SelectedAssetHandle);
 				m_SelectionContext->Clear();
 				return;
 			}
+
+			KITA_CORE_INFO(
+				"Viewport pick resolve: pickId={} -> asset handle={}",
+				pickId,
+				entry.SelectedAssetHandle);
 
 			m_SelectionContext->SetSelectionType(EditorSelectionItemType::Asset);
 			m_SelectionContext->SetSelectionAsset(entry.SelectedAssetHandle);
@@ -197,6 +281,7 @@ namespace Kita {
 
 		case EditorSelectionItemType::None:
 		default:
+			KITA_CORE_INFO("Viewport pick resolve: pickId={} -> selection type none", pickId);
 			m_SelectionContext->Clear();
 			m_LastFocusSelectionUUID = 0;
 			return;
@@ -225,8 +310,8 @@ namespace Kita {
 		if (m_LastFocusSelectionUUID == selectedUUID)
 			return;
 
-		if (ViewportCamera* camera = m_Panel->GetViewportCamera())
-			camera->SetFocusTarget(GetObjectFocusPoint(selectedObject));
+		if (m_ViewportCamera)
+			m_ViewportCamera->SetFocusTarget(GetObjectFocusPoint(selectedObject));
 
 		m_LastFocusSelectionUUID = selectedUUID;
 	}
@@ -243,9 +328,9 @@ namespace Kita {
 		if (!selectedObject || !selectedObject.HasComponent<Transform>())
 			return;
 
-		if (ViewportCamera* camera = m_Panel->GetViewportCamera())
+		if (m_ViewportCamera)
 		{
-			camera->FocusOnPoint(
+			m_ViewportCamera->FocusOnPoint(
 				GetObjectFocusPoint(selectedObject),
 				GetObjectFocusRadius(selectedObject));
 		}
@@ -258,11 +343,11 @@ namespace Kita {
 
 		const ViewportOverlaySettings& settings = m_Panel->GetOverlaySettings();
 
-		if (ViewportCamera* camera = m_Panel->GetViewportCamera())
+		if (m_ViewportCamera)
 		{
-			camera->SetFlightSpeedScale(settings.FlightSpeedScale);
-			camera->SetRotationSpeedValue(settings.RotationSpeed);
-			camera->SetZoomSpeedScale(settings.ZoomSpeedScale);
+			m_ViewportCamera->SetFlightSpeedScale(settings.FlightSpeedScale);
+			m_ViewportCamera->SetRotationSpeedValue(settings.RotationSpeed);
+			m_ViewportCamera->SetZoomSpeedScale(settings.ZoomSpeedScale);
 		}
 
 		if (m_Renderer)

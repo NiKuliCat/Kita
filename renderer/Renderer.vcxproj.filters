@@ -92,6 +92,9 @@
     <ClInclude Include="src\ui\asset\TextureAssetEditor.h">
       <Filter>ui\asset</Filter>
     </ClInclude>
+    <ClInclude Include="src\ui\viewport\EditorGizmoController.h">
+      <Filter>ui\viewport</Filter>
+    </ClInclude>
     <ClInclude Include="src\ui\viewport\EditorPickRegistry.h">
       <Filter>ui\viewport</Filter>
     </ClInclude>
@@ -165,6 +168,9 @@
     </ClCompile>
     <ClCompile Include="src\ui\asset\TextureAssetEditor.cpp">
       <Filter>ui\asset</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\viewport\EditorGizmoController.cpp">
+      <Filter>ui\viewport</Filter>
     </ClCompile>
     <ClCompile Include="src\ui\viewport\EditorPickRegistry.cpp">
       <Filter>ui\viewport</Filter>

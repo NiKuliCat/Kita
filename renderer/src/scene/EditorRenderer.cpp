@@ -41,7 +41,7 @@ namespace Kita {
 
 	void EditorRenderer::OnDestroy()
 	{
-		m_GridDepthDescriptorSet.reset();
+		m_GridDepthDescriptorSets.clear();
 		m_GridVertexShader.reset();
 		m_GridFragmentShader.reset();
 	}
@@ -72,13 +72,21 @@ namespace Kita {
 		if (!m_Context || !m_EditorGridPass)
 			return;
 
+		const uint32_t frameCount = std::max(1u, m_Context->GetFramesInFlight());
+		m_GridDepthDescriptorSets.clear();
+		m_GridDepthDescriptorSets.resize(frameCount);
+
 		VulkanDescriptorSet::CreateInfo descriptorInfo{};
 		descriptorInfo.Name = "EditorGridDepthSet";
 		descriptorInfo.Bindings = {
 			{ 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT }
 		};
-		m_GridDepthDescriptorSet = CreateUnique<VulkanDescriptorSet>(*m_Context, descriptorInfo);
-		m_EditorGridPass->SetDepthDescriptorSet(m_GridDepthDescriptorSet.get());
+		for (uint32_t i = 0; i < frameCount; ++i)
+		{
+			VulkanDescriptorSet::CreateInfo perFrameDescriptorInfo = descriptorInfo;
+			perFrameDescriptorInfo.Name = descriptorInfo.Name + "_" + std::to_string(i);
+			m_GridDepthDescriptorSets[i] = CreateUnique<VulkanDescriptorSet>(*m_Context, perFrameDescriptorInfo);
+		}
 
 		const AssetHandle gridShaderHandle = EditorProjectBootstrap::GetPreLoadShaderHandle("grid");
 		if (!Asset::IsValidHandle(gridShaderHandle))
@@ -98,12 +106,22 @@ namespace Kita {
 		m_GridFragmentShader = shaderBundle.FragmentShader;
 	}
 
-	void EditorRenderer::UpdateGridDepthBinding(VulkanRenderTarget& rt)
+	VulkanDescriptorSet* EditorRenderer::GetGridDepthDescriptorSet(uint32_t frameIndex)
 	{
-		if (!m_GridDepthDescriptorSet || !rt.HasDepthAttachment())
+		if (m_GridDepthDescriptorSets.empty())
+			return nullptr;
+
+		KITA_CORE_ASSERT(frameIndex < m_GridDepthDescriptorSets.size(), "EditorRenderer grid depth descriptor frame index out of range");
+		return m_GridDepthDescriptorSets[frameIndex].get();
+	}
+
+	void EditorRenderer::UpdateGridDepthBinding(uint32_t frameIndex, VulkanRenderTarget& rt)
+	{
+		VulkanDescriptorSet* descriptorSet = GetGridDepthDescriptorSet(frameIndex);
+		if (!descriptorSet || !rt.HasDepthAttachment())
 			return;
 
-		m_GridDepthDescriptorSet->WriteImageSampler(
+		descriptorSet->WriteImageSampler(
 			0,
 			rt.GetDepthDescriptorInfo(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL));
 	}
@@ -157,8 +175,8 @@ namespace Kita {
 		request.DescriptorSetLayouts = {
 			m_SceneBindings.GetDescriptorSet(0).GetLayout()
 		};
-		if (m_GridDepthDescriptorSet)
-			request.DescriptorSetLayouts.push_back(m_GridDepthDescriptorSet->GetLayout());
+		if (VulkanDescriptorSet* descriptorSet = GetGridDepthDescriptorSet(0))
+			request.DescriptorSetLayouts.push_back(descriptorSet->GetLayout());
 		request.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 		request.PolygonMode = VK_POLYGON_MODE_FILL;
 		request.CullMode = VK_CULL_MODE_NONE;
@@ -314,11 +332,13 @@ namespace Kita {
 
 		RenderPassContext passContext(*m_Context, cmd, rt);
 		RenderPassContext pickingPassContext(*m_Context, cmd, pickingRt);
+		const uint32_t frameIndex = passContext.GetFrameIndex();
 
 		m_ForwardOpaquePass->Execute(passContext);
 		if (m_EditorGridPass)
 		{
-			UpdateGridDepthBinding(rt);
+			UpdateGridDepthBinding(frameIndex, rt);
+			m_EditorGridPass->SetDepthDescriptorSet(GetGridDepthDescriptorSet(frameIndex));
 			m_EditorGridPass->SetPipeline(GetGridPipeline(rt));
 			m_EditorGridPass->SetPushConstants(m_GridPushConstants);
 			if (m_IsGridEnabled)

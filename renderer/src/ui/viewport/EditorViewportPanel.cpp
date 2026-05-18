@@ -2,7 +2,6 @@
 #include "EditorViewportPanel.h"
 
 #include "imgui.h"
-#include "ImGuizmo.h"
 #include <imgui_internal.h>
 
 #include <algorithm>
@@ -34,23 +33,26 @@ namespace  Kita {
 
 
 	EditorViewportPanel::EditorViewportPanel(std::string windowName)
-		: m_WindowName(std::move(windowName)),m_ViewportCamera(CreateUnique<ViewportCamera>())
+		: m_WindowName(std::move(windowName))
 	{
-		m_GizmoControlType = ImGuizmo::OPERATION::TRANSLATE;
 	}
 
 	void EditorViewportPanel::OnUpdata(Timestep ts)
 	{
-		if (!m_ViewportCamera || !m_IsActive)
-			return;
-
-		m_ViewportCamera->OnUpdate(ts.GetSecondsF());
+		(void)ts;
 	}
 
-	void EditorViewportPanel::OnImGuiRender()
+	const ViewportPanelFrameState& EditorViewportPanel::OnImGuiRender(const ViewportContentCallback& viewportContentCallback)
 	{
-		if (!m_IsOpen)
-			return;
+		m_FrameState.WantsPick = false;
+		m_FrameState.PickRequest = {};
+		m_FrameState.IsOverlayHovered = false;
+		m_FrameState.IsWindowHovered = false;
+		m_FrameState.IsFocused = false;
+		m_FrameState.IsImageHovered = false;
+
+		if (!m_FrameState.IsOpen)
+			return m_FrameState;
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 
@@ -91,36 +93,34 @@ namespace  Kita {
 		{
 			if (ImGui::MenuItem("Close"))
 			{
-				m_IsOpen = false;
-				m_IsHovered = false;
-				m_IsFocused = false;
-				m_IsImageHovered = false;
+				m_FrameState.IsOpen = false;
+				m_FrameState.IsWindowHovered = false;
+				m_FrameState.IsFocused = false;
+				m_FrameState.IsImageHovered = false;
 			}
 			ImGui::EndPopup();
 		}
 
-		if (!m_IsOpen)
+		if (!m_FrameState.IsOpen)
 		{
 			ImGui::End();
 			ImGui::PopStyleVar();
-			return;
+			return m_FrameState;
 		}
 
-		m_IsHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows);
-		m_IsFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
-		m_IsOverlayHovered = false;
+		m_FrameState.IsWindowHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows);
+		m_FrameState.IsFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
+		m_FrameState.IsOverlayHovered = false;
 
 		const ImVec2 contentSize = ImGui::GetContentRegionAvail();
 		if (contentSize.x > 1.0f && contentSize.y > 1.0f)
 		{
-			m_ViewportSize = { contentSize.x, contentSize.y };
-			if (m_ViewportCamera)
-				m_ViewportCamera->SetViewport(m_ViewportSize.x, m_ViewportSize.y);
+			m_FrameState.ViewportSize = { contentSize.x, contentSize.y };
 		}
 
 		const ImVec2 imageSize(
-			std::max(1.0f, m_ViewportSize.x),
-			std::max(1.0f, m_ViewportSize.y));
+			std::max(1.0f, m_FrameState.ViewportSize.x),
+			std::max(1.0f, m_FrameState.ViewportSize.y));
 
 		if (m_DisplayTextureID)
 		{
@@ -136,88 +136,90 @@ namespace  Kita {
 			DrawMissingTexturePlaceholder(ImGui::GetItemRectMin(), ImGui::GetItemRectMax());
 		}
 
-		m_IsImageHovered = ImGui::IsItemHovered();
 		const ImVec2 itemMin = ImGui::GetItemRectMin();
 		const ImVec2 itemMax = ImGui::GetItemRectMax();
-		m_ViewportBounds[0] = { itemMin.x, itemMin.y };
-		m_ViewportBounds[1] = { itemMax.x, itemMax.y };
+		m_FrameState.BoundsMin = { itemMin.x, itemMin.y };
+		m_FrameState.BoundsMax = { itemMax.x, itemMax.y };
+		m_FrameState.IsImageHovered = m_FrameState.IsWindowHovered && IsMouseInsideImageBounds();
+		if (viewportContentCallback)
+			viewportContentCallback(m_FrameState);
 		DrawViewportOverlay();
-		if (m_IsOverlayHovered)
-			m_IsImageHovered = false;
+		if (m_FrameState.IsOverlayHovered)
+			m_FrameState.IsImageHovered = false;
+
+		const bool leftClicked = ImGui::IsMouseClicked(ImGuiMouseButton_Left);
+		if (leftClicked && m_IsActive && !m_FrameState.IsImageHovered)
+		{
+			KITA_CORE_INFO(
+				"Viewport pick suppressed: leftClicked=1 active=1 imageHovered=0 windowHovered={} overlayHovered={} gizmoOver={} gizmoUsing={}",
+				m_FrameState.IsWindowHovered,
+				m_FrameState.IsOverlayHovered,
+				m_GizmoOver,
+				m_GizmoUsing);
+		}
+		else if (leftClicked && m_IsActive && m_FrameState.IsImageHovered && m_GizmoUsing)
+		{
+			KITA_CORE_INFO(
+				"Viewport pick suppressed: leftClicked=1 active=1 imageHovered=1 gizmoUsing=1 gizmoOver={}",
+				m_GizmoOver);
+		}
 
 		if (m_IsActive &&
-			m_IsImageHovered &&
-			ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
-			!ImGuizmo::IsOver())
+			m_FrameState.IsImageHovered &&
+			leftClicked &&
+			!m_GizmoUsing)
 		{
 			RequestPickAtMousePosition();
 		}
 
 		ImGui::End();
 		ImGui::PopStyleVar();
+		return m_FrameState;
 	}
 
 	void EditorViewportPanel::OnEvent(Event& event)
 	{
-		if (!m_ViewportCamera)
-			return;
+		(void)event;
+	}
 
+	bool EditorViewportPanel::ShouldHandleEvent(Event& event) const
+	{
 		bool allowInput = false;
 		if (event.IsInCategory(EventCategory::EventMouse))
-			allowInput = m_IsActive && m_IsImageHovered;
+			allowInput = m_IsActive && m_FrameState.IsImageHovered;
 		else if (event.IsInCategory(EventCategory::EventKeyboard))
-			allowInput = m_IsActive && (m_IsFocused || m_IsImageHovered);
+			allowInput = m_IsActive && (m_FrameState.IsFocused || m_FrameState.IsImageHovered);
 		else
-			allowInput = m_IsActive && (m_IsImageHovered || m_IsFocused);
+			allowInput = m_IsActive && (m_FrameState.IsImageHovered || m_FrameState.IsFocused);
 
-		if (!allowInput)
-			return;
-
-		EventDisPatcher dispatcher(event);
-		dispatcher.Dispatcher<KeyPressedEvent>(BIND_EVENT_FUNC(EditorViewportPanel::OnKeyPressed));
-		dispatcher.Dispatcher<MouseButtonPressedEvent>(BIND_EVENT_FUNC(EditorViewportPanel::OnMouseButtonPressed));
-		m_ViewportCamera->OnEvent(event);
+		return allowInput;
 	}
 
 	ViewportPickRequest EditorViewportPanel::ConsumePickRequest()
 	{
-		ViewportPickRequest request = m_PendingPickRequest;
-		m_PendingPickRequest = {};
-		m_HasPendingPickRequest = false;
+		ViewportPickRequest request = m_FrameState.PickRequest;
+		m_FrameState.PickRequest = {};
+		m_FrameState.WantsPick = false;
 		return request;
 	}
 
 	bool EditorViewportPanel::OnKeyPressed(KeyPressedEvent& event)
 	{
-		if (event.IsRepeat())
-			return false;
-
-		switch (event.GetKeyCode())
-		{
-		case Key::W:
-			m_GizmoControlType = ImGuizmo::OPERATION::TRANSLATE;
-			break;
-		case Key::E:
-			m_GizmoControlType = ImGuizmo::OPERATION::ROTATE;
-			break;
-		case Key::R:
-			m_GizmoControlType = ImGuizmo::OPERATION::SCALE;
-			break;
-		}
-
+		(void)event;
 		return false;
 	}
 
 	bool EditorViewportPanel::OnMouseButtonPressed(MouseButtonPressedEvent& event)
 	{
+		(void)event;
 		return false;
 	}
 
 	void EditorViewportPanel::DrawViewportOverlay()
 	{
 		ImGui::SetCursorScreenPos(ImVec2(
-			m_ViewportBounds[0].x + kOverlayPadding,
-			m_ViewportBounds[0].y + kOverlayPadding));
+			m_FrameState.BoundsMin.x + kOverlayPadding,
+			m_FrameState.BoundsMin.y + kOverlayPadding));
 
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 6.0f);
 		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.10f, 0.11f, 0.13f, 0.92f));
@@ -226,14 +228,14 @@ namespace  Kita {
 
 		if (ImGui::Button(m_OverlaySettings.ShowGrid ? "[#]" : "[ ]", ImVec2(kOverlayButtonSize, kOverlayButtonSize)))
 			m_OverlaySettings.ShowGrid = !m_OverlaySettings.ShowGrid;
-		m_IsOverlayHovered |= ImGui::IsItemHovered();
+		m_FrameState.IsOverlayHovered |= ImGui::IsItemHovered();
 		if (ImGui::IsItemHovered())
 			ImGui::SetTooltip("Toggle Grid");
 
 		ImGui::SameLine(0.0f, 6.0f);
 		ImGui::Button("[=]", ImVec2(kOverlayButtonSize, kOverlayButtonSize));
 		const bool settingsHovered = ImGui::IsItemHovered();
-		m_IsOverlayHovered |= settingsHovered;
+		m_FrameState.IsOverlayHovered |= settingsHovered;
 		if (settingsHovered)
 			ImGui::SetTooltip("Viewport Settings");
 
@@ -264,7 +266,7 @@ namespace  Kita {
 		{
 			menuVisible = ImGui::Begin("ViewportOverlaySettingsMenu", &m_ShowOverlaySettingsMenu, menuFlags);
 			menuHovered = ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByActiveItem);
-			m_IsOverlayHovered |= menuHovered;
+			m_FrameState.IsOverlayHovered |= menuHovered;
 			if (menuHovered)
 				m_OverlaySettingsKeepAliveUntil = currentTime + 0.20;
 
@@ -305,11 +307,11 @@ namespace  Kita {
 	void EditorViewportPanel::RequestPickAtMousePosition()
 	{
 		const ImVec2 mousePos = ImGui::GetMousePos();
-		const float localX = mousePos.x - m_ViewportBounds[0].x;
-		const float localY = mousePos.y - m_ViewportBounds[0].y;
+		const float localX = mousePos.x - m_FrameState.BoundsMin.x;
+		const float localY = mousePos.y - m_FrameState.BoundsMin.y;
 
-		const uint32_t width = static_cast<uint32_t>(std::max(1.0f, m_ViewportSize.x));
-		const uint32_t height = static_cast<uint32_t>(std::max(1.0f, m_ViewportSize.y));
+		const uint32_t width = static_cast<uint32_t>(std::max(1.0f, m_FrameState.ViewportSize.x));
+		const uint32_t height = static_cast<uint32_t>(std::max(1.0f, m_FrameState.ViewportSize.y));
 
 		const uint32_t pixelX = std::min(
 			static_cast<uint32_t>(std::max(0.0f, localX)),
@@ -317,16 +319,30 @@ namespace  Kita {
 		const uint32_t pixelY = std::min(
 			static_cast<uint32_t>(std::max(0.0f, localY)),
 			height - 1);
+		const uint32_t flippedPixelY = height - 1 - pixelY;
 
-		m_PendingPickRequest = { pixelX, pixelY };
-		m_HasPendingPickRequest = true;
+		m_FrameState.PickRequest = { pixelX, flippedPixelY };
+		m_FrameState.WantsPick = true;
+
+		KITA_CORE_INFO(
+			"Viewport pick click: screen=({:.2f}, {:.2f}), local=({:.2f}, {:.2f}), viewport=({}, {}), displayPixel=({}, {}), pickingPixel=({}, {})",
+			mousePos.x,
+			mousePos.y,
+			localX,
+			localY,
+			width,
+			height,
+			pixelX,
+			pixelY,
+			pixelX,
+			flippedPixelY);
 	}
 
 	bool EditorViewportPanel::IsMouseInsideImageBounds() const
 	{
 		auto [mx, my] = ImGui::GetMousePos();
-		return mx >= m_ViewportBounds[0].x && mx < m_ViewportBounds[1].x
-			&& my >= m_ViewportBounds[0].y && my < m_ViewportBounds[1].y;
+		return mx >= m_FrameState.BoundsMin.x && mx < m_FrameState.BoundsMax.x
+			&& my >= m_FrameState.BoundsMin.y && my < m_FrameState.BoundsMax.y;
 	}
 
 }
