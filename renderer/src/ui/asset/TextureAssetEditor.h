@@ -2,6 +2,7 @@
 
 #include "IAssetEditor.h"
 #include "ui/ThumbnailCache.h"
+#include "ui/UIAttributeUtil.h"
 
 namespace Kita {
 
@@ -37,6 +38,7 @@ namespace Kita {
 		TextureImportSettings m_SavedCopy{};
 		ThumbnailCache* m_ThumbnailCache = nullptr;
 		VulkanResourceFactory* m_ResourceFactory = nullptr;
+		UIAttributeUtil::TableStyle m_TableStyle = UIAttributeUtil::CreateDefaultTableStyle();
 	};
 
 }

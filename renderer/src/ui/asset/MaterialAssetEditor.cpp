@@ -15,10 +15,11 @@ namespace Kita {
 	namespace
 	{
 		constexpr float materialPropertyRowHeight = 30.0f;
-		constexpr float materialToolbarHeight = 36.0f;
+		constexpr float materialToolbarHeight = 48.0f;
 		constexpr float materialBodyHorizontalPadding = 12.0f;
-		const ImVec4 materialContentBgColor = ImVec4(0.10f, 0.10f, 0.10f, 1.0f);
-		const ImVec4 materialBarBgColor = ImVec4(0.13f, 0.13f, 0.13f, 1.0f);
+		const ImVec4 materialContentBgColor = ImVec4(0.12f, 0.12f, 0.13f, 1.0f);
+		const ImVec4 materialBarBgColor = ImVec4(0.12f, 0.12f, 0.13f, 1.0f);
+		const ImVec4 materialHeaderAccentColor = ImVec4(0.18f, 0.18f, 0.20f, 1.0f);
 	}
 
 	MaterialAssetEditor::MaterialAssetEditor(AssetHandle handle, ThumbnailCache* thumbnailCache, VulkanResourceFactory* resourceFactory)
@@ -115,17 +116,29 @@ namespace Kita {
 	void MaterialAssetEditor::DrawToolbar()
 	{
 		ImGui::PushStyleColor(ImGuiCol_ChildBg, materialBarBgColor);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(14.0f, 8.0f));
 		ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 0.0f);
 		ImGui::BeginChild("##MaterialEditorToolbar", ImVec2(0.0f, materialToolbarHeight), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-		ImGui::SetCursorPos(ImVec2(10.0f, 6.0f));
+
+		ImDrawList* drawList = ImGui::GetWindowDrawList();
+		const ImVec2 headerMin = ImGui::GetWindowPos();
+		const ImVec2 headerMax(headerMin.x + ImGui::GetWindowSize().x, headerMin.y + ImGui::GetWindowSize().y);
+		drawList->AddRectFilled(headerMin, ImVec2(headerMax.x, headerMin.y + 2.0f), ImGui::ColorConvertFloat4ToU32(materialHeaderAccentColor));
+
+		ImGui::AlignTextToFramePadding();
+		ImGui::TextUnformatted("Material");
+		ImGui::SameLine();
+		ImGui::TextDisabled("%s", m_DisplayName.c_str());
+
+		const float buttonWidth = 74.0f;
+		ImGui::SameLine(ImMax(0.0f, ImGui::GetContentRegionAvail().x - buttonWidth * 2.0f - 12.0f));
 
 		const bool canSaveNow = CanSave() && IsDirty();
 		if (!canSaveNow)
 		{
 			ImGui::BeginDisabled();
 		}
-		if (ImGui::Button("Save"))
+		if (ImGui::Button("Save", ImVec2(buttonWidth, 0.0f)))
 		{
 			Save();
 		}
@@ -140,7 +153,7 @@ namespace Kita {
 		{
 			ImGui::BeginDisabled();
 		}
-		if (ImGui::Button("Revert"))
+		if (ImGui::Button("Revert", ImVec2(buttonWidth, 0.0f)))
 		{
 			Revert();
 		}

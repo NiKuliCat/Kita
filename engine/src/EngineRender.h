@@ -4,6 +4,7 @@
 #include "render/pass/SceneBindings.h"
 #include "render/pass/ForwardOpaquePass.h"
 #include "render/pass/FullscreenPassBase.h"
+#include "render/pass/SkyboxPass.h"
 #include "render/pipeline/PipelineFactory.h"
 #include "render/VulkanResourceFactory.h"
 #include "render/mesh/Mesh.h"

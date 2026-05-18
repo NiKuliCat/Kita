@@ -175,7 +175,7 @@ namespace Kita {
 		depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
 		depthStencil.depthTestEnable = createInfo.EnableDepthTest ? VK_TRUE : VK_FALSE;
 		depthStencil.depthWriteEnable = createInfo.EnableDepthWrite ? VK_TRUE : VK_FALSE;
-		depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
+		depthStencil.depthCompareOp = createInfo.DepthCompareOp;
 		depthStencil.depthBoundsTestEnable = VK_FALSE;
 		depthStencil.stencilTestEnable = VK_FALSE;
 

@@ -9,10 +9,11 @@ namespace Kita {
 
 	namespace
 	{
-		constexpr float meshToolbarHeight = 36.0f;
+		constexpr float meshToolbarHeight = 48.0f;
 		constexpr float meshBodyHorizontalPadding = 12.0f;
-		const ImVec4 meshContentBgColor = ImVec4(0.10f, 0.10f, 0.10f, 1.0f);
-		const ImVec4 meshBarBgColor = ImVec4(0.13f, 0.13f, 0.13f, 1.0f);
+		const ImVec4 meshContentBgColor = ImVec4(0.12f, 0.12f, 0.13f, 1.0f);
+		const ImVec4 meshBarBgColor = ImVec4(0.12f, 0.12f, 0.13f, 1.0f);
+		const ImVec4 meshHeaderAccentColor = ImVec4(0.18f, 0.18f, 0.20f, 1.0f);
 	}
 
 	MeshAssetEditor::MeshAssetEditor(AssetHandle handle)
@@ -59,15 +60,27 @@ namespace Kita {
 	void MeshAssetEditor::DrawToolbar()
 	{
 		ImGui::PushStyleColor(ImGuiCol_ChildBg, meshBarBgColor);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(14.0f, 8.0f));
 		ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 0.0f);
 		ImGui::BeginChild("##MeshEditorToolbar", ImVec2(0.0f, meshToolbarHeight), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-		ImGui::SetCursorPos(ImVec2(10.0f, 6.0f));
+
+		ImDrawList* drawList = ImGui::GetWindowDrawList();
+		const ImVec2 headerMin = ImGui::GetWindowPos();
+		const ImVec2 headerMax(headerMin.x + ImGui::GetWindowSize().x, headerMin.y + ImGui::GetWindowSize().y);
+		drawList->AddRectFilled(headerMin, ImVec2(headerMax.x, headerMin.y + 2.0f), ImGui::ColorConvertFloat4ToU32(meshHeaderAccentColor));
+
+		ImGui::AlignTextToFramePadding();
+		ImGui::TextUnformatted("Mesh");
+		ImGui::SameLine();
+		ImGui::TextDisabled("%s", m_DisplayName.c_str());
+
+		const float buttonWidth = 74.0f;
+		ImGui::SameLine(ImMax(0.0f, ImGui::GetContentRegionAvail().x - buttonWidth * 2.0f - 12.0f));
 
 		ImGui::BeginDisabled();
-		ImGui::Button("Save");
+		ImGui::Button("Save", ImVec2(buttonWidth, 0.0f));
 		ImGui::SameLine();
-		ImGui::Button("Revert");
+		ImGui::Button("Revert", ImVec2(buttonWidth, 0.0f));
 		ImGui::EndDisabled();
 
 		ImGui::EndChild();
@@ -93,8 +106,6 @@ namespace Kita {
 		}
 
 		ImGui::BeginChild("##MeshDetailsPane", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-		ImGui::Text("SubMesh Count: %zu", m_MeshAsset->MeshRawData.size());
-
 		size_t totalVertices = 0;
 		size_t totalIndices = 0;
 		for (const auto& primitive : m_MeshAsset->MeshRawData)
@@ -103,10 +114,30 @@ namespace Kita {
 			totalIndices += primitive.Indices.size();
 		}
 
-		ImGui::Text("Total Vertices: %zu", totalVertices);
-		ImGui::Text("Total Indices: %zu", totalIndices);
-		ImGui::Separator();
+		if (UIAttributeUtil::BeginPropertyTable("##MeshPropertyTable", m_TableStyle))
+		{
+			UIAttributeUtil::BeginPropertyRow(m_TableStyle);
+			UIAttributeUtil::DrawPropertyLabelCell("SubMeshes", m_TableStyle);
+			UIAttributeUtil::PreparePropertyValueCell(m_TableStyle, UIAttributeUtil::GetLabelYOffset(m_TableStyle));
+			ImGui::Text("%zu", m_MeshAsset->MeshRawData.size());
+			UIAttributeUtil::DrawEmptyResetCell(m_TableStyle);
 
+			UIAttributeUtil::BeginPropertyRow(m_TableStyle);
+			UIAttributeUtil::DrawPropertyLabelCell("Vertices", m_TableStyle);
+			UIAttributeUtil::PreparePropertyValueCell(m_TableStyle, UIAttributeUtil::GetLabelYOffset(m_TableStyle));
+			ImGui::Text("%zu", totalVertices);
+			UIAttributeUtil::DrawEmptyResetCell(m_TableStyle);
+
+			UIAttributeUtil::BeginPropertyRow(m_TableStyle);
+			UIAttributeUtil::DrawPropertyLabelCell("Indices", m_TableStyle);
+			UIAttributeUtil::PreparePropertyValueCell(m_TableStyle, UIAttributeUtil::GetLabelYOffset(m_TableStyle));
+			ImGui::Text("%zu", totalIndices);
+			UIAttributeUtil::DrawEmptyResetCell(m_TableStyle);
+
+			UIAttributeUtil::EndPropertyTable();
+		}
+
+		ImGui::Spacing();
 		for (size_t i = 0; i < m_MeshAsset->MeshRawData.size(); ++i)
 		{
 			const auto& primitive = m_MeshAsset->MeshRawData[i];

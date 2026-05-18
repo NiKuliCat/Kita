@@ -110,6 +110,7 @@ namespace Kita {
 
         key.EnableDepthTest = request.EnableDepthTest;
         key.EnableDepthWrite = request.EnableDepthWrite;
+        key.DepthCompareOp = request.DepthCompareOp;
         key.EnableBlending = request.EnableBlending;
 
         key.VertexModule = request.VertexShader ? request.VertexShader->GetShaderModule() : VK_NULL_HANDLE;
@@ -174,6 +175,7 @@ namespace Kita {
 
         createInfo.EnableDepthTest = request.EnableDepthTest;
         createInfo.EnableDepthWrite = request.EnableDepthWrite;
+        createInfo.DepthCompareOp = request.DepthCompareOp;
         createInfo.EnableBlending = request.EnableBlending;
 
         createInfo.DescriptorSetLayouts = request.DescriptorSetLayouts;
@@ -197,6 +199,7 @@ namespace Kita {
 
         HashCombine(seed, key.EnableDepthTest);
         HashCombine(seed, key.EnableDepthWrite);
+        HashCombine(seed, static_cast<uint32_t>(key.DepthCompareOp));
         HashCombine(seed, key.EnableBlending);
 
         HashCombine(seed, reinterpret_cast<uint64_t>(key.VertexModule));

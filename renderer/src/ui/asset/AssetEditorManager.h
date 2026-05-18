@@ -35,14 +35,16 @@ namespace Kita {
 		OpenEditorEntry* FindOpenEditorEntry(AssetHandle handle);
 		const OpenEditorEntry* FindOpenEditorEntry(AssetHandle handle) const;
 		void CloseEditor(AssetHandle handle);
-		void SetupFloatingRootDock(OpenEditorEntry& entry);
-		void SetupDockWithReference(OpenEditorEntry& entry);
+		void DrawFloatingHostWindow();
+		bool SetupFloatingRootDock(OpenEditorEntry& entry, ImGuiID& outDockId);
+		bool SetupDockWithReference(OpenEditorEntry& entry, ImGuiID& outDockId);
 
 	private:
 		std::vector<OpenEditorEntry> m_OpenEditors;
 		AssetHandle m_ActiveAssetHandle = InvalidAssetHandle;
 		ImGuiID m_DockSpaceId = 0;
 		ImGuiID m_FloatingDockRootId = 0;
+		bool m_ShowFloatingHostWindow = false;
 		ThumbnailCache* m_ThumbnailCache = nullptr;
 		VulkanResourceFactory* m_ResourceFactory = nullptr;
 	};

@@ -182,9 +182,9 @@ namespace Kita {
 			velocity += GetRightDirection();
 		if (Input::IsKeyPressed(Key::A))
 			velocity -= GetRightDirection();
-		if (Input::IsKeyPressed(Key::Q))
-			velocity += glm::vec3(0.0f, 1.0f, 0.0f);
 		if (Input::IsKeyPressed(Key::E))
+			velocity += glm::vec3(0.0f, 1.0f, 0.0f);
+		if (Input::IsKeyPressed(Key::Q))
 			velocity -= glm::vec3(0.0f, 1.0f, 0.0f);
 
 		if (glm::dot(velocity, velocity) > 0.0f)

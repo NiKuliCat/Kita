@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IAssetEditor.h"
+#include "ui/UIAttributeUtil.h"
 
 namespace Kita {
 
@@ -27,6 +28,7 @@ namespace Kita {
 		AssetHandle m_AssetHandle = InvalidAssetHandle;
 		std::string m_DisplayName = "Mesh";
 		Ref<MeshAsset> m_MeshAsset = nullptr;
+		UIAttributeUtil::TableStyle m_TableStyle = UIAttributeUtil::CreateDefaultTableStyle();
 	};
 
 }

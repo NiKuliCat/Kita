@@ -8,21 +8,6 @@ namespace Kita {
 	{
 	}
 
-	void EditorGridPass::BindAdditionalResources(
-		RenderPassContext& context,
-		VkCommandBuffer commandBuffer,
-		const VulkanGraphicsPipeline& pipeline,
-		uint32_t frameIndex)
-	{
-		(void)context;
-		(void)frameIndex;
-
-		if (!m_DepthDescriptorSet || !m_DepthDescriptorSet->IsValid())
-			return;
-
-		m_DepthDescriptorSet->Bind(commandBuffer, pipeline.GetLayout(), 1);
-	}
-
 	void EditorGridPass::PushPassConstants(
 		RenderPassContext& context,
 		VkCommandBuffer commandBuffer,
@@ -45,7 +30,7 @@ namespace Kita {
 		desc.Name = "EditorGridPass";
 		desc.Type = PassType::PostProcess;
 		desc.Samples = VK_SAMPLE_COUNT_1_BIT;
-		desc.UseDepthAttachment = false;
+		desc.UseDepthAttachment = renderTarget.HasDepthAttachment();
 
 		const uint32_t colorCount = renderTarget.GetColorAttachmentCount();
 		desc.ColorFormats.reserve(colorCount);

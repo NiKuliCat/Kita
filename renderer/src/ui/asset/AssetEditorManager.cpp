@@ -12,6 +12,19 @@ namespace Kita {
 
 	namespace
 	{
+		constexpr char kFloatingHostWindowName[] = "Asset Editors###AssetEditorsHost";
+		constexpr char kFloatingDockSpaceName[] = "AssetEditorsFloatingDockspace";
+		constexpr ImVec2 kDefaultAssetEditorWindowSize(1080.0f, 720.0f);
+		constexpr ImVec2 kMinAssetEditorWindowSize(720.0f, 480.0f);
+		constexpr ImVec2 kFloatingHostPadding(6.0f, 6.0f);
+		const ImVec4 kFloatingHostBgColor = ImVec4(0.10f, 0.10f, 0.11f, 1.0f);
+		const ImVec4 kFloatingHostTitleColor = ImVec4(0.07f, 0.07f, 0.08f, 1.0f);
+		const ImVec4 kFloatingHostTitleActiveColor = ImVec4(0.08f, 0.08f, 0.09f, 1.0f);
+		const ImVec4 kFloatingHostBorderColor = ImVec4(0.04f, 0.04f, 0.05f, 1.0f);
+		const ImVec4 kFloatingHostTabColor = ImVec4(0.13f, 0.13f, 0.14f, 1.0f);
+		const ImVec4 kFloatingHostTabActiveColor = ImVec4(0.19f, 0.19f, 0.20f, 1.0f);
+		const ImVec4 kFloatingHostTabHoveredColor = ImVec4(0.16f, 0.16f, 0.18f, 1.0f);
+
 		std::string BuildWindowTitle(IAssetEditor& editor)
 		{
 			std::string title = editor.GetDisplayName();
@@ -73,6 +86,8 @@ namespace Kita {
 
 	void AssetEditorManager::OnImGuiRender()
 	{
+		DrawFloatingHostWindow();
+
 		std::vector<AssetHandle> editorsToClose;
 		for (auto& entry : m_OpenEditors)
 		{
@@ -81,17 +96,23 @@ namespace Kita {
 				continue;
 			}
 
+			ImGuiID initialDockId = 0;
 			if (entry.PendingInitialDock)
 			{
 				if (entry.OpenAsFloatingRoot)
 				{
-					SetupFloatingRootDock(entry);
+					if (!SetupFloatingRootDock(entry, initialDockId))
+					{
+						continue;
+					}
 				}
 				else
 				{
-					SetupDockWithReference(entry);
+					if (!SetupDockWithReference(entry, initialDockId))
+					{
+						continue;
+					}
 				}
-				entry.PendingInitialDock = false;
 			}
 
 			if (entry.RequestFocus)
@@ -100,12 +121,18 @@ namespace Kita {
 				entry.RequestFocus = false;
 			}
 
-			bool keepOpen = entry.IsOpen;
 			const std::string title = BuildWindowTitle(*entry.Editor);
+			if (initialDockId != 0)
+			{
+				ImGui::SetNextWindowDockID(initialDockId, ImGuiCond_Always);
+				entry.PendingInitialDock = false;
+			}
+			ImGui::SetNextWindowSize(kDefaultAssetEditorWindowSize, ImGuiCond_FirstUseEver);
+			ImGui::SetNextWindowSizeConstraints(kMinAssetEditorWindowSize, ImVec2(FLT_MAX, FLT_MAX));
 			ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.07f, 0.07f, 0.07f, 1.0f));
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-			if (ImGui::Begin(title.c_str(), &keepOpen))
+			if (ImGui::Begin(title.c_str(), nullptr, ImGuiWindowFlags_NoCollapse))
 			{
 				m_ActiveAssetHandle = entry.Editor->GetAssetHandle();
 				entry.Editor->OnImGuiRender();
@@ -113,12 +140,6 @@ namespace Kita {
 			ImGui::End();
 			ImGui::PopStyleVar(2);
 			ImGui::PopStyleColor();
-
-			entry.IsOpen = keepOpen;
-			if (!keepOpen)
-			{
-				editorsToClose.push_back(entry.Editor->GetAssetHandle());
-			}
 		}
 
 		for (AssetHandle handle : editorsToClose)
@@ -202,27 +223,37 @@ namespace Kita {
 		{
 			ImGui::DockBuilderRemoveNode(m_FloatingDockRootId);
 			m_FloatingDockRootId = 0;
+			m_ShowFloatingHostWindow = false;
 		}
 	}
 
-	void AssetEditorManager::SetupFloatingRootDock(OpenEditorEntry& entry)
+	void AssetEditorManager::DrawFloatingHostWindow()
 	{
-		if (!entry.Editor)
+		if (m_OpenEditors.empty())
 		{
+			m_ShowFloatingHostWindow = false;
 			return;
 		}
 
-		if (m_FloatingDockRootId != 0)
+		bool hasFloatingEditor = false;
+		for (const auto& entry : m_OpenEditors)
 		{
-			ImGui::DockBuilderRemoveNode(m_FloatingDockRootId);
-			m_FloatingDockRootId = 0;
+			if (entry.IsOpen)
+			{
+				hasFloatingEditor = true;
+				break;
+			}
 		}
 
-		const std::string windowTitle = BuildWindowTitle(*entry.Editor);
+		if (!hasFloatingEditor)
+		{
+			m_ShowFloatingHostWindow = false;
+			return;
+		}
+
 		const ImGuiViewport* mainViewport = ImGui::GetMainViewport();
 		const ImVec2 workPos = mainViewport ? mainViewport->WorkPos : ImVec2(0.0f, 0.0f);
 		const ImVec2 workSize = mainViewport ? mainViewport->WorkSize : ImVec2(1600.0f, 900.0f);
-
 		const ImVec2 floatingSize(
 			ImClamp(workSize.x * 0.62f, 880.0f, 1280.0f),
 			ImClamp(workSize.y * 0.74f, 620.0f, 900.0f));
@@ -230,21 +261,75 @@ namespace Kita {
 			workPos.x + (workSize.x - floatingSize.x) * 0.5f,
 			workPos.y + (workSize.y - floatingSize.y) * 0.5f);
 
-		m_FloatingDockRootId = ImGui::DockBuilderAddNode(0);
-		ImGui::DockBuilderSetNodePos(m_FloatingDockRootId, floatingPos);
-		ImGui::DockBuilderSetNodeSize(m_FloatingDockRootId, floatingSize);
-		ImGui::DockBuilderDockWindow(windowTitle.c_str(), m_FloatingDockRootId);
-		ImGui::DockBuilderFinish(m_FloatingDockRootId);
+		m_ShowFloatingHostWindow = true;
+		ImGui::SetNextWindowPos(floatingPos, ImGuiCond_FirstUseEver);
+		ImGui::SetNextWindowSize(floatingSize, ImGuiCond_FirstUseEver);
+		ImGui::SetNextWindowSizeConstraints(kMinAssetEditorWindowSize, ImVec2(FLT_MAX, FLT_MAX));
+
+		ImGuiWindowFlags hostFlags =
+			ImGuiWindowFlags_NoDocking |
+			ImGuiWindowFlags_NoCollapse;
+
+		ImGui::PushStyleColor(ImGuiCol_WindowBg, kFloatingHostBgColor);
+		ImGui::PushStyleColor(ImGuiCol_TitleBg, kFloatingHostTitleColor);
+		ImGui::PushStyleColor(ImGuiCol_TitleBgActive, kFloatingHostTitleActiveColor);
+		ImGui::PushStyleColor(ImGuiCol_Border, kFloatingHostBorderColor);
+		ImGui::PushStyleColor(ImGuiCol_Tab, kFloatingHostTabColor);
+		ImGui::PushStyleColor(ImGuiCol_TabActive, kFloatingHostTabActiveColor);
+		ImGui::PushStyleColor(ImGuiCol_TabHovered, kFloatingHostTabHoveredColor);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, kFloatingHostPadding);
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 1.0f);
+		if (ImGui::Begin(kFloatingHostWindowName, &m_ShowFloatingHostWindow, hostFlags))
+		{
+			const ImGuiID dockspaceId = ImGui::GetID(kFloatingDockSpaceName);
+			m_FloatingDockRootId = dockspaceId;
+			ImGui::DockSpace(dockspaceId, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_AutoHideTabBar);
+		}
+		ImGui::End();
+		ImGui::PopStyleVar(2);
+		ImGui::PopStyleColor(7);
+
+		if (!m_ShowFloatingHostWindow)
+		{
+			for (auto& entry : m_OpenEditors)
+			{
+				entry.IsOpen = false;
+			}
+
+			if (m_FloatingDockRootId != 0)
+			{
+				ImGui::DockBuilderRemoveNode(m_FloatingDockRootId);
+				m_FloatingDockRootId = 0;
+			}
+		}
 	}
 
-	void AssetEditorManager::SetupDockWithReference(OpenEditorEntry& entry)
+	bool AssetEditorManager::SetupFloatingRootDock(OpenEditorEntry& entry, ImGuiID& outDockId)
 	{
+		outDockId = 0;
 		if (!entry.Editor)
 		{
-			return;
+			return false;
 		}
 
-		const std::string windowTitle = BuildWindowTitle(*entry.Editor);
+		m_ShowFloatingHostWindow = true;
+		if (m_FloatingDockRootId == 0)
+		{
+			return false;
+		}
+
+		outDockId = m_FloatingDockRootId;
+		return true;
+	}
+
+	bool AssetEditorManager::SetupDockWithReference(OpenEditorEntry& entry, ImGuiID& outDockId)
+	{
+		outDockId = 0;
+		if (!entry.Editor)
+		{
+			return false;
+		}
+
 		ImGuiID targetDockId = 0;
 
 		if (const OpenEditorEntry* referenceEntry = FindOpenEditorEntry(entry.DockReferenceHandle))
@@ -255,15 +340,10 @@ namespace Kita {
 				if (referenceWindow->DockId != 0)
 				{
 					targetDockId = referenceWindow->DockId;
-					ImGui::DockBuilderDockWindow(windowTitle.c_str(), targetDockId);
 				}
 				else
 				{
 					targetDockId = m_FloatingDockRootId;
-					if (targetDockId != 0)
-					{
-						ImGui::DockBuilderDockWindow(windowTitle.c_str(), targetDockId);
-					}
 				}
 			}
 		}
@@ -273,13 +353,21 @@ namespace Kita {
 			if (m_FloatingDockRootId == 0)
 			{
 				entry.OpenAsFloatingRoot = true;
-				SetupFloatingRootDock(entry);
+				const bool dockReady = SetupFloatingRootDock(entry, targetDockId);
 				entry.OpenAsFloatingRoot = false;
-				return;
+				if (!dockReady)
+				{
+					return false;
+				}
 			}
-
-			ImGui::DockBuilderDockWindow(windowTitle.c_str(), m_FloatingDockRootId);
+			else
+			{
+				targetDockId = m_FloatingDockRootId;
+			}
 		}
+
+		outDockId = targetDockId;
+		return outDockId != 0;
 	}
 
 }

@@ -22,6 +22,7 @@ namespace Kita {
 
         bool EnableDepthTest = true;
         bool EnableDepthWrite = true;
+        VkCompareOp DepthCompareOp = VK_COMPARE_OP_LESS;
         bool EnableBlending = false;
 
         VkShaderStageFlags PushConstantStages =
@@ -51,6 +52,7 @@ namespace Kita {
 
         bool EnableDepthTest = true;
         bool EnableDepthWrite = true;
+        VkCompareOp DepthCompareOp = VK_COMPARE_OP_LESS;
         bool EnableBlending = false;
 
         VkShaderStageFlags PushConstantStages = 0;
@@ -73,6 +75,7 @@ namespace Kita {
 
         bool EnableDepthTest = true;
         bool EnableDepthWrite = true;
+        VkCompareOp DepthCompareOp = VK_COMPARE_OP_LESS;
         bool EnableBlending = false;
 
         VkShaderModule VertexModule = VK_NULL_HANDLE;
@@ -97,6 +100,7 @@ namespace Kita {
                 FrontFace == other.FrontFace &&
                 EnableDepthTest == other.EnableDepthTest &&
                 EnableDepthWrite == other.EnableDepthWrite &&
+                DepthCompareOp == other.DepthCompareOp &&
                 EnableBlending == other.EnableBlending &&
                 VertexModule == other.VertexModule &&
                 FragmentModule == other.FragmentModule &&

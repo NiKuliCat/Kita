@@ -35,12 +35,10 @@ namespace Kita {
 	private:
 		void InitRenderSceneData(ScenePassData& sceneData);
 		void InitGridResources();
-		void UpdateGridDepthBinding(uint32_t frameIndex, VulkanRenderTarget& rt);
-		VulkanDescriptorSet* GetGridDepthDescriptorSet(uint32_t frameIndex);
 		VulkanGraphicsPipeline* GetPipeline(VulkanRenderTarget& rt, Ref<VulkanGeometry>& geometry, Ref<VulkanMaterial>& material);
 		VulkanGraphicsPipeline* GetGridPipeline(VulkanRenderTarget& rt);
 		VulkanGraphicsPipeline* GetPickingPipeline(VulkanRenderTarget& rt, Ref<VulkanGeometry>& geometry);
-
+		VulkanGraphicsPipeline* GetSkyboxPipeline(VulkanRenderTarget& rt);
 	private:
 		VulkanContext* m_Context = nullptr;
 		SceneBindings m_SceneBindings;
@@ -48,7 +46,8 @@ namespace Kita {
 		Unique<ForwardOpaquePass> m_ForwardOpaquePass;
 		Unique<EditorGridPass> m_EditorGridPass;
 		Unique<ViewportPickingPass> m_ViewportPickingPass;
-		std::vector<Unique<VulkanDescriptorSet>> m_GridDepthDescriptorSets;
+		Unique<SkyboxPass> m_SkyboxPass;
+		Ref<VulkanMaterial> m_SkyboxMaterial = nullptr;
 		Ref<VulkanShader> m_GridVertexShader = nullptr;
 		Ref<VulkanShader> m_GridFragmentShader = nullptr;
 		EditorGridPass::PushConstants m_GridPushConstants{};

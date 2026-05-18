@@ -31,17 +31,21 @@ namespace Kita {
 		m_ForwardOpaquePass = CreateUnique<ForwardOpaquePass>(m_SceneBindings, MakeForwardOpaquePassDesc(rt));
 		m_EditorGridPass = CreateUnique<EditorGridPass>(m_SceneBindings, MakeEditorGridPassDesc(rt));
 		m_ViewportPickingPass = CreateUnique<ViewportPickingPass>(m_SceneBindings,MakeViewportPickingPassDesc(pickingRt));
+		m_SkyboxPass = CreateUnique<SkyboxPass>(m_SceneBindings, MakeSkyboxPassDesc(rt));
 		InitGridResources();
 	}
 
 	void EditorRenderer::Init()
 	{
-
+		const AssetHandle skyboxMaterialHandle = EditorProjectBootstrap::GetPreLoadMaterialHandle("skybox");
+		if (Asset::IsValidHandle(skyboxMaterialHandle))
+		{
+			m_SkyboxMaterial = m_VulkanResFactory->CreateMaterial(skyboxMaterialHandle);
+		}
 	}
 
 	void EditorRenderer::OnDestroy()
 	{
-		m_GridDepthDescriptorSets.clear();
 		m_GridVertexShader.reset();
 		m_GridFragmentShader.reset();
 	}
@@ -64,29 +68,13 @@ namespace Kita {
 		sceneData.BeginInfo.ClearDepth = 1.0f;
 		sceneData.BeginInfo.ClearStencil = 0;
 		sceneData.BeginInfo.TransitionSampledColors = true;
-		sceneData.BeginInfo.TransitionSampledDepth = true;
+		sceneData.BeginInfo.TransitionSampledDepth = false;
 	}
 
 	void EditorRenderer::InitGridResources()
 	{
 		if (!m_Context || !m_EditorGridPass)
 			return;
-
-		const uint32_t frameCount = std::max(1u, m_Context->GetFramesInFlight());
-		m_GridDepthDescriptorSets.clear();
-		m_GridDepthDescriptorSets.resize(frameCount);
-
-		VulkanDescriptorSet::CreateInfo descriptorInfo{};
-		descriptorInfo.Name = "EditorGridDepthSet";
-		descriptorInfo.Bindings = {
-			{ 0, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT }
-		};
-		for (uint32_t i = 0; i < frameCount; ++i)
-		{
-			VulkanDescriptorSet::CreateInfo perFrameDescriptorInfo = descriptorInfo;
-			perFrameDescriptorInfo.Name = descriptorInfo.Name + "_" + std::to_string(i);
-			m_GridDepthDescriptorSets[i] = CreateUnique<VulkanDescriptorSet>(*m_Context, perFrameDescriptorInfo);
-		}
 
 		const AssetHandle gridShaderHandle = EditorProjectBootstrap::GetPreLoadShaderHandle("grid");
 		if (!Asset::IsValidHandle(gridShaderHandle))
@@ -104,26 +92,6 @@ namespace Kita {
 
 		m_GridVertexShader = shaderBundle.VertexShader;
 		m_GridFragmentShader = shaderBundle.FragmentShader;
-	}
-
-	VulkanDescriptorSet* EditorRenderer::GetGridDepthDescriptorSet(uint32_t frameIndex)
-	{
-		if (m_GridDepthDescriptorSets.empty())
-			return nullptr;
-
-		KITA_CORE_ASSERT(frameIndex < m_GridDepthDescriptorSets.size(), "EditorRenderer grid depth descriptor frame index out of range");
-		return m_GridDepthDescriptorSets[frameIndex].get();
-	}
-
-	void EditorRenderer::UpdateGridDepthBinding(uint32_t frameIndex, VulkanRenderTarget& rt)
-	{
-		VulkanDescriptorSet* descriptorSet = GetGridDepthDescriptorSet(frameIndex);
-		if (!descriptorSet || !rt.HasDepthAttachment())
-			return;
-
-		descriptorSet->WriteImageSampler(
-			0,
-			rt.GetDepthDescriptorInfo(VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL));
 	}
 
 	VulkanGraphicsPipeline* EditorRenderer::GetPipeline(VulkanRenderTarget& rt, Ref<VulkanGeometry>& geometry, Ref<VulkanMaterial>& material)
@@ -149,6 +117,7 @@ namespace Kita {
 
 		request.EnableDepthTest = true;
 		request.EnableDepthWrite = true;
+		request.DepthCompareOp = VK_COMPARE_OP_LESS;
 		request.EnableBlending = false;
 
 		request.PushConstantStages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -175,14 +144,13 @@ namespace Kita {
 		request.DescriptorSetLayouts = {
 			m_SceneBindings.GetDescriptorSet(0).GetLayout()
 		};
-		if (VulkanDescriptorSet* descriptorSet = GetGridDepthDescriptorSet(0))
-			request.DescriptorSetLayouts.push_back(descriptorSet->GetLayout());
 		request.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 		request.PolygonMode = VK_POLYGON_MODE_FILL;
 		request.CullMode = VK_CULL_MODE_NONE;
 		request.FrontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-		request.EnableDepthTest = false;
+		request.EnableDepthTest = rt.HasDepthAttachment();
 		request.EnableDepthWrite = false;
+		request.DepthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
 		request.EnableBlending = true;
 		request.PushConstantStages = VK_SHADER_STAGE_FRAGMENT_BIT;
 		request.PushConstantSize = EditorGridPass::PushConstantSize;
@@ -215,9 +183,52 @@ namespace Kita {
 		request.FrontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 		request.EnableDepthTest = true;
 		request.EnableDepthWrite = true;
+		request.DepthCompareOp = VK_COMPARE_OP_LESS;
 		request.EnableBlending = false;
 		request.PushConstantStages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 		request.PushConstantSize = ViewportPickingPushConstantSize;
+
+		return m_PipelineFactory->GetOrCreate(request);
+	}
+
+	VulkanGraphicsPipeline* EditorRenderer::GetSkyboxPipeline(VulkanRenderTarget& rt)
+	{
+		if (!m_SkyboxMaterial)
+		{
+			return nullptr;
+		}
+
+		if (!m_SkyboxMaterial->GetVertexShader() || !m_SkyboxMaterial->GetFragmentShader())
+		{
+			return nullptr;
+		}
+
+		PipelineRequest request{};
+		request.Pass = PassType::PostProcess;
+		request.UseVertexInput = false;
+		request.VertexShader = m_SkyboxMaterial->GetVertexShader().get();
+		request.FragmentShader = m_SkyboxMaterial->GetFragmentShader().get();
+		request.ColorFormat = rt.GetColorFormat(0);
+		request.DepthFormat = rt.HasDepthAttachment() ? rt.GetDepthFormat() : VK_FORMAT_UNDEFINED;
+		request.Samples = VK_SAMPLE_COUNT_1_BIT;
+
+		request.DescriptorSetLayouts = {
+			m_SceneBindings.GetDescriptorSet(0).GetLayout(),
+			m_SkyboxMaterial->GetDescriptorSet(0).GetLayout()
+		};
+
+		request.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+		request.PolygonMode = VK_POLYGON_MODE_FILL;
+		request.CullMode = VK_CULL_MODE_NONE;
+		request.FrontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+
+		request.EnableDepthTest = true;
+		request.EnableDepthWrite = false;
+		request.DepthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+		request.EnableBlending = false;
+
+		request.PushConstantStages = 0;
+		request.PushConstantSize = 0;
 
 		return m_PipelineFactory->GetOrCreate(request);
 	}
@@ -242,6 +253,18 @@ namespace Kita {
 			gridSceneData.BeginInfo.TransitionSampledDepth = false;
 			m_EditorGridPass->SetSceneData(gridSceneData);
 		}
+
+		if (m_SkyboxPass)
+		{
+			ScenePassData skyboxSceneData = sceneData;
+			skyboxSceneData.BeginInfo.ClearColors = false;
+			skyboxSceneData.BeginInfo.ClearDepthAttachment = false;
+			skyboxSceneData.BeginInfo.TransitionSampledColors = true;
+			skyboxSceneData.BeginInfo.TransitionSampledDepth = true;
+			m_SkyboxPass->SetSceneData(skyboxSceneData);
+		}
+
+
 		if (m_ViewportPickingPass)
 		{
 			ScenePassData pickingSceneData = sceneData;
@@ -335,10 +358,17 @@ namespace Kita {
 		const uint32_t frameIndex = passContext.GetFrameIndex();
 
 		m_ForwardOpaquePass->Execute(passContext);
+		if (m_SkyboxPass && m_SkyboxMaterial)
+		{
+			m_SkyboxMaterial->EnsureDescriptors(*m_Context, m_Context->GetFramesInFlight());
+			m_SkyboxMaterial->UpdateDescriptorSet(frameIndex);
+			m_SkyboxPass->SetMaterial(m_SkyboxMaterial);
+			m_SkyboxPass->SetPipeline(GetSkyboxPipeline(rt));
+			if (m_SkyboxPass->HasValidMaterial())
+				m_SkyboxPass->Execute(passContext);
+		}
 		if (m_EditorGridPass)
 		{
-			UpdateGridDepthBinding(frameIndex, rt);
-			m_EditorGridPass->SetDepthDescriptorSet(GetGridDepthDescriptorSet(frameIndex));
 			m_EditorGridPass->SetPipeline(GetGridPipeline(rt));
 			m_EditorGridPass->SetPushConstants(m_GridPushConstants);
 			if (m_IsGridEnabled)

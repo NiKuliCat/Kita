@@ -33,6 +33,7 @@ namespace Kita {
 
 			bool EnableDepthTest = true;
 			bool EnableDepthWrite = true;
+			VkCompareOp DepthCompareOp = VK_COMPARE_OP_LESS;
 			bool EnableBlending = false;
 
 			std::vector<VkDescriptorSetLayout> DescriptorSetLayouts{};
