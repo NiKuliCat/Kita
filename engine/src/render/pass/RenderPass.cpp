@@ -69,7 +69,8 @@ namespace Kita {
 		VulkanRenderCommand::SetViewport(
 			context.GetCommandBuffer(),
 			rt.GetWidth(),
-			rt.GetHeight());
+			rt.GetHeight(),
+			true);
 
 		VulkanRenderCommand::SetScissor(
 			context.GetCommandBuffer(),

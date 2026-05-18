@@ -91,7 +91,10 @@ float AxisCoverage(float axisCoord, float axisWidthPx, float derivative)
 [shader("fragment")]
 float4 PSMain(VSOutput input) : SV_Target0
 {
-    float2 uv = input.uv;
+    // The renderer applies Vulkan Y-flip in the viewport state. For fullscreen
+    // passes, the interpolated triangle UV therefore needs to be flipped back
+    // to sample the depth texture in the same screen-space orientation.
+    float2 uv = float2(input.uv.x, 1.0 - input.uv.y);
     float sceneDepth = gDepthTexture.SampleLevel(gDepthSampler, uv, 0.0);
 
     if (sceneDepth <= 0.0 || sceneDepth >= 1.0)

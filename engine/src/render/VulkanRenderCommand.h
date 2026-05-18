@@ -13,7 +13,7 @@ namespace Kita {
 		static void BeginSwapchainRendering(VulkanContext& context, const glm::vec4& clearColor);
 		static void EndRendering(VulkanContext& context);
 
-		static void SetViewport(VkCommandBuffer commandBuffer, uint32_t width, uint32_t height);
+		static void SetViewport(VkCommandBuffer commandBuffer, uint32_t width, uint32_t height,bool flipY = true);
 		static void SetScissor(VkCommandBuffer commandBuffer, uint32_t width, uint32_t height);
 
 		static void BindPipeline(VkCommandBuffer commandBuffer, const VulkanGraphicsPipeline& pipeline);

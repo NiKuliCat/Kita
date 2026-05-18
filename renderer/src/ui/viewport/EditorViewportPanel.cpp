@@ -127,8 +127,8 @@ namespace  Kita {
 			ImGui::Image(
 				m_DisplayTextureID,
 				imageSize,
-				ImVec2(0.0f, 1.0f),
-				ImVec2(1.0f, 0.0f));
+				ImVec2(0.0f, 0.0f),
+				ImVec2(1.0f, 1.0f));
 		}
 		else
 		{
@@ -319,13 +319,12 @@ namespace  Kita {
 		const uint32_t pixelY = std::min(
 			static_cast<uint32_t>(std::max(0.0f, localY)),
 			height - 1);
-		const uint32_t flippedPixelY = height - 1 - pixelY;
 
-		m_FrameState.PickRequest = { pixelX, flippedPixelY };
+		m_FrameState.PickRequest = { pixelX, pixelY };
 		m_FrameState.WantsPick = true;
 
 		KITA_CORE_INFO(
-			"Viewport pick click: screen=({:.2f}, {:.2f}), local=({:.2f}, {:.2f}), viewport=({}, {}), displayPixel=({}, {}), pickingPixel=({}, {})",
+			"Viewport pick click: screen=({:.2f}, {:.2f}), local=({:.2f}, {:.2f}), viewport=({}, {}),pickingPixel=({}, {})",
 			mousePos.x,
 			mousePos.y,
 			localX,
@@ -333,9 +332,7 @@ namespace  Kita {
 			width,
 			height,
 			pixelX,
-			pixelY,
-			pixelX,
-			flippedPixelY);
+			pixelY);
 	}
 
 	bool EditorViewportPanel::IsMouseInsideImageBounds() const

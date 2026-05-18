@@ -123,7 +123,7 @@ namespace Kita {
 
 		vkCmdBeginRendering(commandBuffer, &renderingInfo);
 
-		SetViewport(commandBuffer, context.GetSwapchainExtent().width, context.GetSwapchainExtent().height);
+		SetViewport(commandBuffer, context.GetSwapchainExtent().width, context.GetSwapchainExtent().height,true);
 		SetScissor(commandBuffer, context.GetSwapchainExtent().width, context.GetSwapchainExtent().height);
 	}
 
@@ -143,7 +143,7 @@ namespace Kita {
 		context.SetSwapchainImageLayout(imageIndex, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 	}
 
-	void VulkanRenderCommand::SetViewport(VkCommandBuffer commandBuffer, uint32_t width, uint32_t height)
+	void VulkanRenderCommand::SetViewport(VkCommandBuffer commandBuffer, uint32_t width, uint32_t height, bool flipY)
 	{
 		KITA_CORE_ASSERT(commandBuffer != VK_NULL_HANDLE, "VulkanRenderCommand command buffer is null");
 
@@ -152,6 +152,12 @@ namespace Kita {
 		viewport.y = 0.0f;
 		viewport.width = static_cast<float>(width);
 		viewport.height = static_cast<float>(height);
+
+		if (flipY)
+		{
+			viewport.y = static_cast<float>(height);
+			viewport.height = -static_cast<float>(height);
+		}
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
 

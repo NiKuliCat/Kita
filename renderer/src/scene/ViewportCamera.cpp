@@ -22,9 +22,6 @@ namespace Kita {
 		:m_FOV(fov), m_Aspect(aspect), m_Near(nearPlane), m_Far(farPlane)
 	{
 		m_ProjectionMatrix = glm::perspectiveRH_ZO(glm::radians(m_FOV), m_Aspect, m_Near, m_Far);
-		m_ProjectionMatrix[1][1] *= -1.0f;
-		m_GizmoProjectionMatrix = m_ProjectionMatrix;
-		m_GizmoProjectionMatrix[1][1] *= -1.0f;
 		m_Position = CalculatePosition();
 		UpdateViewMatrix();
 	}
@@ -54,7 +51,9 @@ namespace Kita {
 			else if (middleMouseDown)
 				MousePan(delta);
 			else if (rightMouseDown)
-				MouseZoom(delta.y);
+				// Mouse delta Y grows downward on screen; invert it so dragging up zooms in,
+				// matching scroll-wheel zoom and the RH/Y-up/-Z-forward camera convention.
+				MouseZoom(-delta.y);
 
 			UpdateViewMatrix();
 		}
@@ -91,10 +90,6 @@ namespace Kita {
 		UpdateViewMatrix();
 	}
 
-	const glm::mat4& ViewportCamera::GetGizmoProjection() const
-	{
-		return m_GizmoProjectionMatrix;
-	}
 
 	glm::vec3 ViewportCamera::GetUpDirection() const
 	{
@@ -122,9 +117,6 @@ namespace Kita {
 	{
 		m_Aspect = m_ViewportWidth / m_ViewportHeight;
 		m_ProjectionMatrix = glm::perspectiveRH_ZO(glm::radians(m_FOV), m_Aspect, m_Near, m_Far);
-		m_ProjectionMatrix[1][1] *= -1.0f;
-		m_GizmoProjectionMatrix = m_ProjectionMatrix;
-		m_GizmoProjectionMatrix[1][1] *= -1.0f;
 	}
 
 	void ViewportCamera::UpdateViewMatrix()
@@ -145,6 +137,7 @@ namespace Kita {
 	void ViewportCamera::MousePan(const glm::vec2& delta)
 	{
 		auto [xSpeed, ySpeed] = PanSpeed();
+		// Pan follows the cursor on screen: dragging right/up moves the scene right/up.
 		m_FocusePosition += -GetRightDirection() * delta.x * xSpeed * m_Distance;
 		m_FocusePosition += GetUpDirection() * delta.y * ySpeed * m_Distance;
 		m_Position = CalculatePosition();
@@ -153,7 +146,7 @@ namespace Kita {
 	void ViewportCamera::MouseRotate(const glm::vec2& delta)
 	{
 		m_Yaw += delta.x * RotationSpeed();
-		m_Pitch = glm::clamp(m_Pitch - delta.y * RotationSpeed(), -kMaxPitch, kMaxPitch);
+		m_Pitch = glm::clamp(m_Pitch + delta.y * RotationSpeed(), -kMaxPitch, kMaxPitch);
 		m_Position = CalculatePosition();
 	}
 
@@ -172,7 +165,7 @@ namespace Kita {
 	void ViewportCamera::FlightRotate(const glm::vec2& delta)
 	{
 		m_Yaw += delta.x * RotationSpeed();
-		m_Pitch = glm::clamp(m_Pitch - delta.y * RotationSpeed(), -kMaxPitch, kMaxPitch);
+		m_Pitch = glm::clamp(m_Pitch + delta.y * RotationSpeed(), -kMaxPitch, kMaxPitch);
 		m_FocusePosition = m_Position + GetForwardDirection() * m_Distance;
 	}
 
