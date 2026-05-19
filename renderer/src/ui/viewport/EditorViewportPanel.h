@@ -34,7 +34,7 @@ namespace Kita {
 		float ZoomSpeedScale = 1.0f;
 		float MinorCellSize = 1.0f;
 		float MajorCellSize = 10.0f;
-		float MinorLineWidth = 1.15f;
+		float MinorLineWidth = 1.35f;
 		float MajorLineWidth = 1.85f;
 		float FadeNear = 1.0f;
 		float FadeFar = 190.0f;

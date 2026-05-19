@@ -45,9 +45,6 @@ namespace Kita {
 
 		switch (event.GetKeyCode())
 		{
-		case Key::Q:
-			m_Operation = GizmoOperation::None;
-			return true;
 		case Key::W:
 			m_Operation = GizmoOperation::Translate;
 			return true;

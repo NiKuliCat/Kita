@@ -10,7 +10,7 @@ namespace Kita {
 	public:
 		struct alignas(16) PushConstants
 		{
-			glm::vec4 MinorColor = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
+			glm::vec4 MinorColor = glm::vec4(0.6f, 0.6f, 0.6f, 1.0f);
 			glm::vec4 MajorColor = glm::vec4(0.88f, 0.88f, 0.88f, 1.0f);
 			glm::vec4 AxisXColor = glm::vec4(1.0f,  0.0f, 0.0f, 1.0f);
 			glm::vec4 AxisZColor = glm::vec4(0.0f, 0.0f, 1.00f, 1.0f);
