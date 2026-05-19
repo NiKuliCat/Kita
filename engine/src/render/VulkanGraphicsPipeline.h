@@ -23,9 +23,9 @@ namespace Kita {
 			VkShaderStageFlags PushConstantStages = 0;
 			uint32_t PushConstantSize = 0;
 
-			VkFormat ColorFormat = VK_FORMAT_UNDEFINED;
+			std::vector<VkFormat> ColorFormats{};
 			VkFormat DepthFormat = VK_FORMAT_UNDEFINED;
-
+			VkSampleCountFlagBits  Samples = VK_SAMPLE_COUNT_1_BIT;
 			VkPrimitiveTopology Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 			VkPolygonMode PolygonMode = VK_POLYGON_MODE_FILL;
 			VkCullModeFlags CullMode = VK_CULL_MODE_BACK_BIT;

@@ -95,7 +95,7 @@ namespace Kita {
         RenderPassDesc desc{}; 
         desc.Name = "ForwardOpaquePass";
         desc.Type = PassType::ForwardOpaque;
-        desc.Samples = VK_SAMPLE_COUNT_1_BIT;
+        desc.Samples = renderTarget.GetCreateInfo().Samples;
 
         const uint32_t colorCount = renderTarget.GetColorAttachmentCount();
         desc.ColorFormats.reserve(colorCount);

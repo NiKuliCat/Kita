@@ -78,7 +78,7 @@ namespace Kita {
 		RenderPassDesc desc{};
 		desc.Name = "SkyboxPass";
 		desc.Type = PassType::PostProcess;
-		desc.Samples = VK_SAMPLE_COUNT_1_BIT;
+		desc.Samples = renderTarget.GetCreateInfo().Samples;
 		desc.UseDepthAttachment = renderTarget.HasDepthAttachment();
 
 		const uint32_t colorCount = renderTarget.GetColorAttachmentCount();

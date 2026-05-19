@@ -39,7 +39,7 @@ namespace Kita {
         const VulkanShader* VertexShader = nullptr;
         const VulkanShader* FragmentShader = nullptr;
 
-        VkFormat ColorFormat = VK_FORMAT_UNDEFINED;
+        std::vector<VkFormat> ColorFormats{};
         VkFormat DepthFormat = VK_FORMAT_UNDEFINED;
         VkSampleCountFlagBits Samples = VK_SAMPLE_COUNT_1_BIT;
 
@@ -64,7 +64,9 @@ namespace Kita {
     {
         PassType Pass = PassType::Unknown;
 
-        VkFormat ColorFormat = VK_FORMAT_UNDEFINED;
+
+        uint64_t ColorFormatsHash = 0;
+        uint32_t ColorAttachmentCount = 0;
         VkFormat DepthFormat = VK_FORMAT_UNDEFINED;
         VkSampleCountFlagBits Samples = VK_SAMPLE_COUNT_1_BIT;
 
@@ -91,7 +93,8 @@ namespace Kita {
         bool operator==(const PipelineKey& other) const
         {
             return Pass == other.Pass &&
-                ColorFormat == other.ColorFormat &&
+                ColorFormatsHash == other.ColorFormatsHash &&
+                ColorAttachmentCount == other.ColorAttachmentCount &&
                 DepthFormat == other.DepthFormat &&
                 Samples == other.Samples &&
                 Topology == other.Topology &&

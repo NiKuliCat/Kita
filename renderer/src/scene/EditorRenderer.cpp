@@ -101,9 +101,13 @@ namespace Kita {
 		request.Geometry = geometry.get();
 		request.VertexShader = material->GetVertexShader().get();
 		request.FragmentShader = material->GetFragmentShader().get();
-		request.ColorFormat = rt.GetColorFormat(0);
+
+		request.ColorFormats.clear();
+		for (uint32_t i = 0; i < rt.GetColorAttachmentCount(); ++i)
+			request.ColorFormats.push_back(rt.GetColorFormat(i));
+
 		request.DepthFormat = rt.GetDepthFormat();
-		request.Samples = VK_SAMPLE_COUNT_1_BIT;
+		request.Samples = rt.GetCreateInfo().Samples;
 
 		request.DescriptorSetLayouts = {
 			m_SceneBindings.GetDescriptorSet(0).GetLayout(),
@@ -138,9 +142,13 @@ namespace Kita {
 		request.UseVertexInput = false;
 		request.VertexShader = m_GridVertexShader.get();
 		request.FragmentShader = m_GridFragmentShader.get();
-		request.ColorFormat = rt.GetColorFormat(0);
+
+		request.ColorFormats.clear();
+		for (uint32_t i = 0; i < rt.GetColorAttachmentCount(); ++i)
+			request.ColorFormats.push_back(rt.GetColorFormat(i));
+
 		request.DepthFormat = rt.HasDepthAttachment() ? rt.GetDepthFormat() : VK_FORMAT_UNDEFINED;
-		request.Samples = VK_SAMPLE_COUNT_1_BIT;
+		request.Samples = rt.GetCreateInfo().Samples;
 		request.DescriptorSetLayouts = {
 			m_SceneBindings.GetDescriptorSet(0).GetLayout()
 		};
@@ -171,9 +179,12 @@ namespace Kita {
 		request.Geometry = geometry.get();
 		request.VertexShader = shaderBundle.VertexShader.get();
 		request.FragmentShader = shaderBundle.FragmentShader.get();
-		request.ColorFormat = rt.GetColorFormat(0);
+
+		request.ColorFormats.clear();
+		for (uint32_t i = 0; i < rt.GetColorAttachmentCount(); ++i)
+			request.ColorFormats.push_back(rt.GetColorFormat(i));
 		request.DepthFormat = rt.HasDepthAttachment() ? rt.GetDepthFormat() : VK_FORMAT_UNDEFINED;
-		request.Samples = VK_SAMPLE_COUNT_1_BIT;
+		request.Samples = rt.GetCreateInfo().Samples;
 		request.DescriptorSetLayouts = {
 			m_SceneBindings.GetDescriptorSet(0).GetLayout()
 		};
@@ -208,9 +219,12 @@ namespace Kita {
 		request.UseVertexInput = false;
 		request.VertexShader = m_SkyboxMaterial->GetVertexShader().get();
 		request.FragmentShader = m_SkyboxMaterial->GetFragmentShader().get();
-		request.ColorFormat = rt.GetColorFormat(0);
+
+		request.ColorFormats.clear();
+		for (uint32_t i = 0; i < rt.GetColorAttachmentCount(); ++i)
+			request.ColorFormats.push_back(rt.GetColorFormat(i));
 		request.DepthFormat = rt.HasDepthAttachment() ? rt.GetDepthFormat() : VK_FORMAT_UNDEFINED;
-		request.Samples = VK_SAMPLE_COUNT_1_BIT;
+		request.Samples = rt.GetCreateInfo().Samples;
 
 		request.DescriptorSetLayouts = {
 			m_SceneBindings.GetDescriptorSet(0).GetLayout(),

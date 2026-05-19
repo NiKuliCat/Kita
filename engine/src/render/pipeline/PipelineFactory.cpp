@@ -25,7 +25,13 @@ namespace Kita {
                 "PipelineRequest Geometry is null when vertex input is enabled");
             KITA_CORE_ASSERT(request.VertexShader, "PipelineRequest VertexShader is null");
             KITA_CORE_ASSERT(request.FragmentShader, "PipelineRequest FragmentShader is null");
-            KITA_CORE_ASSERT(request.ColorFormat != VK_FORMAT_UNDEFINED, "PipelineRequest ColorFormat is invalid");
+
+            KITA_CORE_ASSERT(!request.ColorFormats.empty(), "PipelineRequest ColorFormats is empty");
+            for (VkFormat format : request.ColorFormats)
+            {
+                KITA_CORE_ASSERT(format != VK_FORMAT_UNDEFINED, "PipelineRequest ColorFormats contains invalid format");
+            }
+
             KITA_CORE_ASSERT(!request.DescriptorSetLayouts.empty(), "PipelineRequest DescriptorSetLayouts is empty");
         }
 
@@ -92,6 +98,15 @@ namespace Kita {
 
             return static_cast<uint64_t>(seed);
         }
+
+        uint64_t BuildColorFormatsHash(const std::vector<VkFormat>& formats)
+        {
+            size_t seed = 0;
+            for (VkFormat format : formats)
+                HashCombine(seed, static_cast<uint32_t>(format));
+
+            return static_cast<uint64_t>(seed);
+        }
     }
 
 	PipelineKey PipelineFactory::BuildKey(const PipelineRequest& request) const
@@ -99,7 +114,8 @@ namespace Kita {
         PipelineKey key{};
         key.Pass = request.Pass;
 
-        key.ColorFormat = request.ColorFormat;
+        key.ColorAttachmentCount = static_cast<uint32_t>(request.ColorFormats.size());
+        key.ColorFormatsHash = BuildColorFormatsHash(request.ColorFormats);
         key.DepthFormat = request.DepthFormat;
         key.Samples = request.Samples;
 
@@ -165,9 +181,9 @@ namespace Kita {
         createInfo.PushConstantStages = request.PushConstantStages;
         createInfo.PushConstantSize = request.PushConstantSize;
 
-        createInfo.ColorFormat = request.ColorFormat;
+        createInfo.ColorFormats = request.ColorFormats;
         createInfo.DepthFormat = request.DepthFormat;
-
+        createInfo.Samples = request.Samples;
         createInfo.Topology = request.Topology;
         createInfo.PolygonMode = request.PolygonMode;
         createInfo.CullMode = request.CullMode;
@@ -188,7 +204,8 @@ namespace Kita {
         size_t seed = 0;
 
         HashCombine(seed, static_cast<uint32_t>(key.Pass));
-        HashCombine(seed, static_cast<uint32_t>(key.ColorFormat));
+        HashCombine(seed, key.ColorFormatsHash);
+        HashCombine(seed, key.ColorAttachmentCount);
         HashCombine(seed, static_cast<uint32_t>(key.DepthFormat));
         HashCombine(seed, static_cast<uint32_t>(key.Samples));
 

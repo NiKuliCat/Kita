@@ -104,7 +104,11 @@ namespace Kita {
 		KITA_CORE_ASSERT(
 			!createInfo.UseVertexInput || createInfo.Geometry,
 			"VulkanGraphicsPipeline geometry is null when vertex input is enabled");
-		KITA_CORE_ASSERT(createInfo.ColorFormat != VK_FORMAT_UNDEFINED, "VulkanGraphicsPipeline color format is invalid");
+		KITA_CORE_ASSERT(!createInfo.ColorFormats.empty(), "VulkanGraphicsPipeline color formats are empty");
+		for (VkFormat format : createInfo.ColorFormats)
+		{
+			KITA_CORE_ASSERT(format != VK_FORMAT_UNDEFINED, "VulkanGraphicsPipeline color format is invalid");
+		}
 
 		std::array<VkPipelineShaderStageCreateInfo, 2> shaderStages =
 		{
@@ -169,7 +173,7 @@ namespace Kita {
 		VkPipelineMultisampleStateCreateInfo multisampling{};
 		multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
 		multisampling.sampleShadingEnable = VK_FALSE;
-		multisampling.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+		multisampling.rasterizationSamples = createInfo.Samples;
 
 		VkPipelineDepthStencilStateCreateInfo depthStencil{};
 		depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
@@ -197,11 +201,14 @@ namespace Kita {
 			colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
 		}
 
+		std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments;
+		colorBlendAttachments.resize(createInfo.ColorFormats.size(), colorBlendAttachment);
+
 		VkPipelineColorBlendStateCreateInfo colorBlending{};
 		colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
 		colorBlending.logicOpEnable = VK_FALSE;
-		colorBlending.attachmentCount = 1;
-		colorBlending.pAttachments = &colorBlendAttachment;
+		colorBlending.attachmentCount = static_cast<uint32_t>(colorBlendAttachments.size());
+		colorBlending.pAttachments = colorBlendAttachments.data();
 
 
 
@@ -232,8 +239,8 @@ namespace Kita {
 
 		VkPipelineRenderingCreateInfo renderingInfo{};
 		renderingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
-		renderingInfo.colorAttachmentCount = 1;
-		renderingInfo.pColorAttachmentFormats = &createInfo.ColorFormat;
+		renderingInfo.colorAttachmentCount = static_cast<uint32_t>(createInfo.ColorFormats.size());
+		renderingInfo.pColorAttachmentFormats = createInfo.ColorFormats.data();
 		renderingInfo.depthAttachmentFormat = createInfo.DepthFormat;
 		renderingInfo.stencilAttachmentFormat = VK_FORMAT_UNDEFINED;
 
