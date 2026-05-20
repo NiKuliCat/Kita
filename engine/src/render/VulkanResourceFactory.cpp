@@ -10,6 +10,11 @@ namespace Kita {
 
 	namespace
 	{
+		float BoolToGpuFlag(bool value)
+		{
+			return value ? 1.0f : 0.0f;
+		}
+
 		BufferLayout CreateMeshVertexLayout()
 		{
 			return BufferLayout{
@@ -27,6 +32,16 @@ namespace Kita {
 		:m_Context(context), m_AssetManager(assetManager)
 	{
 
+	}
+
+	void VulkanResourceFactory::SetFallbackTextureHandles(
+		AssetHandle whiteTextureHandle,
+		AssetHandle blackTextureHandle,
+		AssetHandle normalTextureHandle)
+	{
+		m_FallbackWhiteTextureHandle = whiteTextureHandle;
+		m_FallbackBlackTextureHandle = blackTextureHandle;
+		m_FallbackNormalTextureHandle = normalTextureHandle;
 	}
 
 	VulkanResourceFactory::ShaderBundle VulkanResourceFactory::GetOrCreateShaderBundle(AssetHandle handle)
@@ -145,11 +160,42 @@ namespace Kita {
 
 	void VulkanResourceFactory::ApplyMaterial(const MaterialAsset& materialAsset, VulkanMaterial& outMaterial)
 	{
-		outMaterial.SetBaseColor(materialAsset.BaseColor);
+		const Ref<VulkanTexture> fallbackWhiteTexture =
+			Asset::IsValidHandle(m_FallbackWhiteTextureHandle)
+			? GetOrCreateTexture(m_FallbackWhiteTextureHandle)
+			: nullptr;
+		const Ref<VulkanTexture> fallbackBlackTexture =
+			Asset::IsValidHandle(m_FallbackBlackTextureHandle)
+			? GetOrCreateTexture(m_FallbackBlackTextureHandle)
+			: nullptr;
+		const Ref<VulkanTexture> fallbackNormalTexture =
+			Asset::IsValidHandle(m_FallbackNormalTextureHandle)
+			? GetOrCreateTexture(m_FallbackNormalTextureHandle)
+			: nullptr;
+
+		outMaterial.SetFallbackTextures(
+			fallbackWhiteTexture,
+			fallbackBlackTexture,
+			fallbackNormalTexture);
+
+		MaterialGpuParams params{};
+		params.BaseColor = materialAsset.m_SurfaceParams.BaseColor;
+		params.Emissive = glm::vec4(materialAsset.m_SurfaceParams.Emissive, 0.0f);
+		params.SurfaceParams = glm::vec4(
+			materialAsset.m_SurfaceParams.Metallic,
+			materialAsset.m_SurfaceParams.Roughness,
+			materialAsset.m_SurfaceParams.AmbientOcclusion,
+			materialAsset.m_SurfaceParams.Opacity);
+		params.MiscParams = glm::vec4(
+			materialAsset.m_SurfaceParams.NormalScale,
+			materialAsset.m_SurfaceParams.AlphaCutoff,
+			0.0f,
+			0.0f);
+		outMaterial.SetParams(params);
 
 		outMaterial.SetVertexShader(nullptr);
 		outMaterial.SetFragmentShader(nullptr);
-		outMaterial.ClearAlbedoTexture();
+		outMaterial.ClearTextures();
 
 		if (Asset::IsValidHandle(materialAsset.ShaderHandle))
 		{
@@ -167,9 +213,9 @@ namespace Kita {
 			}
 		}
 
-		if (Asset::IsValidHandle(materialAsset.AlbedoTextureHandle))
+		if (Asset::IsValidHandle(materialAsset.m_Textures.Albedo))
 		{
-			Ref<VulkanTexture> texture = GetOrCreateTexture(materialAsset.AlbedoTextureHandle);
+			Ref<VulkanTexture> texture = GetOrCreateTexture(materialAsset.m_Textures.Albedo);
 			if (texture)
 			{
 				outMaterial.SetAlbedoTexture(texture);
@@ -178,11 +224,74 @@ namespace Kita {
 			{
 				KITA_CORE_WARN(
 					"VulkanResourceFactory: failed to build texture for material, texture handle={}",
-					materialAsset.AlbedoTextureHandle);
+					materialAsset.m_Textures.Albedo);
 			}
 		}
 
-		if (outMaterial.GetAlbedoTexture())
+		if (Asset::IsValidHandle(materialAsset.m_Textures.Normal))
+		{
+			outMaterial.SetNormalTexture(GetOrCreateTexture(materialAsset.m_Textures.Normal));
+		}
+		if (Asset::IsValidHandle(materialAsset.m_Textures.MetallicRoughness))
+		{
+			outMaterial.SetMetallicRoughnessTexture(GetOrCreateTexture(materialAsset.m_Textures.MetallicRoughness));
+		}
+		if (Asset::IsValidHandle(materialAsset.m_Textures.AmbientOcclusion))
+		{
+			outMaterial.SetAmbientOcclusionTexture(GetOrCreateTexture(materialAsset.m_Textures.AmbientOcclusion));
+		}
+		if (Asset::IsValidHandle(materialAsset.m_Textures.Emissive))
+		{
+			outMaterial.SetEmissiveTexture(GetOrCreateTexture(materialAsset.m_Textures.Emissive));
+		}
+		if (Asset::IsValidHandle(materialAsset.m_Textures.Opacity))
+		{
+			outMaterial.SetOpacityTexture(GetOrCreateTexture(materialAsset.m_Textures.Opacity));
+		}
+
+		if (!outMaterial.GetAlbedoTexture() && fallbackWhiteTexture)
+		{
+			outMaterial.SetAlbedoTexture(fallbackWhiteTexture);
+		}
+
+		if (!outMaterial.GetNormalTexture() && fallbackNormalTexture)
+		{
+			outMaterial.SetNormalTexture(fallbackNormalTexture);
+		}
+
+		if (!outMaterial.GetMetallicRoughnessTexture() && fallbackWhiteTexture)
+		{
+			outMaterial.SetMetallicRoughnessTexture(fallbackWhiteTexture);
+		}
+
+		if (!outMaterial.GetAmbientOcclusionTexture() && fallbackWhiteTexture)
+		{
+			outMaterial.SetAmbientOcclusionTexture(fallbackWhiteTexture);
+		}
+
+		if (!outMaterial.GetEmissiveTexture() && fallbackBlackTexture)
+		{
+			outMaterial.SetEmissiveTexture(fallbackBlackTexture);
+		}
+
+		if (!outMaterial.GetOpacityTexture() && fallbackWhiteTexture)
+		{
+			outMaterial.SetOpacityTexture(fallbackWhiteTexture);
+		}
+
+		params.TextureFlags0 = glm::vec4(
+			BoolToGpuFlag(Asset::IsValidHandle(materialAsset.m_Textures.Albedo)),
+			BoolToGpuFlag(Asset::IsValidHandle(materialAsset.m_Textures.Normal)),
+			BoolToGpuFlag(Asset::IsValidHandle(materialAsset.m_Textures.MetallicRoughness)),
+			BoolToGpuFlag(Asset::IsValidHandle(materialAsset.m_Textures.AmbientOcclusion)));
+		params.TextureFlags1 = glm::vec4(
+			BoolToGpuFlag(Asset::IsValidHandle(materialAsset.m_Textures.Emissive)),
+			BoolToGpuFlag(Asset::IsValidHandle(materialAsset.m_Textures.Opacity)),
+			0.0f,
+			0.0f);
+		outMaterial.SetParams(params);
+
+		if (outMaterial.HasAnyTexture() || outMaterial.GetVertexShader() || outMaterial.GetFragmentShader())
 		{
 			outMaterial.EnsureDescriptors(m_Context, m_Context.GetFramesInFlight());
 			outMaterial.MarkDescriptorSetsDirty();
@@ -226,11 +335,6 @@ namespace Kita {
 		}
 
 		Ref<VulkanMaterial>& material = cacheIt->second;
-		if (!material->GetAlbedoTexture())
-		{
-			return;
-		}
-
 		material->EnsureDescriptors(m_Context, m_Context.GetFramesInFlight());
 		if (material->IsDescriptorSetDirty(frameIndex))
 		{

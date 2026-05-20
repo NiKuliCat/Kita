@@ -39,6 +39,11 @@ namespace Kita {
 		Ref<VulkanMaterial> CreateMaterial(AssetHandle handle);
 		Ref<VulkanMaterial> CreateMaterial(const MaterialAsset& materialAsset);
 
+		void SetFallbackTextureHandles(
+			AssetHandle whiteTextureHandle,
+			AssetHandle blackTextureHandle,
+			AssetHandle normalTextureHandle);
+
 		void ApplyMaterial(const MaterialAsset& materialAsset, VulkanMaterial& outMaterial);
 		void RefreshMaterial(AssetHandle handle);
 		void RefreshMaterialFrameResources(AssetHandle handle, uint32_t frameIndex);
@@ -70,5 +75,9 @@ namespace Kita {
 		std::unordered_map<AssetHandle, Ref<VulkanTexture>> m_TextureCache;
 		std::unordered_map<AssetHandle, Ref<VulkanMaterial>> m_MaterialCache;
 		std::unordered_map<AssetHandle, std::vector<Ref<VulkanGeometry>>> m_GeometryCache;
+
+		AssetHandle m_FallbackWhiteTextureHandle = InvalidAssetHandle;
+		AssetHandle m_FallbackBlackTextureHandle = InvalidAssetHandle;
+		AssetHandle m_FallbackNormalTextureHandle = InvalidAssetHandle;
 	};
 }

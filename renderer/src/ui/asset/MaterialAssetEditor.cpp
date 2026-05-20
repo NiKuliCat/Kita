@@ -17,9 +17,38 @@ namespace Kita {
 		constexpr float materialPropertyRowHeight = 30.0f;
 		constexpr float materialToolbarHeight = 48.0f;
 		constexpr float materialBodyHorizontalPadding = 12.0f;
+		constexpr float kMaterialThumbCheckerCellSize = 8.0f;
 		const ImVec4 materialContentBgColor = ImVec4(0.12f, 0.12f, 0.13f, 1.0f);
 		const ImVec4 materialBarBgColor = ImVec4(0.12f, 0.12f, 0.13f, 1.0f);
 		const ImVec4 materialHeaderAccentColor = ImVec4(0.18f, 0.18f, 0.20f, 1.0f);
+
+		void DrawCheckerboard(
+			ImDrawList* drawList,
+			const ImVec2& min,
+			const ImVec2& max,
+			float cellSize,
+			ImU32 colorA,
+			ImU32 colorB)
+		{
+			if (!drawList || cellSize <= 0.0f || max.x <= min.x || max.y <= min.y)
+			{
+				return;
+			}
+
+			for (float y = min.y; y < max.y; y += cellSize)
+			{
+				for (float x = min.x; x < max.x; x += cellSize)
+				{
+					const int cellX = static_cast<int>((x - min.x) / cellSize);
+					const int cellY = static_cast<int>((y - min.y) / cellSize);
+					const ImU32 color = ((cellX + cellY) & 1) == 0 ? colorA : colorB;
+					drawList->AddRectFilled(
+						ImVec2(x, y),
+						ImVec2(ImMin(x + cellSize, max.x), ImMin(y + cellSize, max.y)),
+						color);
+				}
+			}
+		}
 	}
 
 	MaterialAssetEditor::MaterialAssetEditor(AssetHandle handle, ThumbnailCache* thumbnailCache, VulkanResourceFactory* resourceFactory)
@@ -60,9 +89,6 @@ namespace Kita {
 			return;
 		}
 
-		m_SourceAsset->ShaderHandle = m_WorkingCopy.ShaderHandle;
-		m_SourceAsset->AlbedoTextureHandle = m_WorkingCopy.AlbedoTextureHandle;
-		m_SourceAsset->BaseColor = m_WorkingCopy.BaseColor;
 		SyncWorkingCopyToAssetData();
 
 		if (MaterialSerializer::Serialize(m_AssetPath, *m_SourceAsset))
@@ -224,8 +250,20 @@ namespace Kita {
 		if (UIAttributeUtil::BeginPropertyTable("##MaterialPropertyTable", m_TableStyle))
 		{
 			DrawAssetRow("Shader", "##MaterialShader", m_WorkingCopy.ShaderHandle, AssetType::Shader, m_SavedCopy.ShaderHandle);
-			DrawTextureSlotRow("Albedo", 0, m_WorkingCopy.AlbedoTextureHandle, m_SavedCopy.AlbedoTextureHandle);
-			DrawColorRow("Base Color", "##MaterialBaseColor", m_WorkingCopy.BaseColor, m_SavedCopy.BaseColor);
+			DrawTextureSlotRow("Albedo", 0, m_WorkingCopy.m_Textures.Albedo, m_SavedCopy.m_Textures.Albedo);
+			DrawTextureSlotRow("Normal", 1, m_WorkingCopy.m_Textures.Normal, m_SavedCopy.m_Textures.Normal);
+			DrawTextureSlotRow("Metal/Rough", 2, m_WorkingCopy.m_Textures.MetallicRoughness, m_SavedCopy.m_Textures.MetallicRoughness);
+			DrawTextureSlotRow("AO", 3, m_WorkingCopy.m_Textures.AmbientOcclusion, m_SavedCopy.m_Textures.AmbientOcclusion);
+			DrawTextureSlotRow("Emissive", 4, m_WorkingCopy.m_Textures.Emissive, m_SavedCopy.m_Textures.Emissive);
+			DrawTextureSlotRow("Opacity", 5, m_WorkingCopy.m_Textures.Opacity, m_SavedCopy.m_Textures.Opacity);
+			DrawColorRow("Base Color", "##MaterialBaseColor", m_WorkingCopy.m_SurfaceParams.BaseColor, m_SavedCopy.m_SurfaceParams.BaseColor);
+			DrawColorRow("Emissive", "##MaterialEmissive", m_WorkingCopy.m_SurfaceParams.Emissive, m_SavedCopy.m_SurfaceParams.Emissive);
+			DrawFloatRow("Metallic", "##MaterialMetallic", m_WorkingCopy.m_SurfaceParams.Metallic, m_SavedCopy.m_SurfaceParams.Metallic, 0.01f, 0.0f, 1.0f);
+			DrawFloatRow("Roughness", "##MaterialRoughness", m_WorkingCopy.m_SurfaceParams.Roughness, m_SavedCopy.m_SurfaceParams.Roughness, 0.01f, 0.0f, 1.0f);
+			DrawFloatRow("AO Strength", "##MaterialAO", m_WorkingCopy.m_SurfaceParams.AmbientOcclusion, m_SavedCopy.m_SurfaceParams.AmbientOcclusion, 0.01f, 0.0f, 1.0f);
+			DrawFloatRow("Opacity", "##MaterialOpacity", m_WorkingCopy.m_SurfaceParams.Opacity, m_SavedCopy.m_SurfaceParams.Opacity, 0.01f, 0.0f, 1.0f);
+			DrawFloatRow("Normal Scale", "##MaterialNormalScale", m_WorkingCopy.m_SurfaceParams.NormalScale, m_SavedCopy.m_SurfaceParams.NormalScale, 0.01f, 0.0f, 8.0f);
+			DrawFloatRow("Alpha Cutoff", "##MaterialAlphaCutoff", m_WorkingCopy.m_SurfaceParams.AlphaCutoff, m_SavedCopy.m_SurfaceParams.AlphaCutoff, 0.01f, 0.0f, 1.0f);
 			UIAttributeUtil::EndPropertyTable();
 		}
 		ImGui::EndChild();
@@ -296,6 +334,13 @@ namespace Kita {
 			m_ThumbnailCache ? m_ThumbnailCache->GetOrCreate(handle, AssetType::Texture) : ThumbnailCache::ThumbnailHandle{};
 		if (thumbnail.IsValid())
 		{
+			DrawCheckerboard(
+				drawList,
+				thumbRect.Min,
+				thumbRect.Max,
+				kMaterialThumbCheckerCellSize,
+				IM_COL32(74, 74, 74, 255),
+				IM_COL32(108, 108, 108, 255));
 			drawList->AddImage(thumbnail.TextureID, thumbRect.Min, thumbRect.Max, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f));
 		}
 		else
@@ -389,11 +434,83 @@ namespace Kita {
 		}
 	}
 
+	void MaterialAssetEditor::DrawColorRow(const char* label, const char* colorId, glm::vec3& value, const glm::vec3& resetValue)
+	{
+		UIAttributeUtil::BeginPropertyRow(m_TableStyle, materialPropertyRowHeight);
+		UIAttributeUtil::DrawPropertyLabelCell(label, m_TableStyle, materialPropertyRowHeight);
+		UIAttributeUtil::PreparePropertyValueCell(m_TableStyle, UIAttributeUtil::GetControlYOffset(m_TableStyle, materialPropertyRowHeight));
+
+		ImGui::PushStyleColor(ImGuiCol_Border, m_TableStyle.InputBorderColor);
+		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - m_TableStyle.ValueRightInset);
+		ImGui::ColorEdit3(colorId, &value.x,
+			ImGuiColorEditFlags_DisplayRGB |
+			ImGuiColorEditFlags_Float);
+		if (ImGui::IsItemEdited())
+		{
+			SyncWorkingCopyToAssetData();
+		}
+		ImGui::PopStyleColor();
+
+		if (UIAttributeUtil::DrawResetButtonCell(
+			label,
+			m_TableStyle,
+			value != resetValue,
+			UIAttributeUtil::GetControlYOffset(m_TableStyle, materialPropertyRowHeight)))
+		{
+			value = resetValue;
+			SyncWorkingCopyToAssetData();
+		}
+	}
+
+	void MaterialAssetEditor::DrawFloatRow(
+		const char* label,
+		const char* valueId,
+		float& value,
+		float resetValue,
+		float speed,
+		float minValue,
+		float maxValue)
+	{
+		UIAttributeUtil::BeginPropertyRow(m_TableStyle, materialPropertyRowHeight);
+		UIAttributeUtil::DrawPropertyLabelCell(label, m_TableStyle, materialPropertyRowHeight);
+		UIAttributeUtil::PreparePropertyValueCell(m_TableStyle, UIAttributeUtil::GetControlYOffset(m_TableStyle, materialPropertyRowHeight));
+
+		UIAttributeUtil::PushInputStyle(m_TableStyle);
+		ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x - m_TableStyle.ValueRightInset);
+		if (ImGui::DragFloat(valueId, &value, speed, minValue, maxValue, "%.3f"))
+		{
+			SyncWorkingCopyToAssetData();
+		}
+		UIAttributeUtil::PopInputStyle();
+
+		if (UIAttributeUtil::DrawResetButtonCell(
+			label,
+			m_TableStyle,
+			value != resetValue,
+			UIAttributeUtil::GetControlYOffset(m_TableStyle, materialPropertyRowHeight)))
+		{
+			value = resetValue;
+			SyncWorkingCopyToAssetData();
+		}
+	}
+
 	bool MaterialAssetEditor::IsWorkingCopyDirty() const
 	{
 		return m_WorkingCopy.ShaderHandle != m_SavedCopy.ShaderHandle ||
-			m_WorkingCopy.AlbedoTextureHandle != m_SavedCopy.AlbedoTextureHandle ||
-			m_WorkingCopy.BaseColor != m_SavedCopy.BaseColor;
+			m_WorkingCopy.m_Textures.Albedo != m_SavedCopy.m_Textures.Albedo ||
+			m_WorkingCopy.m_Textures.Normal != m_SavedCopy.m_Textures.Normal ||
+			m_WorkingCopy.m_Textures.MetallicRoughness != m_SavedCopy.m_Textures.MetallicRoughness ||
+			m_WorkingCopy.m_Textures.AmbientOcclusion != m_SavedCopy.m_Textures.AmbientOcclusion ||
+			m_WorkingCopy.m_Textures.Emissive != m_SavedCopy.m_Textures.Emissive ||
+			m_WorkingCopy.m_Textures.Opacity != m_SavedCopy.m_Textures.Opacity ||
+			m_WorkingCopy.m_SurfaceParams.BaseColor != m_SavedCopy.m_SurfaceParams.BaseColor ||
+			m_WorkingCopy.m_SurfaceParams.Emissive != m_SavedCopy.m_SurfaceParams.Emissive ||
+			m_WorkingCopy.m_SurfaceParams.Metallic != m_SavedCopy.m_SurfaceParams.Metallic ||
+			m_WorkingCopy.m_SurfaceParams.Roughness != m_SavedCopy.m_SurfaceParams.Roughness ||
+			m_WorkingCopy.m_SurfaceParams.AmbientOcclusion != m_SavedCopy.m_SurfaceParams.AmbientOcclusion ||
+			m_WorkingCopy.m_SurfaceParams.Opacity != m_SavedCopy.m_SurfaceParams.Opacity ||
+			m_WorkingCopy.m_SurfaceParams.NormalScale != m_SavedCopy.m_SurfaceParams.NormalScale ||
+			m_WorkingCopy.m_SurfaceParams.AlphaCutoff != m_SavedCopy.m_SurfaceParams.AlphaCutoff;
 	}
 
 	void MaterialAssetEditor::SyncWorkingCopyToAssetData()
@@ -404,8 +521,20 @@ namespace Kita {
 		}
 
 		m_SourceAsset->ShaderHandle = m_WorkingCopy.ShaderHandle;
-		m_SourceAsset->AlbedoTextureHandle = m_WorkingCopy.AlbedoTextureHandle;
-		m_SourceAsset->BaseColor = m_WorkingCopy.BaseColor;
+		m_SourceAsset->m_Textures.Albedo = m_WorkingCopy.m_Textures.Albedo;
+		m_SourceAsset->m_Textures.Normal = m_WorkingCopy.m_Textures.Normal;
+		m_SourceAsset->m_Textures.MetallicRoughness = m_WorkingCopy.m_Textures.MetallicRoughness;
+		m_SourceAsset->m_Textures.AmbientOcclusion = m_WorkingCopy.m_Textures.AmbientOcclusion;
+		m_SourceAsset->m_Textures.Emissive = m_WorkingCopy.m_Textures.Emissive;
+		m_SourceAsset->m_Textures.Opacity = m_WorkingCopy.m_Textures.Opacity;
+		m_SourceAsset->m_SurfaceParams.BaseColor = m_WorkingCopy.m_SurfaceParams.BaseColor;
+		m_SourceAsset->m_SurfaceParams.Emissive = m_WorkingCopy.m_SurfaceParams.Emissive;
+		m_SourceAsset->m_SurfaceParams.Metallic = m_WorkingCopy.m_SurfaceParams.Metallic;
+		m_SourceAsset->m_SurfaceParams.Roughness = m_WorkingCopy.m_SurfaceParams.Roughness;
+		m_SourceAsset->m_SurfaceParams.AmbientOcclusion = m_WorkingCopy.m_SurfaceParams.AmbientOcclusion;
+		m_SourceAsset->m_SurfaceParams.Opacity = m_WorkingCopy.m_SurfaceParams.Opacity;
+		m_SourceAsset->m_SurfaceParams.NormalScale = m_WorkingCopy.m_SurfaceParams.NormalScale;
+		m_SourceAsset->m_SurfaceParams.AlphaCutoff = m_WorkingCopy.m_SurfaceParams.AlphaCutoff;
 
 		if (m_ResourceFactory && Asset::IsValidHandle(m_AssetHandle))
 		{

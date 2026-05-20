@@ -41,6 +41,10 @@ namespace Kita {
 		{
 			m_ContentBrowserPanel = ContentBrowserPanel(project->GetAssetRootDirectory(),m_EditorSelectionContext);
 			m_EditorVulkanResourceFactory = CreateUnique<VulkanResourceFactory>(Application::Get().GetVulkanContext(), AssetManager::GetInstance());
+			m_EditorVulkanResourceFactory->SetFallbackTextureHandles(
+				EditorProjectBootstrap::GetPreLoadTextureHandle("white"),
+				EditorProjectBootstrap::GetPreLoadTextureHandle("black"),
+				EditorProjectBootstrap::GetPreLoadTextureHandle("normal"));
 			m_PipelineFactory = CreateUnique<PipelineFactory>(Application::Get().GetVulkanContext());
 
 			m_ContentBrowserThumbnailCache = CreateUnique<ThumbnailCache>(*m_EditorVulkanResourceFactory);
@@ -73,11 +77,8 @@ namespace Kita {
 			meshrenderer.DefaultMaterialAssetHandle = EditorProjectBootstrap::GetPreLoadMaterialHandle("default");
 			meshrenderer.MaterialAssetHandles.clear();
 
-			m_Scene->CreateObject("obj - 0");
-			m_Scene->CreateObject("obj - 1");
-			m_Scene->CreateObject("obj - 2");
-			m_Scene->CreateObject("obj - 3");
-			m_Scene->CreateObject("obj - 4");
+			auto light_obj = m_Scene->CreateObject("direction light");
+			auto& lightComponent =  light_obj.AddComponent<LightComponent>();
 		}
 	}
 

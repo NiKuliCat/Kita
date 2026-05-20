@@ -15,7 +15,8 @@ namespace Kita {
 	public:
 		EditorRenderer(
 			VulkanContext& context,
-			VulkanRenderTarget& rt,
+			VulkanRenderTarget& gbufferRt,
+			VulkanRenderTarget& finalRt,
 			VulkanRenderTarget& pickingRt,
 			VulkanResourceFactory& vulkanResFactory,
 			PipelineFactory& pipelineFactory,
@@ -35,7 +36,9 @@ namespace Kita {
 	private:
 		void InitRenderSceneData(ScenePassData& sceneData);
 		void InitGridResources();
+		void InitDeferredLightingResources();
 		VulkanGraphicsPipeline* GetPipeline(VulkanRenderTarget& rt, Ref<VulkanGeometry>& geometry, Ref<VulkanMaterial>& material);
+		VulkanGraphicsPipeline* GetDeferredLightingPipeline(VulkanRenderTarget& rt);
 		VulkanGraphicsPipeline* GetGridPipeline(VulkanRenderTarget& rt);
 		VulkanGraphicsPipeline* GetPickingPipeline(VulkanRenderTarget& rt, Ref<VulkanGeometry>& geometry);
 		VulkanGraphicsPipeline* GetSkyboxPipeline(VulkanRenderTarget& rt);
@@ -43,6 +46,8 @@ namespace Kita {
 		VulkanContext* m_Context = nullptr;
 		SceneBindings m_SceneBindings;
 		
+		Unique<BasePass> m_BasePass;
+		Unique<DeferredLightingPass> m_DeferredLightingPass;
 		Unique<ForwardOpaquePass> m_ForwardOpaquePass;
 		Unique<EditorGridPass> m_EditorGridPass;
 		Unique<ViewportPickingPass> m_ViewportPickingPass;
@@ -50,9 +55,12 @@ namespace Kita {
 		Ref<VulkanMaterial> m_SkyboxMaterial = nullptr;
 		Ref<VulkanShader> m_GridVertexShader = nullptr;
 		Ref<VulkanShader> m_GridFragmentShader = nullptr;
+		Ref<VulkanShader> m_DeferredLightingVertexShader = nullptr;
+		Ref<VulkanShader> m_DeferredLightingFragmentShader = nullptr;
 		EditorGridPass::PushConstants m_GridPushConstants{};
 		bool m_IsGridEnabled = true;
 
+		VulkanRenderTarget* m_GBufferRenderTarget = nullptr;
 		VulkanRenderTarget* m_RenderTarget = nullptr;
 		Ref<Scene> m_SceneContext = nullptr;
 		EditorPickRegistry* m_PickRegistry = nullptr;

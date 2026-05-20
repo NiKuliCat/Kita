@@ -11,6 +11,9 @@
 namespace Kita {
 	namespace
 	{
+		constexpr float kTooltipPreviewMinSize = 96.0f;
+		constexpr float kPreviewCheckerCellSize = 8.0f;
+
 		bool IsSupportedAssetPath(const std::filesystem::path& path)
 		{
 			std::string extension = path.extension().string();
@@ -56,6 +59,34 @@ namespace Kita {
 			std::transform(value.begin(), value.end(), value.begin(),
 				[](unsigned char c) { return static_cast<char>(std::tolower(c)); });
 			return value;
+		}
+
+		void DrawCheckerboard(
+			ImDrawList* drawList,
+			const ImVec2& min,
+			const ImVec2& max,
+			float cellSize,
+			ImU32 colorA,
+			ImU32 colorB)
+		{
+			if (!drawList || cellSize <= 0.0f || max.x <= min.x || max.y <= min.y)
+			{
+				return;
+			}
+
+			for (float y = min.y; y < max.y; y += cellSize)
+			{
+				for (float x = min.x; x < max.x; x += cellSize)
+				{
+					const int cellX = static_cast<int>((x - min.x) / cellSize);
+					const int cellY = static_cast<int>((y - min.y) / cellSize);
+					const ImU32 color = ((cellX + cellY) & 1) == 0 ? colorA : colorB;
+					drawList->AddRectFilled(
+						ImVec2(x, y),
+						ImVec2(ImMin(x + cellSize, max.x), ImMin(y + cellSize, max.y)),
+						color);
+				}
+			}
 		}
 	}
 
@@ -515,6 +546,13 @@ namespace Kita {
 
 		if (thumbnail.IsValid())
 		{
+			DrawCheckerboard(
+				drawList,
+				previewMin,
+				previewMax,
+				kPreviewCheckerCellSize,
+				IM_COL32(72, 72, 72, 255),
+				IM_COL32(104, 104, 104, 255));
 			drawList->AddImage(
 				thumbnail.TextureID,
 				previewMin,
@@ -567,8 +605,19 @@ namespace Kita {
 			const float maxDimension = ImMax(width, height);
 			if (maxDimension > 0.0f)
 			{
-				const float scale = ImMin(1.0f, kTooltipPreviewMaxSize / maxDimension);
+				const float targetMaxDimension = ImClamp(maxDimension, kTooltipPreviewMinSize, kTooltipPreviewMaxSize);
+				const float scale = targetMaxDimension / maxDimension;
 				const ImVec2 previewSize(width * scale, height * scale);
+				const ImVec2 imageMin = ImGui::GetCursorScreenPos();
+				const ImVec2 imageMax(imageMin.x + previewSize.x, imageMin.y + previewSize.y);
+				ImDrawList* drawList = ImGui::GetWindowDrawList();
+				DrawCheckerboard(
+					drawList,
+					imageMin,
+					imageMax,
+					kPreviewCheckerCellSize,
+					IM_COL32(76, 76, 76, 255),
+					IM_COL32(112, 112, 112, 255));
 				ImGui::Image(thumbnail.TextureID, previewSize, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f));
 				ImGui::Separator();
 			}

@@ -49,8 +49,8 @@ namespace Kita {
 		for (auto entity : lightView)
 		{
 			auto [lightTransform, lightComponent] = lightView.get<Transform, LightComponent>(entity);
-			lightData.Direction = glm::vec4(lightTransform.GetFrontDir(), lightComponent.intensity);
-			lightData.Color = lightComponent.color;
+			lightData.Direction = glm::vec4(lightTransform.GetFrontDir(), 0.0f);
+			lightData.Color = glm::vec4(lightComponent.color.x, lightComponent.color.y, lightComponent.color.z,lightComponent.intensity);
 			break;
 		}
 

@@ -11,6 +11,8 @@ namespace Kita {
 
 	namespace
 	{
+		constexpr float kTexturePreviewMinVisibleSize = 128.0f;
+		constexpr float kTexturePreviewCheckerCellSize = 12.0f;
 		constexpr float textureToolbarHeight = 48.0f;
 		constexpr float textureBodyHorizontalPadding = 12.0f;
 		const ImVec4 textureContentBgColor = ImVec4(0.12f, 0.12f, 0.13f, 1.0f);
@@ -64,6 +66,34 @@ namespace Kita {
 			case TextureColorSpace::Linear: return "Linear";
 			case TextureColorSpace::SRGB:
 			default: return "sRGB";
+			}
+		}
+
+		void DrawCheckerboard(
+			ImDrawList* drawList,
+			const ImVec2& min,
+			const ImVec2& max,
+			float cellSize,
+			ImU32 colorA,
+			ImU32 colorB)
+		{
+			if (!drawList || cellSize <= 0.0f || max.x <= min.x || max.y <= min.y)
+			{
+				return;
+			}
+
+			for (float y = min.y; y < max.y; y += cellSize)
+			{
+				for (float x = min.x; x < max.x; x += cellSize)
+				{
+					const int cellX = static_cast<int>((x - min.x) / cellSize);
+					const int cellY = static_cast<int>((y - min.y) / cellSize);
+					const ImU32 color = ((cellX + cellY) & 1) == 0 ? colorA : colorB;
+					drawList->AddRectFilled(
+						ImVec2(x, y),
+						ImVec2(ImMin(x + cellSize, max.x), ImMin(y + cellSize, max.y)),
+						color);
+				}
 			}
 		}
 	}
@@ -231,11 +261,28 @@ namespace Kita {
 
 		const float availWidth = ImGui::GetContentRegionAvail().x;
 		const float availHeight = ImGui::GetContentRegionAvail().y;
-		const float scale = std::min(availWidth / static_cast<float>(thumbnail.Width), availHeight / static_cast<float>(thumbnail.Height));
+		const float width = static_cast<float>(thumbnail.Width);
+		const float height = static_cast<float>(thumbnail.Height);
+		const float maxDimension = ImMax(width, height);
+		const float maxPreviewDimension = ImMax(1.0f, ImMin(availWidth, availHeight) * 0.82f);
+		const float targetMaxDimension = ImClamp(maxDimension, kTexturePreviewMinVisibleSize, maxPreviewDimension);
+		const float scale = maxDimension > 0.0f ? targetMaxDimension / maxDimension : 1.0f;
 		const ImVec2 previewSize(
-			static_cast<float>(thumbnail.Width) * std::min(1.0f, scale),
-			static_cast<float>(thumbnail.Height) * std::min(1.0f, scale));
+			width * scale,
+			height * scale);
+		const float cursorPosY = ImMax(0.0f, (availHeight - previewSize.y) * 0.5f);
 		ImGui::SetCursorPosX(std::max(0.0f, (availWidth - previewSize.x) * 0.5f));
+		ImGui::SetCursorPosY(cursorPosY);
+		const ImVec2 imageMin = ImGui::GetCursorScreenPos();
+		const ImVec2 imageMax(imageMin.x + previewSize.x, imageMin.y + previewSize.y);
+		ImDrawList* drawList = ImGui::GetWindowDrawList();
+		DrawCheckerboard(
+			drawList,
+			imageMin,
+			imageMax,
+			kTexturePreviewCheckerCellSize,
+			IM_COL32(74, 74, 74, 255),
+			IM_COL32(108, 108, 108, 255));
 		ImGui::Image(thumbnail.TextureID, previewSize);
 		ImGui::EndChild();
 	}
@@ -422,7 +469,16 @@ namespace Kita {
 				continue;
 			}
 
-			if (materialAsset->AlbedoTextureHandle == m_AssetHandle)
+			const MaterialTextures& textures = materialAsset->m_Textures;
+			const bool usesTexture =
+				textures.Albedo == m_AssetHandle ||
+				textures.Normal == m_AssetHandle ||
+				textures.MetallicRoughness == m_AssetHandle ||
+				textures.AmbientOcclusion == m_AssetHandle ||
+				textures.Emissive == m_AssetHandle ||
+				textures.Opacity == m_AssetHandle;
+
+			if (usesTexture)
 			{
 				if (rebuiltTexture->GetType() == TextureType::TextureCube)
 				{

@@ -66,16 +66,16 @@ namespace Kita {
 			vkFreeCommandBuffers(context.GetDevice(), context.GetCommandPool(), 1, &commandBuffer);
 		}
 
-		VulkanRenderTarget::CreateInfo BuildRenderTargetCreateInfo( const EditorViewportSurface::CreateInfo& createInfo )
+		VulkanRenderTarget::CreateInfo BuildFinalRenderTargetCreateInfo(const EditorViewportSurface::CreateInfo& createInfo)
 		{
 			VulkanRenderTarget::CreateInfo rtInfo{};
-			rtInfo.Name = createInfo.Name;
+			rtInfo.Name = createInfo.Name + "_Final";
 			rtInfo.Width = createInfo.Width;
 			rtInfo.Height = createInfo.Height;
 			rtInfo.Samples = createInfo.Samples;
 
 			VulkanRenderTarget::ColorAttachmentDesc colorAttachment{};
-			colorAttachment.Name = createInfo.Name + "_Color";
+			colorAttachment.Name = rtInfo.Name + "_Color";
 			colorAttachment.Format = createInfo.ColorFormat;
 			colorAttachment.CreateSampler = true;
 			colorAttachment.CreateResolveImage = false;
@@ -85,6 +85,58 @@ namespace Kita {
 
 			rtInfo.DepthAttachment.Enabled = true;
 			rtInfo.DepthAttachment.Name = createInfo.Name + "_Depth";
+			rtInfo.DepthAttachment.Format = createInfo.DepthFormat;
+			rtInfo.DepthAttachment.CreateSampler = true;
+
+			return rtInfo;
+		}
+
+		VulkanRenderTarget::CreateInfo BuildGBufferRenderTargetCreateInfo(const EditorViewportSurface::CreateInfo& createInfo)
+		{
+			VulkanRenderTarget::CreateInfo rtInfo{};
+			rtInfo.Name = createInfo.Name + "_GBuffer";
+			rtInfo.Width = createInfo.Width;
+			rtInfo.Height = createInfo.Height;
+			rtInfo.Samples = createInfo.Samples;
+
+			VulkanRenderTarget::ColorAttachmentDesc baseColorAttachment{};
+			baseColorAttachment.Name = rtInfo.Name + "_BaseColor";
+			baseColorAttachment.Format = createInfo.GBufferBaseColorFormat;
+			baseColorAttachment.CreateSampler = true;
+			baseColorAttachment.CreateResolveImage = false;
+			baseColorAttachment.Filter = createInfo.SamplerFilter;
+			baseColorAttachment.AddressMode = createInfo.SamplerAddressMode;
+			rtInfo.ColorAttachments.push_back(baseColorAttachment);
+
+			VulkanRenderTarget::ColorAttachmentDesc normalAttachment{};
+			normalAttachment.Name = rtInfo.Name + "_Normal";
+			normalAttachment.Format = createInfo.GBufferNormalFormat;
+			normalAttachment.CreateSampler = true;
+			normalAttachment.CreateResolveImage = false;
+			normalAttachment.Filter = createInfo.SamplerFilter;
+			normalAttachment.AddressMode = createInfo.SamplerAddressMode;
+			rtInfo.ColorAttachments.push_back(normalAttachment);
+
+			VulkanRenderTarget::ColorAttachmentDesc materialAttachment{};
+			materialAttachment.Name = rtInfo.Name + "_Material";
+			materialAttachment.Format = createInfo.GBufferMaterialFormat;
+			materialAttachment.CreateSampler = true;
+			materialAttachment.CreateResolveImage = false;
+			materialAttachment.Filter = createInfo.SamplerFilter;
+			materialAttachment.AddressMode = createInfo.SamplerAddressMode;
+			rtInfo.ColorAttachments.push_back(materialAttachment);
+
+			VulkanRenderTarget::ColorAttachmentDesc emissiveAttachment{};
+			emissiveAttachment.Name = rtInfo.Name + "_Emissive";
+			emissiveAttachment.Format = createInfo.GBufferEmissiveFormat;
+			emissiveAttachment.CreateSampler = true;
+			emissiveAttachment.CreateResolveImage = false;
+			emissiveAttachment.Filter = createInfo.SamplerFilter;
+			emissiveAttachment.AddressMode = createInfo.SamplerAddressMode;
+			rtInfo.ColorAttachments.push_back(emissiveAttachment);
+
+			rtInfo.DepthAttachment.Enabled = true;
+			rtInfo.DepthAttachment.Name = rtInfo.Name + "_Depth";
 			rtInfo.DepthAttachment.Format = createInfo.DepthFormat;
 			rtInfo.DepthAttachment.CreateSampler = true;
 
@@ -135,7 +187,7 @@ namespace Kita {
 		m_CreateInfo.Width = std::max(1u, m_CreateInfo.Width);
 		m_CreateInfo.Height = std::max(1u, m_CreateInfo.Height);
 
-		CreateRenderTarget();
+		CreateRenderTargets();
 		CreatePickingResources();
 		RecreateTextureID();
 	}
@@ -149,7 +201,8 @@ namespace Kita {
 
 		ReleaseTextureID();
 		DestroyPickingResources();
-		m_RenderTarget.reset();
+		m_GBufferRenderTarget.reset();
+		m_FinalRenderTarget.reset();
 		m_Context = nullptr;
 		m_CreateInfo = {};
 	}
@@ -159,10 +212,10 @@ namespace Kita {
 		width = std::max(1u, width);
 		height = std::max(1u, height);
 
-		if (!m_RenderTarget)
+		if (!m_FinalRenderTarget)
 			return;
 
-		if (width == m_RenderTarget->GetWidth() && height == m_RenderTarget->GetHeight())
+		if (width == m_FinalRenderTarget->GetWidth() && height == m_FinalRenderTarget->GetHeight())
 			return;
 
 		Resize(width, height);
@@ -172,12 +225,12 @@ namespace Kita {
 	void EditorViewportSurface::Resize(uint32_t width, uint32_t height)
 	{
 		KITA_CORE_ASSERT(m_Context, "EditorViewportSurface context is null");
-		KITA_CORE_ASSERT(m_RenderTarget, "EditorViewportSurface render target is null");
+		KITA_CORE_ASSERT(m_FinalRenderTarget, "EditorViewportSurface final render target is null");
 
 		width = std::max(1u, width);
 		height = std::max(1u, height);
 
-		if (width == m_RenderTarget->GetWidth() && height == m_RenderTarget->GetHeight())
+		if (width == m_FinalRenderTarget->GetWidth() && height == m_FinalRenderTarget->GetHeight())
 			return;
 
 		m_Context->WaitIdle();
@@ -186,23 +239,48 @@ namespace Kita {
 
 		m_CreateInfo.Width = width;
 		m_CreateInfo.Height = height;
-		m_RenderTarget->Resize(width, height);
+		if (m_GBufferRenderTarget)
+			m_GBufferRenderTarget->Resize(width, height);
+		if (m_FinalRenderTarget)
+			m_FinalRenderTarget->Resize(width, height);
 		DestroyPickingResources();
 		CreatePickingResources();
 
 		RecreateTextureID();
 	}
 
+	VulkanRenderTarget& EditorViewportSurface::GetGBufferRenderTarget()
+	{
+		KITA_CORE_ASSERT(m_GBufferRenderTarget, "EditorViewportSurface GBuffer render target is null");
+		return *m_GBufferRenderTarget;
+	}
+
+	const VulkanRenderTarget& EditorViewportSurface::GetGBufferRenderTarget() const
+	{
+		KITA_CORE_ASSERT(m_GBufferRenderTarget, "EditorViewportSurface GBuffer render target is null");
+		return *m_GBufferRenderTarget;
+	}
+
+	VulkanRenderTarget& EditorViewportSurface::GetFinalRenderTarget()
+	{
+		KITA_CORE_ASSERT(m_FinalRenderTarget, "EditorViewportSurface final render target is null");
+		return *m_FinalRenderTarget;
+	}
+
+	const VulkanRenderTarget& EditorViewportSurface::GetFinalRenderTarget() const
+	{
+		KITA_CORE_ASSERT(m_FinalRenderTarget, "EditorViewportSurface final render target is null");
+		return *m_FinalRenderTarget;
+	}
+
 	VulkanRenderTarget& EditorViewportSurface::GetRenderTarget()
 	{
-		KITA_CORE_ASSERT(m_RenderTarget, "EditorViewportSurface render target is null");
-		return *m_RenderTarget;
+		return GetFinalRenderTarget();
 	}
 
 	const VulkanRenderTarget& EditorViewportSurface::GetRenderTarget() const
 	{
-		KITA_CORE_ASSERT(m_RenderTarget, "EditorViewportSurface render target is null");
-		return *m_RenderTarget;
+		return GetFinalRenderTarget();
 	}
 
 	VulkanRenderTarget& EditorViewportSurface::GetPickingRenderTarget()
@@ -280,12 +358,15 @@ namespace Kita {
 		return pickedValue;
 	}
 
-	void EditorViewportSurface::CreateRenderTarget()
+	void EditorViewportSurface::CreateRenderTargets()
 	{
 		KITA_CORE_ASSERT(m_Context, "EditorViewportSurface context is null");
 
-		VulkanRenderTarget::CreateInfo rtInfo = BuildRenderTargetCreateInfo(m_CreateInfo);
-		m_RenderTarget = CreateUnique<VulkanRenderTarget>(*m_Context, rtInfo);
+		VulkanRenderTarget::CreateInfo gBufferInfo = BuildGBufferRenderTargetCreateInfo(m_CreateInfo);
+		m_GBufferRenderTarget = CreateUnique<VulkanRenderTarget>(*m_Context, gBufferInfo);
+
+		VulkanRenderTarget::CreateInfo finalInfo = BuildFinalRenderTargetCreateInfo(m_CreateInfo);
+		m_FinalRenderTarget = CreateUnique<VulkanRenderTarget>(*m_Context, finalInfo);
 	}
 
 	void EditorViewportSurface::CreatePickingResources()
@@ -315,10 +396,10 @@ namespace Kita {
 	{
 		ReleaseTextureID();
 
-		if (!m_RenderTarget)
+		if (!m_FinalRenderTarget)
 			return;
 
-		const VulkanImage& sampledImage = m_RenderTarget->GetSampledColorAttachment(0);
+		const VulkanImage& sampledImage = m_FinalRenderTarget->GetSampledColorAttachment(0);
 		KITA_CORE_ASSERT(sampledImage.HasSampler(), "EditorViewportSurface sampled image has no sampler");
 		KITA_CORE_ASSERT(sampledImage.GetView() != VK_NULL_HANDLE, "EditorViewportSurface sampled image view is null");
 

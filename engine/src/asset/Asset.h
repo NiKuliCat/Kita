@@ -44,12 +44,36 @@ namespace Kita {
 		AssetHandle m_Handle = InvalidAssetHandle;
 	};
 
+	struct MaterialSurfaceParams
+	{
+		glm::vec4 BaseColor = glm::vec4(1.0f);
+		glm::vec3 Emissive = glm::vec3(1.0f);
+
+		float Metallic = 0.0f;
+		float Roughness = 1.0f;
+		float AmbientOcclusion = 1.0f;
+		float Opacity = 1.0f;
+		float NormalScale = 1.0f;
+		float AlphaCutoff = 0.5f;
+	};
+
+	struct MaterialTextures
+	{
+		AssetHandle Albedo = InvalidAssetHandle;
+		AssetHandle Normal = InvalidAssetHandle;
+		AssetHandle MetallicRoughness = InvalidAssetHandle;
+		AssetHandle AmbientOcclusion = InvalidAssetHandle;
+		AssetHandle Emissive = InvalidAssetHandle;
+		AssetHandle Opacity = InvalidAssetHandle;
+	};
+
+
 	struct MaterialAsset : public Asset
 	{
 		virtual AssetType GetType() const override { return AssetType::Material; }
 		AssetHandle ShaderHandle = InvalidAssetHandle;
-		AssetHandle AlbedoTextureHandle = InvalidAssetHandle;
-		glm::vec4 BaseColor = glm::vec4(1.0f);
+		MaterialSurfaceParams m_SurfaceParams;
+		MaterialTextures m_Textures;
 	};
 
 	struct ShaderStageBinary

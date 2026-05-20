@@ -96,6 +96,7 @@ namespace Kita {
 		desc.Name = "BasePass";
 		desc.Type = PassType::GBuffer;
 		desc.Samples = renderTarget.GetCreateInfo().Samples;
+		desc.UseDepthAttachment = renderTarget.HasDepthAttachment();
 
 		const uint32_t colorCount = renderTarget.GetColorAttachmentCount();
 		desc.ColorFormats.reserve(colorCount);

@@ -11,7 +11,8 @@ namespace Kita {
 
 	EditorRenderer::EditorRenderer(
 		VulkanContext& context,
-		VulkanRenderTarget& rt,
+		VulkanRenderTarget& gbufferRt,
+		VulkanRenderTarget& finalRt,
 		VulkanRenderTarget& pickingRt,
 		VulkanResourceFactory& vulkanResFactory,
 		PipelineFactory& pipelineFactory,
@@ -20,7 +21,8 @@ namespace Kita {
 		EditorPickRegistry& pickRegistry)
 		: m_Context(&context)
 		, m_VulkanResFactory(&vulkanResFactory)
-		, m_RenderTarget(&rt)
+		, m_GBufferRenderTarget(&gbufferRt)
+		, m_RenderTarget(&finalRt)
 		, m_SceneContext(scene)
 		, m_PickRegistry(&pickRegistry)
 		, m_ViewportCamera(&camera)
@@ -28,11 +30,14 @@ namespace Kita {
 	{
 		Init();
 		m_SceneBindings.Init(context, context.GetFramesInFlight());
-		m_ForwardOpaquePass = CreateUnique<ForwardOpaquePass>(m_SceneBindings, MakeForwardOpaquePassDesc(rt));
-		m_EditorGridPass = CreateUnique<EditorGridPass>(m_SceneBindings, MakeEditorGridPassDesc(rt));
+		m_BasePass = CreateUnique<BasePass>(m_SceneBindings, MakeBasePassDesc(gbufferRt));
+		m_DeferredLightingPass = CreateUnique<DeferredLightingPass>(m_SceneBindings, MakeDeferredLightingPassDesc(finalRt));
+		m_DeferredLightingPass->Init(context, context.GetFramesInFlight());
+		m_EditorGridPass = CreateUnique<EditorGridPass>(m_SceneBindings, MakeEditorGridPassDesc(finalRt));
 		m_ViewportPickingPass = CreateUnique<ViewportPickingPass>(m_SceneBindings,MakeViewportPickingPassDesc(pickingRt));
-		m_SkyboxPass = CreateUnique<SkyboxPass>(m_SceneBindings, MakeSkyboxPassDesc(rt));
+		m_SkyboxPass = CreateUnique<SkyboxPass>(m_SceneBindings, MakeSkyboxPassDesc(finalRt));
 		InitGridResources();
+		InitDeferredLightingResources();
 	}
 
 	void EditorRenderer::Init()
@@ -48,6 +53,10 @@ namespace Kita {
 	{
 		m_GridVertexShader.reset();
 		m_GridFragmentShader.reset();
+		m_DeferredLightingVertexShader.reset();
+		m_DeferredLightingFragmentShader.reset();
+		if (m_DeferredLightingPass)
+			m_DeferredLightingPass->Destroy();
 	}
 
 	void EditorRenderer::InitRenderSceneData(ScenePassData& sceneData)
@@ -94,10 +103,33 @@ namespace Kita {
 		m_GridFragmentShader = shaderBundle.FragmentShader;
 	}
 
+	void EditorRenderer::InitDeferredLightingResources()
+	{
+		if (!m_Context || !m_DeferredLightingPass)
+			return;
+
+		const AssetHandle deferredLightingShaderHandle = EditorProjectBootstrap::GetPreLoadShaderHandle("deferredLighting");
+		if (!Asset::IsValidHandle(deferredLightingShaderHandle))
+		{
+			KITA_CORE_WARN("EditorRenderer: preload shader handle 'deferredLighting' is invalid.");
+			return;
+		}
+
+		VulkanResourceFactory::ShaderBundle shaderBundle = m_VulkanResFactory->GetOrCreateShaderBundle(deferredLightingShaderHandle);
+		if (!shaderBundle.IsValid())
+		{
+			KITA_CORE_WARN("EditorRenderer: failed to create shader bundle for preload shader 'deferredLighting'.");
+			return;
+		}
+
+		m_DeferredLightingVertexShader = shaderBundle.VertexShader;
+		m_DeferredLightingFragmentShader = shaderBundle.FragmentShader;
+	}
+
 	VulkanGraphicsPipeline* EditorRenderer::GetPipeline(VulkanRenderTarget& rt, Ref<VulkanGeometry>& geometry, Ref<VulkanMaterial>& material)
 	{
 		PipelineRequest request{};
-		request.Pass = PassType::ForwardOpaque;
+		request.Pass = PassType::GBuffer;
 		request.Geometry = geometry.get();
 		request.VertexShader = material->GetVertexShader().get();
 		request.FragmentShader = material->GetFragmentShader().get();
@@ -130,6 +162,41 @@ namespace Kita {
 		VulkanGraphicsPipeline* pipeline = m_PipelineFactory->GetOrCreate(request);
 
 		return pipeline;
+	}
+
+	VulkanGraphicsPipeline* EditorRenderer::GetDeferredLightingPipeline(VulkanRenderTarget& rt)
+	{
+		if (!m_DeferredLightingVertexShader || !m_DeferredLightingFragmentShader || !m_DeferredLightingPass)
+			return nullptr;
+
+		PipelineRequest request{};
+		request.Pass = PassType::DeferredLighting;
+		request.UseVertexInput = false;
+		request.VertexShader = m_DeferredLightingVertexShader.get();
+		request.FragmentShader = m_DeferredLightingFragmentShader.get();
+
+		request.ColorFormats.clear();
+		for (uint32_t i = 0; i < rt.GetColorAttachmentCount(); ++i)
+			request.ColorFormats.push_back(rt.GetColorFormat(i));
+
+		request.DepthFormat = rt.HasDepthAttachment() ? rt.GetDepthFormat() : VK_FORMAT_UNDEFINED;
+		request.Samples = rt.GetCreateInfo().Samples;
+		request.DescriptorSetLayouts = {
+			m_SceneBindings.GetDescriptorSet(0).GetLayout(),
+			m_DeferredLightingPass->GetDescriptorSet(0).GetLayout()
+		};
+		request.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+		request.PolygonMode = VK_POLYGON_MODE_FILL;
+		request.CullMode = VK_CULL_MODE_NONE;
+		request.FrontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+		request.EnableDepthTest = true;
+		request.EnableDepthWrite = true;
+		request.DepthCompareOp = VK_COMPARE_OP_ALWAYS;
+		request.EnableBlending = false;
+		request.PushConstantStages = 0;
+		request.PushConstantSize = 0;
+
+		return m_PipelineFactory->GetOrCreate(request);
 	}
 
 	VulkanGraphicsPipeline* EditorRenderer::GetGridPipeline(VulkanRenderTarget& rt)
@@ -252,12 +319,25 @@ namespace Kita {
 		if (!m_Context || !m_SceneContext || !m_ViewportCamera || !m_PickRegistry)
 			return;
 
-		VulkanRenderTarget& rt = surface.GetRenderTarget();
+		VulkanRenderTarget& gbufferRt = surface.GetGBufferRenderTarget();
+		VulkanRenderTarget& finalRt = surface.GetFinalRenderTarget();
 		VulkanRenderTarget& pickingRt = surface.GetPickingRenderTarget();
 		ScenePassData sceneData{};
 		InitRenderSceneData(sceneData);
 
-		m_ForwardOpaquePass->SetSceneData(sceneData);
+		ScenePassData baseSceneData = sceneData;
+		baseSceneData.BeginInfo.TransitionSampledDepth = true;
+		m_BasePass->SetSceneData(baseSceneData);
+		if (m_DeferredLightingPass)
+		{
+			ScenePassData lightingSceneData = sceneData;
+			lightingSceneData.BeginInfo.ClearColors = true;
+			lightingSceneData.BeginInfo.ClearDepthAttachment = true;
+			lightingSceneData.BeginInfo.TransitionSampledColors = true;
+			lightingSceneData.BeginInfo.TransitionSampledDepth = false;
+			m_DeferredLightingPass->SetSceneData(lightingSceneData);
+			m_DeferredLightingPass->SetGBufferInput(&gbufferRt);
+		}
 		if (m_EditorGridPass)
 		{
 			ScenePassData gridSceneData = sceneData;
@@ -291,13 +371,23 @@ namespace Kita {
 		auto cmd = m_Context->GetCurrentCommandBuffer();
 		if (cmd == VK_NULL_HANDLE)
 			return;
-		m_ForwardOpaquePass->ClearDrawItems();
+		m_BasePass->ClearDrawItems();
 		if (m_ViewportPickingPass)
 			m_ViewportPickingPass->ClearDrawItems();
+
+		uint32_t meshEntityCount = 0;
+		uint32_t drawItemCount = 0;
+		uint32_t skippedEmptyGeometryCount = 0;
+		uint32_t skippedNullGeometryCount = 0;
+		uint32_t skippedInvalidMaterialCount = 0;
+		uint32_t skippedInvalidShaderCount = 0;
+		uint32_t skippedInvalidPipelineCount = 0;
+		uint32_t skippedInvalidPickingPipelineCount = 0;
 
 		auto mesh = m_SceneContext->GetRegistry().group<Transform, MeshRenderer>();
 		for (auto entity : mesh)
 		{
+			++meshEntityCount;
 			auto [transform, meshRenderer] = mesh.get<Transform, MeshRenderer>(entity);
 			Object object{ entity, m_SceneContext.get(), "" };
 			if (!object)
@@ -310,13 +400,25 @@ namespace Kita {
 
 			auto geometries = m_VulkanResFactory->GetOrCreateGeometries(meshRenderer.MeshAssetHandle);
 			if (geometries.empty())
+			{
+				++skippedEmptyGeometryCount;
+				KITA_CORE_WARN(
+					"EditorRenderer: object '{}' skipped, mesh handle {} produced no geometries. defaultMaterial={}, materialSlotCount={}",
+					object.GetName(),
+					meshRenderer.MeshAssetHandle,
+					meshRenderer.DefaultMaterialAssetHandle,
+					static_cast<uint32_t>(meshRenderer.MaterialAssetHandles.size()));
 				continue;
+			}
 
 			for (size_t i = 0; i < geometries.size(); ++i)
 			{
 				Ref<VulkanGeometry> geometry = geometries[i];
 				if (!geometry)
+				{
+					++skippedNullGeometryCount;
 					continue;
+				}
 
 				AssetHandle materialHandle = meshRenderer.DefaultMaterialAssetHandle;
 				if (i < meshRenderer.MaterialAssetHandles.size() &&
@@ -327,35 +429,60 @@ namespace Kita {
 
 				Ref<VulkanMaterial> material = m_VulkanResFactory->CreateMaterial(materialHandle);
 				if (!material)
+				{
+					++skippedInvalidMaterialCount;
+					KITA_CORE_WARN(
+						"EditorRenderer: object '{}' skipped, material handle {} failed to create.",
+						object.GetName(),
+						materialHandle);
 					continue;
+				}
+
+				if (!material->GetVertexShader() || !material->GetFragmentShader())
+				{
+					++skippedInvalidShaderCount;
+					KITA_CORE_WARN(
+						"EditorRenderer: object '{}' skipped, material handle {} has invalid shaders. VS='{}' FS='{}'",
+						object.GetName(),
+						materialHandle,
+						material->GetVertexShader() ? material->GetVertexShader()->GetName() : std::string("<null>"),
+						material->GetFragmentShader() ? material->GetFragmentShader()->GetName() : std::string("<null>"));
+					continue;
+				}
 
 				m_VulkanResFactory->RefreshMaterialFrameResources(
 					materialHandle,
 					m_Context->GetCurrentFrameIndex());
 
-				if (!material->GetAlbedoTexture())
+				VulkanGraphicsPipeline* pipeline = GetPipeline(gbufferRt, geometry, material);
+				if (!pipeline)
 				{
-					KITA_CORE_WARN("EditorRenderer: material has no albedo texture, skipping draw.");
+					++skippedInvalidPipelineCount;
+					KITA_CORE_WARN(
+						"EditorRenderer: object '{}' skipped, failed to get GBuffer pipeline. material handle={}, geometryIndex={}",
+						object.GetName(),
+						materialHandle,
+						static_cast<uint32_t>(i));
 					continue;
 				}
 
-				VulkanGraphicsPipeline* pipeline = GetPipeline(rt, geometry, material);
-				if (!pipeline)
-					continue;
-
-				ForwardOpaqueDrawItem item{};
+				BasePassDrawItem item{};
 				item.Pipeline = pipeline;
 				item.Geometry = geometry.get();
 				item.Material = material.get();
 				item.PerObject = objectData;
 
-				m_ForwardOpaquePass->AddDrawItem(item);
+				m_BasePass->AddDrawItem(item);
+				++drawItemCount;
 
 				if (m_ViewportPickingPass)
 				{
 					VulkanGraphicsPipeline* pickingPipeline = GetPickingPipeline(pickingRt, geometry);
 					if (!pickingPipeline)
+					{
+						++skippedInvalidPickingPipelineCount;
 						continue;
+					}
 
 					ViewportPickingDrawItem pickingItem{};
 					pickingItem.Pipeline = pickingPipeline;
@@ -366,27 +493,33 @@ namespace Kita {
 				}
 			}
 		}
-
-		RenderPassContext passContext(*m_Context, cmd, rt);
+		RenderPassContext gbufferPassContext(*m_Context, cmd, gbufferRt);
+		RenderPassContext finalPassContext(*m_Context, cmd, finalRt);
 		RenderPassContext pickingPassContext(*m_Context, cmd, pickingRt);
-		const uint32_t frameIndex = passContext.GetFrameIndex();
+		const uint32_t frameIndex = gbufferPassContext.GetFrameIndex();
 
-		m_ForwardOpaquePass->Execute(passContext);
+		m_BasePass->Execute(gbufferPassContext);
+		if (m_DeferredLightingPass)
+		{
+			m_DeferredLightingPass->UpdateFrameResources(frameIndex);
+			m_DeferredLightingPass->SetPipeline(GetDeferredLightingPipeline(finalRt));
+			m_DeferredLightingPass->Execute(finalPassContext);
+		}
 		if (m_SkyboxPass && m_SkyboxMaterial)
 		{
 			m_SkyboxMaterial->EnsureDescriptors(*m_Context, m_Context->GetFramesInFlight());
 			m_SkyboxMaterial->UpdateDescriptorSet(frameIndex);
 			m_SkyboxPass->SetMaterial(m_SkyboxMaterial);
-			m_SkyboxPass->SetPipeline(GetSkyboxPipeline(rt));
+			m_SkyboxPass->SetPipeline(GetSkyboxPipeline(finalRt));
 			if (m_SkyboxPass->HasValidMaterial())
-				m_SkyboxPass->Execute(passContext);
+				m_SkyboxPass->Execute(finalPassContext);
 		}
 		if (m_EditorGridPass)
 		{
-			m_EditorGridPass->SetPipeline(GetGridPipeline(rt));
+			m_EditorGridPass->SetPipeline(GetGridPipeline(finalRt));
 			m_EditorGridPass->SetPushConstants(m_GridPushConstants);
 			if (m_IsGridEnabled)
-				m_EditorGridPass->Execute(passContext);
+				m_EditorGridPass->Execute(finalPassContext);
 		}
 		if (m_ViewportPickingPass)
 		{

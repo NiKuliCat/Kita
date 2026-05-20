@@ -368,17 +368,35 @@ namespace Kita {
             queueCreateInfos.push_back(queueCreateInfo);
         }
 
-        VkPhysicalDeviceFeatures deviceFeatures{};
+        VkPhysicalDeviceFeatures2 deviceFeatures2{};
+        deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+
+        VkPhysicalDeviceVulkan11Features vulkan11Features{};
+        vulkan11Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+
         VkPhysicalDeviceVulkan13Features vulkan13Features{};
         vulkan13Features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+        deviceFeatures2.pNext = &vulkan11Features;
+        vulkan11Features.pNext = &vulkan13Features;
+
+        vkGetPhysicalDeviceFeatures2(m_PhysicalDevice, &deviceFeatures2);
+
+        KITA_CORE_ASSERT(
+            vulkan11Features.shaderDrawParameters == VK_TRUE,
+            "Vulkan physical device does not support shaderDrawParameters");
+        KITA_CORE_ASSERT(
+            vulkan13Features.dynamicRendering == VK_TRUE,
+            "Vulkan physical device does not support dynamicRendering");
+
+        vulkan11Features.shaderDrawParameters = VK_TRUE;
         vulkan13Features.dynamicRendering = VK_TRUE;
 
         VkDeviceCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-        createInfo.pNext = &vulkan13Features;
+        createInfo.pNext = &vulkan11Features;
         createInfo.queueCreateInfoCount = static_cast<uint32_t>(queueCreateInfos.size());
         createInfo.pQueueCreateInfos = queueCreateInfos.data();
-        createInfo.pEnabledFeatures = &deviceFeatures;
+        createInfo.pEnabledFeatures = nullptr;
         createInfo.enabledExtensionCount = static_cast<uint32_t>(s_DeviceExtensions.size());
         createInfo.ppEnabledExtensionNames = s_DeviceExtensions.data();
 

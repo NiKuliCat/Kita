@@ -29,6 +29,8 @@ namespace Kita {
 		void DrawAssetRow(const char* label, const char* comboId, AssetHandle& handle, AssetType type, AssetHandle resetValue);
 		void DrawTextureSlotRow(const char* label, size_t slotIndex, AssetHandle& handle, AssetHandle resetValue);
 		void DrawColorRow(const char* label, const char* colorId, glm::vec4& value, const glm::vec4& resetValue);
+		void DrawColorRow(const char* label, const char* colorId, glm::vec3& value, const glm::vec3& resetValue);
+		void DrawFloatRow(const char* label, const char* valueId, float& value, float resetValue, float speed, float minValue, float maxValue);
 		bool IsWorkingCopyDirty() const;
 		void SyncWorkingCopyToAssetData();
 

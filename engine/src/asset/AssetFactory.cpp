@@ -85,18 +85,27 @@ namespace Kita{
 	bool AssetBuilder::CompilerShader(ShaderAsset& shaderAsset)
 	{
 		ShaderCompiler compiler;
-
+		const std::filesystem::path shaderDirectory = shaderAsset.SourcePath.parent_path();
+		KITA_CORE_INFO("shader include dir : {0}", shaderDirectory.string());
 		ShaderCompiler::CompileRequest vs{};
 		vs.SourcePath = shaderAsset.SourcePath;
 		vs.ModuleName = shaderAsset.SourcePath.stem().string() + "_vs";
 		vs.EntryPointName = "VSMain";
 		vs.ShaderStage = ShaderCompiler::Stage::Vertex;
+		if (!shaderDirectory.empty())
+		{
+			vs.IncludeDirs.push_back(shaderDirectory);
+		}
 
 		ShaderCompiler::CompileRequest fs{};
 		fs.SourcePath = shaderAsset.SourcePath;
 		fs.ModuleName = shaderAsset.SourcePath.stem().string() + "_fs";
 		fs.EntryPointName = "PSMain";
 		fs.ShaderStage = ShaderCompiler::Stage::Fragment;
+		if (!shaderDirectory.empty())
+		{
+			fs.IncludeDirs.push_back(shaderDirectory);
+		}
 
 		auto vsResult = compiler.CompileToSpirv(vs);
 		auto fsResult = compiler.CompileToSpirv(fs);
