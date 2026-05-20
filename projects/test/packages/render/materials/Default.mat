@@ -1,0 +1,31 @@
+{
+    "version": 2,
+    "shader": "13780338159838875874",
+    "textures": {
+        "albedo": "12737767096402535834",
+        "normal": "0",
+        "metallicRoughness": "0",
+        "ambientOcclusion": "0",
+        "emissive": "0",
+        "opacity": "0"
+    },
+    "params": {
+        "baseColor": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+        ],
+        "emissive": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "metallic": 0.0,
+        "roughness": 0.4300000071525574,
+        "ambientOcclusion": 1.0,
+        "opacity": 1.0,
+        "normalScale": 1.1200000047683716,
+        "alphaCutoff": 0.0
+    }
+}

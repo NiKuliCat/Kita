@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "generatedAt": "2026-05-14T07:50:30.587Z",
+  "outputName": "editor_icons",
+  "inputDir": "G:\\TA\\renderer\\svg_to_atlas\\examples\\icons",
+  "outputDir": "G:\\TA\\renderer\\svg_to_atlas\\out",
+  "iconSize": 64,
+  "padding": 2,
+  "atlasMaxWidth": 512,
+  "atlasMaxHeight": 512,
+  "pages": [
+    {
+      "index": 0,
+      "file": "editor_icons_64_0.png",
+      "width": 476,
+      "height": 68
+    }
+  ],
+  "icons": {
+    "icons8-file-100": {
+      "page": 0,
+      "x": 2,
+      "y": 2,
+      "w": 64,
+      "h": 64,
+      "u0": 0.004201680672268907,
+      "v0": 0.029411764705882353,
+      "u1": 0.13865546218487396,
+      "v1": 0.9705882352941176,
+      "source": "icons8-file-100.svg"
+    },
+    "icons8-file": {
+      "page": 0,
+      "x": 70,
+      "y": 2,
+      "w": 64,
+      "h": 64,
+      "u0": 0.14705882352941177,
+      "v0": 0.029411764705882353,
+      "u1": 0.2815126050420168,
+      "v1": 0.9705882352941176,
+      "source": "icons8-file.svg"
+    },
+    "icons8-folder-100": {
+      "page": 0,
+      "x": 138,
+      "y": 2,
+      "w": 64,
+      "h": 64,
+      "u0": 0.28991596638655465,
+      "v0": 0.029411764705882353,
+      "u1": 0.42436974789915966,
+      "v1": 0.9705882352941176,
+      "source": "icons8-folder-100.svg"
+    },
+    "icons8-opened-folder-100": {
+      "page": 0,
+      "x": 206,
+      "y": 2,
+      "w": 64,
+      "h": 64,
+      "u0": 0.4327731092436975,
+      "v0": 0.029411764705882353,
+      "u1": 0.5672268907563025,
+      "v1": 0.9705882352941176,
+      "source": "icons8-opened-folder-100.svg"
+    },
+    "icons8-search-104": {
+      "page": 0,
+      "x": 274,
+      "y": 2,
+      "w": 64,
+      "h": 64,
+      "u0": 0.5756302521008403,
+      "v0": 0.029411764705882353,
+      "u1": 0.7100840336134454,
+      "v1": 0.9705882352941176,
+      "source": "icons8-search-104.svg"
+    }
+  }
+}

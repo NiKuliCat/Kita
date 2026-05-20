@@ -1,0 +1,25 @@
+﻿{
+    "asset": {
+        "shader": {
+            "default": "packages/render/shaders/BaseGBuffer.slang",
+            "picking": "packages/render/shaders/EditorPicking.slang",
+            "deferredLighting": "packages/render/shaders/DeferredLighting.slang",
+            "grid": "packages/render/shaders/EditorGrid.slang",
+            "skybox": "packages/render/shaders/Skybox.slang"
+        },
+        "texture": {
+            "test": "packages/render/textures/test.jpg",
+            "white": "packages/render/textures/white.png",
+            "black": "packages/render/textures/black.png",
+            "normal": "packages/render/textures/normal.png"
+        },
+        "mesh": {
+            "box": "packages/render/models/box.fbx",
+            "sphere": "packages/render/models/Sphere.fbx"
+        },
+        "material": {
+            "default": "packages/render/materials/Default.mat",
+            "skybox": "packages/render/materials/Skybox.mat"
+        }
+    }
+}
