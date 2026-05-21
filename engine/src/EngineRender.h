@@ -10,3 +10,5 @@
 #include "render/pipeline/PipelineFactory.h"
 #include "render/VulkanResourceFactory.h"
 #include "render/mesh/Mesh.h"
+
+#include "render/ibl/IBLGenerator.h"

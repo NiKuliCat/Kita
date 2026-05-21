@@ -33,6 +33,7 @@ namespace Kita {
 		const EditorGridPass::PushConstants& GetGridPushConstants() const { return m_GridPushConstants; }
 		void SetGridPushConstants(const EditorGridPass::PushConstants& pushConstants) { m_GridPushConstants = pushConstants; }
 
+		void SetIBLSource(const Ref<ImageBasedLighting>& ibl) { m_IBL = ibl; }
 	private:
 		void InitRenderSceneData(ScenePassData& sceneData);
 		void InitGridResources();
@@ -67,6 +68,10 @@ namespace Kita {
 		ViewportCamera* m_ViewportCamera = nullptr;
 		VulkanResourceFactory* m_VulkanResFactory = nullptr;
 		PipelineFactory*  m_PipelineFactory = nullptr;
+
+
+		//ibl
+		Ref<ImageBasedLighting> m_IBL = nullptr;
 
 	};
 

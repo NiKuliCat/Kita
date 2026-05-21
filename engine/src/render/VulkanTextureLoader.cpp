@@ -123,6 +123,32 @@ namespace Kita {
 			return static_cast<uint8_t>(std::round(clamped * 255.0f));
 		}
 
+		uint16_t FloatToHalf(float value)
+		{
+			uint32_t bits = 0;
+			std::memcpy(&bits, &value, sizeof(uint32_t));
+
+			const uint32_t sign = (bits >> 16) & 0x8000u;
+			int32_t exponent = static_cast<int32_t>((bits >> 23) & 0xFFu) - 127 + 15;
+			uint32_t mantissa = bits & 0x007FFFFFu;
+
+			if (exponent <= 0)
+			{
+				if (exponent < -10)
+					return static_cast<uint16_t>(sign);
+
+				mantissa = (mantissa | 0x00800000u) >> (1 - exponent);
+				return static_cast<uint16_t>(sign | ((mantissa + 0x00001000u) >> 13));
+			}
+
+			if (exponent >= 31)
+			{
+				return static_cast<uint16_t>(sign | 0x7C00u);
+			}
+
+			return static_cast<uint16_t>(sign | (static_cast<uint32_t>(exponent) << 10) | ((mantissa + 0x00001000u) >> 13));
+		}
+
 		Float4 LoadPixelAsFloat4(const TexturePrimitiveData& data, uint32_t x, uint32_t y)
 		{
 			KITA_CORE_ASSERT(data.Width > 0 && data.Height > 0, "Texture source dimensions must be valid");
@@ -258,8 +284,13 @@ namespace Kita {
 
 						case TexturePixelFormat::R16G16B16A16_Float:
 						{
-							KITA_CORE_ERROR("VulkanTextureLoader: cubemap conversion for R16G16B16A16_Float is not implemented yet: {}", texAsset.SourcePath.string());
-							return false;
+							const size_t offset = pixelIndex * 8;
+							uint16_t* dest = reinterpret_cast<uint16_t*>(facePixels.data() + offset);
+							dest[0] = FloatToHalf(sampled.R);
+							dest[1] = FloatToHalf(sampled.G);
+							dest[2] = FloatToHalf(sampled.B);
+							dest[3] = FloatToHalf(sampled.A);
+							break;
 						}
 
 						case TexturePixelFormat::R32G32B32A32_Float:

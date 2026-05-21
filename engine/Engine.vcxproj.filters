@@ -25,6 +25,9 @@
     <Filter Include="src\render">
       <UniqueIdentifier>{1CA98B76-0861-CDC3-7168-A61F5D3F68B4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\render\ibl">
+      <UniqueIdentifier>{7A00E7F0-0D9D-4DDF-9C36-0F77C760A5C1}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\render\deferred">
       <UniqueIdentifier>{6CD87D6E-D839-5B7C-61A7-A12ECD07923B}</UniqueIdentifier>
     </Filter>
@@ -165,6 +168,9 @@
     <ClInclude Include="src\platform\windows\WindowsWindow.h">
       <Filter>src\platform\windows</Filter>
     </ClInclude>
+    <ClInclude Include="src\render\ibl\IBLGenerator.h">
+      <Filter>src\render\ibl</Filter>
+    </ClInclude>
     <ClInclude Include="src\render\BufferLayout.h">
       <Filter>src\render</Filter>
     </ClInclude>
@@ -274,6 +280,9 @@
       <Filter>src\render\scene</Filter>
     </ClInclude>
     <ClInclude Include="src\render\scene\PerspectiveCamera.h">
+      <Filter>src\render\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\scene\SceneRenderConfig.h">
       <Filter>src\render\scene</Filter>
     </ClInclude>
     <ClInclude Include="src\serialize\JsonUtils.h">
@@ -1603,6 +1612,9 @@
     </ClCompile>
     <ClCompile Include="src\platform\windows\WindowsWindow.cpp">
       <Filter>src\platform\windows</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\ibl\IBLGenerator.cpp">
+      <Filter>src\render\ibl</Filter>
     </ClCompile>
     <ClCompile Include="src\render\BufferLayout.cpp">
       <Filter>src\render</Filter>

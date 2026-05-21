@@ -99,7 +99,11 @@ namespace Kita {
         imageInfo.ArrayLayers = m_ArrayLayers;
         imageInfo.Samples = VK_SAMPLE_COUNT_1_BIT;
         imageInfo.Tiling = VK_IMAGE_TILING_OPTIMAL;
-        imageInfo.Usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+        // 采样纹理默认同时具备 transfer dst / src 能力。
+        // 这样后续可以继续用于 mip 生成、IBL 预计算或拷贝到其他纹理。
+        imageInfo.Usage = VK_IMAGE_USAGE_SAMPLED_BIT
+                        | VK_IMAGE_USAGE_TRANSFER_DST_BIT
+                        | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
         imageInfo.AspectFlags = VK_IMAGE_ASPECT_COLOR_BIT;
         imageInfo.Flags = isCubeTexture ? VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT : 0;
 

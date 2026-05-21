@@ -3,6 +3,7 @@
 #include "entt.hpp"
 #include "render/Light.h"
 #include "core/UUID.h"
+#include "render/scene/SceneRenderConfig.h"
 namespace Kita {
 
 	class Object;
@@ -37,13 +38,14 @@ namespace Kita {
 		void RenderSceneEditor();
 
 		DirectLightData GetMainDirectLightData() const;
+		const SceneRenderSettings& GetRenderSettings() const { return m_RenderSettings; }
+		SceneRenderSettings& GetRenderSettings() { return m_RenderSettings; }
 	private:
 		std::string m_Name = "New Scene";
 		entt::registry m_Registry;
-
-		
-
 		std::filesystem::path m_FilePath;
+
+		SceneRenderSettings m_RenderSettings{};
 	};
 }
 

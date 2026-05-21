@@ -1,5 +1,6 @@
 import render_core;
 import pbr_common;
+import IBL;
 
 struct VSOutput
 {
@@ -56,9 +57,6 @@ float3 DecodeNormal(float3 encodedNormal)
     return normalize(encodedNormal * 2.0 - 1.0);
 }
 
-// 从屏幕 UV 和深度重建世界坐标。
-// 这一步相当于 UE 在 deferred lighting 中从 SceneDepth + inverse VP
-// 还原当前像素位置，后续正确的视线方向 V 需要依赖它。
 float3 ReconstructWorldPosition(float2 uv, float depth)
 {
     float2 clipXY = uv * 2.0 - 1.0;
@@ -90,34 +88,34 @@ PSOutput PSMain(VSOutput input)
     float3 albedo = baseColorOpacity.rgb;
     float roughness = materialSample.g;
     float metallic = materialSample.r;
-    float ao = materialSample.b;
+    float ambientOcclusion = 1.0;
+
+    float clampedMetallic = saturate(metallic);
+    float clampedRoughness = ClampRoughness(roughness);
+
+    float3 F0 = ComputeF0(albedo, clampedMetallic);
+
     float3 N = DecodeNormal(normalSample.rgb);
     float3 positionWS = ReconstructWorldPosition(input.uv, depth);
     float3 L = SafeNormalize(-gMainLight.Direction.xyz, float3(0.0, 1.0, 0.0));
-
-    // 正确的观察方向应从当前像素世界坐标指向相机位置。
-    // 这一步对镜面高光、粗糙度响应和 Fresnel 表现都很关键。
     float3 V = SafeNormalize(gCamera.CameraPosWS.xyz - positionWS, float3(0.0, 0.0, 1.0));
 
     float intensity = gMainLight.Color.w;
     float3 lightColor = gMainLight.Color.rgb;
 
-    float3 directLighting = EvaluateDirectionalLightPBR(
-        albedo,
-        metallic,
-        roughness,
-        ao,
-        N,
-        V,
-        L,
-        lightColor,
-        intensity);
+    float3 directLighting = EvaluateDirectionalLightPBR(albedo,clampedMetallic,clampedRoughness,ambientOcclusion,N,V,L,lightColor,intensity);
 
-    float3 finalColor = directLighting + emissiveSample.rgb;
-    // Deferred opaque lighting should output an opaque final image and
-    // forward the sampled scene depth so later overlays (for example grid)
-    // can still depth-test correctly against scene geometry.
-    output.color = float4(finalColor, 1.0);
+    float3 F = FresnelSchlickRoughness(saturate(dot(N, V)), F0, clampedRoughness);
+    float3 kS = F;
+    float3 kD = (1.0 - kS) * (1.0 - clampedMetallic);
+
+    float3 diffuseIBL = EvaluateDiffuseIBL(N, albedo, clampedMetallic);
+    float3 specularIBL = EvaluateSpecularIBL(N, V, clampedRoughness, F0);
+
+
+    float3 indirectLighting = (kD * diffuseIBL + specularIBL) * ambientOcclusion;
+
+    output.color = float4(directLighting + indirectLighting + emissiveSample.rgb, 1.0);
     output.depth = depth;
     return output;
 }

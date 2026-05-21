@@ -178,7 +178,9 @@ IF EXIST "C:\VulkanSDK\1.4.341.1\Bin\slang.dll"\ (xcopy /Q /E /Y /I "C:\VulkanSD
     <ClInclude Include="src\scene\ViewportPickingPass.h" />
     <ClInclude Include="src\ui\ContentBrowserPanel.h" />
     <ClInclude Include="src\ui\EditorSelectionContext.h" />
+    <ClInclude Include="src\ui\IBLPreviewPanel.h" />
     <ClInclude Include="src\ui\InspectorPanel.h" />
+    <ClInclude Include="src\ui\SceneRenderSettingsPanel.h" />
     <ClInclude Include="src\ui\SceneHierarchyPanel.h" />
     <ClInclude Include="src\ui\SceneSelectionContext.h" />
     <ClInclude Include="src\ui\SvgIconAtlas.h" />
@@ -213,7 +215,9 @@ IF EXIST "C:\VulkanSDK\1.4.341.1\Bin\slang.dll"\ (xcopy /Q /E /Y /I "C:\VulkanSD
     <ClCompile Include="src\scene\ViewportPickingPass.cpp" />
     <ClCompile Include="src\ui\ContentBrowserPanel.cpp" />
     <ClCompile Include="src\ui\EditorSelectionContext.cpp" />
+    <ClCompile Include="src\ui\IBLPreviewPanel.cpp" />
     <ClCompile Include="src\ui\InspectorPanel.cpp" />
+    <ClCompile Include="src\ui\SceneRenderSettingsPanel.cpp" />
     <ClCompile Include="src\ui\SceneHierarchyPanel.cpp" />
     <ClCompile Include="src\ui\SvgIconAtlas.cpp" />
     <ClCompile Include="src\ui\ThumbnailCache.cpp" />

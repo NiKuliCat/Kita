@@ -50,7 +50,7 @@ namespace Kita {
 		EditorViewportSurface* GetSurface() const { return m_Surface.get(); }
 		EditorRenderer* GetRenderer() const { return m_Renderer.get(); }
 		ViewportCamera* GetViewportCamera() const { return m_ViewportCamera.get(); }
-
+		void SetIBLSource(const Ref<ImageBasedLighting>& ibl) { m_Renderer->SetIBLSource(ibl); }
 	private:
 		Object FindSceneObjectByUUID(UUID uuid) const;
 		EditorGizmoContext BuildGizmoContext() const;

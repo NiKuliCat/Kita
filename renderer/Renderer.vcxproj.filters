@@ -50,7 +50,13 @@
     <ClInclude Include="src\ui\EditorSelectionContext.h">
       <Filter>ui</Filter>
     </ClInclude>
+    <ClInclude Include="src\ui\IBLPreviewPanel.h">
+      <Filter>ui</Filter>
+    </ClInclude>
     <ClInclude Include="src\ui\InspectorPanel.h">
+      <Filter>ui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ui\SceneRenderSettingsPanel.h">
       <Filter>ui</Filter>
     </ClInclude>
     <ClInclude Include="src\ui\SceneHierarchyPanel.h">
@@ -139,7 +145,13 @@
     <ClCompile Include="src\ui\EditorSelectionContext.cpp">
       <Filter>ui</Filter>
     </ClCompile>
+    <ClCompile Include="src\ui\IBLPreviewPanel.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
     <ClCompile Include="src\ui\InspectorPanel.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\SceneRenderSettingsPanel.cpp">
       <Filter>ui</Filter>
     </ClCompile>
     <ClCompile Include="src\ui\SceneHierarchyPanel.cpp">

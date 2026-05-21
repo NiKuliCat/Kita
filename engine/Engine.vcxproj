@@ -183,6 +183,7 @@
     <ClInclude Include="src\event\MouseEvent.h" />
     <ClInclude Include="src\kita_pch.h" />
     <ClInclude Include="src\platform\windows\WindowsWindow.h" />
+    <ClInclude Include="src\render\ibl\IBLGenerator.h" />
     <ClInclude Include="src\render\BufferLayout.h" />
     <ClInclude Include="src\render\Light.h" />
     <ClInclude Include="src\render\ShaderCompiler.h" />
@@ -220,6 +221,7 @@
     <ClInclude Include="src\render\scene\Camera.h" />
     <ClInclude Include="src\render\scene\OrthographicCamera.h" />
     <ClInclude Include="src\render\scene\PerspectiveCamera.h" />
+    <ClInclude Include="src\render\scene\SceneRenderConfig.h" />
     <ClInclude Include="src\serialize\JsonUtils.h" />
     <ClInclude Include="src\serialize\MaterialSerializer.h" />
     <ClInclude Include="src\serialize\SceneSerializer.h" />
@@ -666,6 +668,7 @@
     </ClCompile>
     <ClCompile Include="src\platform\windows\WindowsInput.cpp" />
     <ClCompile Include="src\platform\windows\WindowsWindow.cpp" />
+    <ClCompile Include="src\render\ibl\IBLGenerator.cpp" />
     <ClCompile Include="src\render\BufferLayout.cpp" />
     <ClCompile Include="src\render\ShaderCompiler.cpp" />
     <ClCompile Include="src\render\VulkanBuffer.cpp" />
