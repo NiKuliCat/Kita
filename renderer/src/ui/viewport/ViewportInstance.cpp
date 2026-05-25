@@ -31,6 +31,7 @@ namespace Kita {
 			m_Renderer = CreateUnique<EditorRenderer>(
 				context,
 				m_Surface->GetGBufferRenderTarget(),
+				m_Surface->GetLightingRenderTarget(),
 				m_Surface->GetRenderTarget(),
 				m_Surface->GetPickingRenderTarget(),
 				resFactory,

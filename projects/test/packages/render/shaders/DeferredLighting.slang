@@ -88,7 +88,7 @@ PSOutput PSMain(VSOutput input)
     float3 albedo = baseColorOpacity.rgb;
     float roughness = materialSample.g;
     float metallic = materialSample.r;
-    float ambientOcclusion = 1.0;
+    float ambientOcclusion = materialSample.b;
 
     float clampedMetallic = saturate(metallic);
     float clampedRoughness = ClampRoughness(roughness);

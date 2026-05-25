@@ -75,6 +75,156 @@ namespace Kita {
 			}
 		}
 
+		uint32_t CalculateMipLevels(uint32_t width, uint32_t height)
+		{
+			const uint32_t maxDimension = std::max(width, height);
+			return static_cast<uint32_t>(std::floor(std::log2(static_cast<float>(maxDimension)))) + 1;
+		}
+
+		void GenerateCubeMipmaps(
+			VulkanContext& context,
+			VulkanImage& image,
+			uint32_t width,
+			uint32_t height,
+			uint32_t mipLevels)
+		{
+			VkCommandBufferAllocateInfo allocInfo{};
+			allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+			allocInfo.commandPool = context.GetCommandPool();
+			allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+			allocInfo.commandBufferCount = 1;
+
+			VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
+			VKCheck(
+				vkAllocateCommandBuffers(context.GetDevice(), &allocInfo, &commandBuffer),
+				"VulkanTextureLoader: failed to allocate cubemap mip generation command buffer");
+
+			VkCommandBufferBeginInfo beginInfo{};
+			beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+			beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+			VKCheck(
+				vkBeginCommandBuffer(commandBuffer, &beginInfo),
+				"VulkanTextureLoader: failed to begin cubemap mip generation command buffer");
+
+			if (mipLevels <= 1)
+			{
+				VulkanImage::TransitionImageLayout(
+					commandBuffer,
+					image.GetHandle(),
+					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+					VK_IMAGE_ASPECT_COLOR_BIT,
+					0,
+					1,
+					0,
+					kCubeFaceCount);
+
+				VKCheck(
+					vkEndCommandBuffer(commandBuffer),
+					"VulkanTextureLoader: failed to end cubemap layout transition command buffer");
+
+				VkSubmitInfo submitInfo{};
+				submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+				submitInfo.commandBufferCount = 1;
+				submitInfo.pCommandBuffers = &commandBuffer;
+				VKCheck(
+					vkQueueSubmit(context.GetGraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE),
+					"VulkanTextureLoader: failed to submit cubemap layout transition command buffer");
+				VKCheck(
+					vkQueueWaitIdle(context.GetGraphicsQueue()),
+					"VulkanTextureLoader: failed to wait for cubemap layout transition completion");
+
+				vkFreeCommandBuffers(context.GetDevice(), context.GetCommandPool(), 1, &commandBuffer);
+				return;
+			}
+
+			int32_t mipWidth = static_cast<int32_t>(width);
+			int32_t mipHeight = static_cast<int32_t>(height);
+			for (uint32_t mipIndex = 1; mipIndex < mipLevels; ++mipIndex)
+			{
+				VulkanImage::TransitionImageLayout(
+					commandBuffer,
+					image.GetHandle(),
+					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+					VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+					VK_IMAGE_ASPECT_COLOR_BIT,
+					mipIndex - 1,
+					1,
+					0,
+					kCubeFaceCount);
+
+				VkImageBlit blit{};
+				blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+				blit.srcSubresource.mipLevel = mipIndex - 1;
+				blit.srcSubresource.baseArrayLayer = 0;
+				blit.srcSubresource.layerCount = kCubeFaceCount;
+				blit.srcOffsets[0] = { 0, 0, 0 };
+				blit.srcOffsets[1] = { mipWidth, mipHeight, 1 };
+				blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+				blit.dstSubresource.mipLevel = mipIndex;
+				blit.dstSubresource.baseArrayLayer = 0;
+				blit.dstSubresource.layerCount = kCubeFaceCount;
+				blit.dstOffsets[0] = { 0, 0, 0 };
+				blit.dstOffsets[1] = {
+					std::max(1, mipWidth / 2),
+					std::max(1, mipHeight / 2),
+					1
+				};
+
+				vkCmdBlitImage(
+					commandBuffer,
+					image.GetHandle(),
+					VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+					image.GetHandle(),
+					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+					1,
+					&blit,
+					VK_FILTER_LINEAR);
+
+				VulkanImage::TransitionImageLayout(
+					commandBuffer,
+					image.GetHandle(),
+					VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+					VK_IMAGE_ASPECT_COLOR_BIT,
+					mipIndex - 1,
+					1,
+					0,
+					kCubeFaceCount);
+
+				mipWidth = std::max(1, mipWidth / 2);
+				mipHeight = std::max(1, mipHeight / 2);
+			}
+
+			VulkanImage::TransitionImageLayout(
+				commandBuffer,
+				image.GetHandle(),
+				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+				VK_IMAGE_ASPECT_COLOR_BIT,
+				mipLevels - 1,
+				1,
+				0,
+				kCubeFaceCount);
+
+			VKCheck(
+				vkEndCommandBuffer(commandBuffer),
+				"VulkanTextureLoader: failed to end cubemap mip generation command buffer");
+
+			VkSubmitInfo submitInfo{};
+			submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+			submitInfo.commandBufferCount = 1;
+			submitInfo.pCommandBuffers = &commandBuffer;
+			VKCheck(
+				vkQueueSubmit(context.GetGraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE),
+				"VulkanTextureLoader: failed to submit cubemap mip generation command buffer");
+			VKCheck(
+				vkQueueWaitIdle(context.GetGraphicsQueue()),
+				"VulkanTextureLoader: failed to wait for cubemap mip generation completion");
+
+			vkFreeCommandBuffers(context.GetDevice(), context.GetCommandPool(), 1, &commandBuffer);
+		}
+
 		float HalfToFloat(uint16_t value)
 		{
 			const uint32_t sign = (static_cast<uint32_t>(value & 0x8000u)) << 16;
@@ -393,8 +543,10 @@ namespace Kita {
 			textureInfo.Filter = VK_FILTER_LINEAR;
 			textureInfo.AddressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
 			textureInfo.MaxAnisotropy = 1.0f;
-			textureInfo.EnableMipmaps = false;
-			textureInfo.MipLevels = 1;
+			textureInfo.EnableMipmaps = texAsset.ImportSettings.GenerateMipmaps;
+			textureInfo.MipLevels = texAsset.ImportSettings.GenerateMipmaps
+				? CalculateMipLevels(faceSize, faceSize)
+				: 1;
 
 			Ref<VulkanTexture> texture = nullptr;
 			try
@@ -486,13 +638,6 @@ namespace Kita {
 					kCubeFaceCount,
 					copyRegions.data());
 
-				image.TransitionLayout(
-					commandBuffer,
-					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
-					VK_IMAGE_ASPECT_COLOR_BIT,
-					0, 1,
-					0, kCubeFaceCount);
-
 				VKCheck(
 					vkEndCommandBuffer(commandBuffer),
 					"VulkanTextureLoader: failed to end cubemap upload command buffer");
@@ -517,6 +662,15 @@ namespace Kita {
 				{
 					vkFreeCommandBuffers(context.GetDevice(), context.GetCommandPool(), 1, &commandBuffer);
 				}
+				return nullptr;
+			}
+
+			try
+			{
+				GenerateCubeMipmaps(context, image, faceSize, faceSize, texture->GetMipLevels());
+			}
+			catch (const std::exception&)
+			{
 				return nullptr;
 			}
 

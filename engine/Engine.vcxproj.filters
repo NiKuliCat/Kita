@@ -270,6 +270,9 @@
     <ClInclude Include="src\render\pass\SkyboxPass.h">
       <Filter>src\render\pass</Filter>
     </ClInclude>
+    <ClInclude Include="src\render\pass\ToneMappingPass.h">
+      <Filter>src\render\pass</Filter>
+    </ClInclude>
     <ClInclude Include="src\render\pipeline\PipelineFactory.h">
       <Filter>src\render\pipeline</Filter>
     </ClInclude>
@@ -1704,6 +1707,9 @@
       <Filter>src\render\pass</Filter>
     </ClCompile>
     <ClCompile Include="src\render\pass\SkyboxPass.cpp">
+      <Filter>src\render\pass</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\pass\ToneMappingPass.cpp">
       <Filter>src\render\pass</Filter>
     </ClCompile>
     <ClCompile Include="src\render\pipeline\PipelineFactory.cpp">

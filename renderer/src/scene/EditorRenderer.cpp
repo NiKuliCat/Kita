@@ -13,6 +13,7 @@ namespace Kita {
 	EditorRenderer::EditorRenderer(
 		VulkanContext& context,
 		VulkanRenderTarget& gbufferRt,
+		VulkanRenderTarget& lightingRt,
 		VulkanRenderTarget& finalRt,
 		VulkanRenderTarget& pickingRt,
 		VulkanResourceFactory& vulkanResFactory,
@@ -23,7 +24,8 @@ namespace Kita {
 		: m_Context(&context)
 		, m_VulkanResFactory(&vulkanResFactory)
 		, m_GBufferRenderTarget(&gbufferRt)
-		, m_RenderTarget(&finalRt)
+		, m_LightingRenderTarget(&lightingRt)
+		, m_FinalRenderTarget(&finalRt)
 		, m_SceneContext(scene)
 		, m_PickRegistry(&pickRegistry)
 		, m_ViewportCamera(&camera)
@@ -32,21 +34,57 @@ namespace Kita {
 		Init();
 		m_SceneBindings.Init(context, context.GetFramesInFlight());
 		m_BasePass = CreateUnique<BasePass>(m_SceneBindings, MakeBasePassDesc(gbufferRt));
-		m_DeferredLightingPass = CreateUnique<DeferredLightingPass>(m_SceneBindings, MakeDeferredLightingPassDesc(finalRt));
+		m_DeferredLightingPass = CreateUnique<DeferredLightingPass>(m_SceneBindings, MakeDeferredLightingPassDesc(lightingRt));
 		m_DeferredLightingPass->Init(context, context.GetFramesInFlight());
 		m_EditorGridPass = CreateUnique<EditorGridPass>(m_SceneBindings, MakeEditorGridPassDesc(finalRt));
 		m_ViewportPickingPass = CreateUnique<ViewportPickingPass>(m_SceneBindings, MakeViewportPickingPassDesc(pickingRt));
-		m_SkyboxPass = CreateUnique<SkyboxPass>(m_SceneBindings, MakeSkyboxPassDesc(finalRt));
-
+		m_SkyboxPass = CreateUnique<SkyboxPass>(m_SceneBindings, MakeSkyboxPassDesc(lightingRt));
+		m_TonemapPass = CreateUnique<ToneMappingPass>(m_SceneBindings, MakeTonemappingPassDesc(finalRt));
+		m_TonemapPass->Init(context, context.GetFramesInFlight());
 		InitGridResources();
 		InitDeferredLightingResources();
+		InitTonemapResources();
 	}
 
 	void EditorRenderer::Init()
 	{
 		const AssetHandle skyboxMaterialHandle = EditorProjectBootstrap::GetPreLoadMaterialHandle("skybox");
 		if (Asset::IsValidHandle(skyboxMaterialHandle))
+		{
 			m_SkyboxMaterial = m_VulkanResFactory->CreateMaterial(skyboxMaterialHandle);
+			if (m_SkyboxMaterial)
+				m_DefaultSkyboxTexture = m_SkyboxMaterial->GetAlbedoTexture();
+		}
+	}
+
+	void EditorRenderer::SyncSkyboxMaterialFromSettings()
+	{
+		if (!m_VulkanResFactory || !m_SceneContext || !m_SkyboxMaterial)
+			return;
+
+		const SceneRenderSettings& settings = m_SceneContext->GetRenderSettings();
+		Ref<VulkanTexture> skyboxTexture = nullptr;
+		if (Asset::IsValidHandle(settings.SkyboxTextureHandle))
+			skyboxTexture = m_VulkanResFactory->GetOrCreateTexture(settings.SkyboxTextureHandle);
+
+		if ((!skyboxTexture || !skyboxTexture->IsValid() || skyboxTexture->GetType() != TextureType::TextureCube) &&
+			m_IBL && m_IBL->EnvironmentCube && m_IBL->EnvironmentCube->IsValid())
+		{
+			skyboxTexture = m_IBL->EnvironmentCube;
+		}
+
+		if ((!skyboxTexture || !skyboxTexture->IsValid() || skyboxTexture->GetType() != TextureType::TextureCube) &&
+			m_DefaultSkyboxTexture && m_DefaultSkyboxTexture->IsValid() && m_DefaultSkyboxTexture->GetType() == TextureType::TextureCube)
+		{
+			skyboxTexture = m_DefaultSkyboxTexture;
+		}
+
+		const Ref<VulkanTexture>& currentTexture = m_SkyboxMaterial->GetAlbedoTexture();
+		if (skyboxTexture && skyboxTexture->IsValid() && skyboxTexture->GetType() == TextureType::TextureCube)
+		{
+			if (currentTexture != skyboxTexture)
+				m_SkyboxMaterial->SetAlbedoTexture(skyboxTexture);
+		}
 	}
 
 	void EditorRenderer::OnDestroy()
@@ -55,9 +93,13 @@ namespace Kita {
 		m_GridFragmentShader.reset();
 		m_DeferredLightingVertexShader.reset();
 		m_DeferredLightingFragmentShader.reset();
+		m_TonemapVertexShader.reset();
+		m_TonemapFragmentShader.reset();
 
 		if (m_DeferredLightingPass)
 			m_DeferredLightingPass->Destroy();
+		if (m_TonemapPass)
+			m_TonemapPass->Destroy();
 	}
 
 	void EditorRenderer::InitRenderSceneData(ScenePassData& sceneData)
@@ -125,6 +167,29 @@ namespace Kita {
 
 		m_DeferredLightingVertexShader = shaderBundle.VertexShader;
 		m_DeferredLightingFragmentShader = shaderBundle.FragmentShader;
+	}
+
+	void EditorRenderer::InitTonemapResources()
+	{
+		if (!m_Context || !m_TonemapPass)
+			return;
+
+		const AssetHandle tonemapShaderHandle = EditorProjectBootstrap::GetPreLoadShaderHandle("tonemap");
+		if (!Asset::IsValidHandle(tonemapShaderHandle))
+		{
+			KITA_CORE_WARN("EditorRenderer: preload shader handle 'tonemap' is invalid.");
+			return;
+		}
+
+		VulkanResourceFactory::ShaderBundle shaderBundle = m_VulkanResFactory->GetOrCreateShaderBundle(tonemapShaderHandle);
+		if (!shaderBundle.IsValid())
+		{
+			KITA_CORE_WARN("EditorRenderer: failed to create shader bundle for preload shader 'tonemap'.");
+			return;
+		}
+
+		m_TonemapVertexShader = shaderBundle.VertexShader;
+		m_TonemapFragmentShader = shaderBundle.FragmentShader;
 	}
 
 	VulkanGraphicsPipeline* EditorRenderer::GetPipeline(VulkanRenderTarget& rt, Ref<VulkanGeometry>& geometry, Ref<VulkanMaterial>& material)
@@ -228,6 +293,41 @@ namespace Kita {
 		return m_PipelineFactory->GetOrCreate(request);
 	}
 
+	VulkanGraphicsPipeline* EditorRenderer::GetTonemapPipeline(VulkanRenderTarget& rt)
+	{
+		if (!m_TonemapVertexShader || !m_TonemapFragmentShader || !m_TonemapPass)
+			return nullptr;
+
+		PipelineRequest request{};
+		request.Pass = PassType::PostProcess;
+		request.UseVertexInput = false;
+		request.VertexShader = m_TonemapVertexShader.get();
+		request.FragmentShader = m_TonemapFragmentShader.get();
+
+		request.ColorFormats.clear();
+		for (uint32_t i = 0; i < rt.GetColorAttachmentCount(); ++i)
+			request.ColorFormats.push_back(rt.GetColorFormat(i));
+
+		request.DepthFormat = rt.HasDepthAttachment() ? rt.GetDepthFormat() : VK_FORMAT_UNDEFINED;
+		request.Samples = rt.GetCreateInfo().Samples;
+		request.DescriptorSetLayouts = {
+			m_SceneBindings.GetDescriptorSet(0).GetLayout(),
+			m_TonemapPass->GetDescriptorSet(0).GetLayout()
+		};
+		request.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+		request.PolygonMode = VK_POLYGON_MODE_FILL;
+		request.CullMode = VK_CULL_MODE_NONE;
+		request.FrontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+		request.EnableDepthTest = false;
+		request.EnableDepthWrite = false;
+		request.DepthCompareOp = VK_COMPARE_OP_ALWAYS;
+		request.EnableBlending = false;
+		request.PushConstantStages = 0;
+		request.PushConstantSize = 0;
+
+		return m_PipelineFactory->GetOrCreate(request);
+	}
+
 	VulkanGraphicsPipeline* EditorRenderer::GetPickingPipeline(VulkanRenderTarget& rt, Ref<VulkanGeometry>& geometry)
 	{
 		if (!m_ViewportPickingPass)
@@ -291,10 +391,67 @@ namespace Kita {
 		request.EnableDepthWrite = false;
 		request.DepthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
 		request.EnableBlending = false;
-		request.PushConstantStages = 0;
-		request.PushConstantSize = 0;
+		request.PushConstantStages = VK_SHADER_STAGE_FRAGMENT_BIT;
+		request.PushConstantSize = SkyboxPushConstantSize;
 
 		return m_PipelineFactory->GetOrCreate(request);
+	}
+
+	void EditorRenderer::CopyDepthAttachment(
+		const VulkanRenderTarget& sourceRt,
+		VulkanRenderTarget& targetRt,
+		VkCommandBuffer commandBuffer) const
+	{
+		if (!sourceRt.HasDepthAttachment() || !targetRt.HasDepthAttachment())
+			return;
+
+		const VulkanImage* sourceDepth = sourceRt.GetDepthAttachment();
+		const VulkanImage* targetDepth = targetRt.GetDepthAttachment();
+		if (!sourceDepth || !targetDepth)
+			return;
+
+		VulkanImage& mutableSourceDepth = const_cast<VulkanImage&>(*sourceDepth);
+		VulkanImage& mutableTargetDepth = const_cast<VulkanImage&>(*targetDepth);
+
+		const VkImageLayout sourcePreviousLayout = mutableSourceDepth.GetCurrentLayout();
+		const VkImageLayout targetPreviousLayout = mutableTargetDepth.GetCurrentLayout();
+
+		mutableSourceDepth.TransitionLayout(commandBuffer, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+		mutableTargetDepth.TransitionLayout(commandBuffer, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
+		VkImageCopy copyRegion{};
+		copyRegion.srcSubresource.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+		copyRegion.srcSubresource.mipLevel = 0;
+		copyRegion.srcSubresource.baseArrayLayer = 0;
+		copyRegion.srcSubresource.layerCount = 1;
+		copyRegion.dstSubresource.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+		copyRegion.dstSubresource.mipLevel = 0;
+		copyRegion.dstSubresource.baseArrayLayer = 0;
+		copyRegion.dstSubresource.layerCount = 1;
+		copyRegion.extent = {
+			std::min(sourceRt.GetWidth(), targetRt.GetWidth()),
+			std::min(sourceRt.GetHeight(), targetRt.GetHeight()),
+			1
+		};
+
+		vkCmdCopyImage(
+			commandBuffer,
+			mutableSourceDepth.GetHandle(),
+			VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+			mutableTargetDepth.GetHandle(),
+			VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			1,
+			&copyRegion);
+
+		if (sourcePreviousLayout != VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL)
+			mutableSourceDepth.TransitionLayout(commandBuffer, sourcePreviousLayout);
+
+		const VkImageLayout targetFinalLayout =
+			targetPreviousLayout == VK_IMAGE_LAYOUT_UNDEFINED
+			? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+			: targetPreviousLayout;
+		if (targetFinalLayout != VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL)
+			mutableTargetDepth.TransitionLayout(commandBuffer, targetFinalLayout);
 	}
 
 	void EditorRenderer::Render(EditorViewportSurface& surface)
@@ -303,6 +460,7 @@ namespace Kita {
 			return;
 
 		VulkanRenderTarget& gbufferRt = surface.GetGBufferRenderTarget();
+		VulkanRenderTarget& lightingRt = surface.GetLightingRenderTarget();
 		VulkanRenderTarget& finalRt = surface.GetFinalRenderTarget();
 		VulkanRenderTarget& pickingRt = surface.GetPickingRenderTarget();
 		ScenePassData sceneData{};
@@ -318,10 +476,21 @@ namespace Kita {
 			lightingSceneData.BeginInfo.ClearColors = true;
 			lightingSceneData.BeginInfo.ClearDepthAttachment = true;
 			lightingSceneData.BeginInfo.TransitionSampledColors = true;
-			lightingSceneData.BeginInfo.TransitionSampledDepth = false;
+			lightingSceneData.BeginInfo.TransitionSampledDepth = true;
 			m_DeferredLightingPass->SetSceneData(lightingSceneData);
 			m_DeferredLightingPass->SetGBufferInput(&gbufferRt);
 			m_DeferredLightingPass->SetIBLInput(m_IBL);
+		}
+
+		if (m_TonemapPass)
+		{
+			ScenePassData tonemapSceneData = sceneData;
+			tonemapSceneData.BeginInfo.ClearColors = true;
+			tonemapSceneData.BeginInfo.ClearDepthAttachment = false;
+			tonemapSceneData.BeginInfo.TransitionSampledColors = true;
+			tonemapSceneData.BeginInfo.TransitionSampledDepth = false;
+			m_TonemapPass->SetSceneData(tonemapSceneData);
+			m_TonemapPass->SetSourceInput(&lightingRt);
 		}
 
 		if (m_EditorGridPass)
@@ -342,6 +511,12 @@ namespace Kita {
 			skyboxSceneData.BeginInfo.TransitionSampledColors = true;
 			skyboxSceneData.BeginInfo.TransitionSampledDepth = false;
 			m_SkyboxPass->SetSceneData(skyboxSceneData);
+			const SceneRenderSettings& skyboxSettings = m_SceneContext->GetRenderSettings();
+			SkyboxPushConstants pushConstants{};
+			pushConstants.Intensity = skyboxSettings.SkyboxIntensity;
+			pushConstants.RotationY = skyboxSettings.SkyboxRotationY;
+			pushConstants.MipLevel = skyboxSettings.SkyboxMipLevel;
+			m_SkyboxPass->SetPushConstants(pushConstants);
 		}
 
 		if (m_ViewportPickingPass)
@@ -427,6 +602,7 @@ namespace Kita {
 		}
 
 		RenderPassContext gbufferPassContext(*m_Context, cmd, gbufferRt);
+		RenderPassContext lightingPassContext(*m_Context, cmd, lightingRt);
 		RenderPassContext finalPassContext(*m_Context, cmd, finalRt);
 		RenderPassContext pickingPassContext(*m_Context, cmd, pickingRt);
 		const uint32_t frameIndex = gbufferPassContext.GetFrameIndex();
@@ -436,18 +612,28 @@ namespace Kita {
 		if (m_DeferredLightingPass)
 		{
 			m_DeferredLightingPass->UpdateFrameResources(frameIndex);
-			m_DeferredLightingPass->SetPipeline(GetDeferredLightingPipeline(finalRt));
-			m_DeferredLightingPass->Execute(finalPassContext);
+			m_DeferredLightingPass->SetPipeline(GetDeferredLightingPipeline(lightingRt));
+			m_DeferredLightingPass->Execute(lightingPassContext);
 		}
 
 		if (m_SkyboxPass && m_SkyboxMaterial)
 		{
+			SyncSkyboxMaterialFromSettings();
 			m_SkyboxMaterial->EnsureDescriptors(*m_Context, m_Context->GetFramesInFlight());
 			m_SkyboxMaterial->UpdateDescriptorSet(frameIndex);
 			m_SkyboxPass->SetMaterial(m_SkyboxMaterial);
-			m_SkyboxPass->SetPipeline(GetSkyboxPipeline(finalRt));
+			m_SkyboxPass->SetPipeline(GetSkyboxPipeline(lightingRt));
 			if (m_SkyboxPass->HasValidMaterial())
-				m_SkyboxPass->Execute(finalPassContext);
+				m_SkyboxPass->Execute(lightingPassContext);
+		}
+
+		CopyDepthAttachment(lightingRt, finalRt, cmd);
+
+		if (m_TonemapPass)
+		{
+			m_TonemapPass->UpdateFrameResources(frameIndex);
+			m_TonemapPass->SetPipeline(GetTonemapPipeline(finalRt));
+			m_TonemapPass->Execute(finalPassContext);
 		}
 
 		if (m_EditorGridPass)

@@ -48,6 +48,14 @@ namespace Kita {
 			return;
 		}
 
+		vkCmdPushConstants(
+			commandBuffer,
+			pipeline.GetLayout(),
+			VK_SHADER_STAGE_FRAGMENT_BIT,
+			0,
+			SkyboxPushConstantSize,
+			&m_PushConstants);
+
 		m_Material->GetDescriptorSet(frameIndex).Bind(commandBuffer,pipeline.GetLayout(),1);
 	}
 

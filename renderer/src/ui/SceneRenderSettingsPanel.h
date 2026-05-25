@@ -22,7 +22,9 @@ namespace Kita {
 		void OnImGuiRender();
 
 	private:
+		void DrawSkyboxSection(SceneRenderSettings& settings);
 		void DrawEnvironmentSection(SceneRenderSettings& settings);
+		void DrawSkyboxTextureRow(SceneRenderSettings& settings, const std::vector<AssetMetadata>& textureAssets);
 		void DrawTextureSourceRow(SceneRenderSettings& settings, const std::vector<AssetMetadata>& textureAssets);
 		void DrawSourceTypeRow(SceneRenderSettings& settings);
 		void DrawCubeSizeRow(const char* label, uint32_t& value, uint32_t defaultValue, uint32_t minValue, uint32_t maxValue);

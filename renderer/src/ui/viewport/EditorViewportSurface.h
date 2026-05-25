@@ -68,6 +68,9 @@ namespace Kita {
 		const VulkanRenderTarget& GetRenderTarget() const;
 		VulkanRenderTarget& GetPickingRenderTarget();
 		const VulkanRenderTarget& GetPickingRenderTarget() const;
+		VulkanRenderTarget& GetLightingRenderTarget();
+		const VulkanRenderTarget& GetLightingRenderTarget() const;
+
 		uint32_t ReadPickingPixel(uint32_t x, uint32_t y);
 
 	private:
@@ -82,6 +85,7 @@ namespace Kita {
 		CreateInfo m_CreateInfo{};
 
 		Unique<VulkanRenderTarget> m_GBufferRenderTarget = nullptr;
+		Unique<VulkanRenderTarget> m_LightingRenderTarget = nullptr;
 		Unique<VulkanRenderTarget> m_FinalRenderTarget = nullptr;
 		Unique<VulkanRenderTarget> m_PickingRenderTarget = nullptr;
 		Unique<VulkanBuffer> m_PickingReadbackBuffer = nullptr;

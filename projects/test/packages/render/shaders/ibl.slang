@@ -16,8 +16,8 @@ public SamplerCube g_EnvironmentCube;
 public float3 EvaluateDiffuseIBL(float3 N,float3 baseColor,float metallic)
 {
     float3 irradiance = g_IrradianceCube.Sample(N).rgb;
-    float3 diffuseColor = baseColor * (1.0 - saturate(metallic));
-    return irradiance * diffuseColor;
+    float3 diffuseColor = baseColor ;
+    return irradiance * diffuseColor * INV_PI;
 }
 
 public float3 EvaluateSpecularIBL(float3 N,float3 V,float roughness,float3 F0)

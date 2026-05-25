@@ -489,7 +489,7 @@ namespace Kita {
 						}
 
 						if (sampleWeight > 0.0f)
-							irradiance *= (kPi / sampleWeight);
+							irradiance /= sampleWeight;
 
 						irradiance *= intensity;
 						const size_t pixelIndex = (static_cast<size_t>(y) * static_cast<size_t>(irradianceSize) + static_cast<size_t>(x)) * 4;

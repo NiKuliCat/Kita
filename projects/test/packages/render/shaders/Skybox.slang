@@ -30,11 +30,32 @@ ConstantBuffer<SceneDirectionalLightData> gMainLight;
 [[vk::binding(0, 1)]]
 SamplerCube gSkyboxTexture;
 
+struct SkyboxParams
+{
+    float intensity;
+    float rotationY;
+    float mipLevel;
+    float padding;
+};
+
+[[vk::push_constant]]
+SkyboxParams gSkyboxParams;
+
 float2 FullscreenTrianglePosition(uint vertexID)
 {
     if (vertexID == 0) return float2(-1.0, -1.0);
     if (vertexID == 1) return float2(-1.0, 3.0);
     return float2(3.0, -1.0);
+}
+
+float3 RotateAroundY(float3 direction, float angle)
+{
+    float sineValue = sin(angle);
+    float cosineValue = cos(angle);
+    return float3(
+        direction.x * cosineValue - direction.z * sineValue,
+        direction.y,
+        direction.x * sineValue + direction.z * cosineValue);
 }
 
 [shader("vertex")]
@@ -59,6 +80,9 @@ VSOutput VSMain(uint vertexID : SV_VertexID)
 float4 PSMain(VSOutput input) : SV_Target0
 {
     float3 direction = normalize(input.viewDirWS);
-    float3 color = gSkyboxTexture.Sample(direction).rgb;
+    direction = normalize(RotateAroundY(direction, gSkyboxParams.rotationY));
+    float mipLevel = max(gSkyboxParams.mipLevel, 0.0);
+    float intensity = max(gSkyboxParams.intensity, 0.0);
+    float3 color = gSkyboxTexture.SampleLevel(direction, mipLevel).rgb * intensity;
     return float4(color, 1.0);
 }

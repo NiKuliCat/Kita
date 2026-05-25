@@ -16,6 +16,10 @@ namespace Kita {
 		AssetHandle  EnvironmentSourceTexHandle = InvalidAssetHandle;
 		EnvironmentSourceType SourceType = EnvironmentSourceType::Equirectangular;
 
+		AssetHandle SkyboxTextureHandle = InvalidAssetHandle;
+		float SkyboxIntensity = 1.0f;
+		float SkyboxRotationY = 0.0f;
+		float SkyboxMipLevel = 0.0f;
 
 
 		uint32_t EnvironmentCubeSize = 512;

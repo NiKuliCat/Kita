@@ -12,3 +12,4 @@
 #include "render/mesh/Mesh.h"
 
 #include "render/ibl/IBLGenerator.h"
+#include "render/pass/ToneMappingPass.h"

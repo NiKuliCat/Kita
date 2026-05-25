@@ -5,7 +5,8 @@
             "picking": "packages/render/shaders/EditorPicking.slang",
             "deferredLighting": "packages/render/shaders/DeferredLighting.slang",
             "grid": "packages/render/shaders/EditorGrid.slang",
-            "skybox": "packages/render/shaders/Skybox.slang"
+            "skybox": "packages/render/shaders/Skybox.slang",
+            "tonemap": "packages/render/shaders/ToneMapping.slang"
         },
         "texture": {
             "test": "packages/render/textures/test.jpg",

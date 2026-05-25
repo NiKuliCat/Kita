@@ -1,6 +1,7 @@
 # Kita
 
-![Editor Preview](docs/images/multiViewport.png)
+![Editor Preview](docs/images/IBL.png)
+![Editor Preview](docs/images/IBL1.png)
 
 
 ## 快速开始

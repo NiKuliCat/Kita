@@ -13,6 +13,11 @@ public float Pow2(float x)
     return x * x;
 }
 
+public float Pow4(float x)
+{
+    return x * x * x * x;
+}
+
 // 五次方，Fresnel Schlick 近似里会频繁使用
 public float Pow5(float x)
 {
@@ -32,6 +37,11 @@ public float3 FresnelSchlick(float cosTheta, float3 F0)
     float t = saturate(1.0 - cosTheta);
     return F0 + (1.0 - F0) * Pow5(t);
 }
+float3 F_Schlick_UE( float3 SpecularColor, float VoH )
+{
+    float Fc = Pow5( 1 - VoH );
+    return saturate( 50.0 * SpecularColor.g ) * Fc + (1 - Fc) * SpecularColor;
+}
 
 // 带 roughness 修正的 Fresnel，常用于 IBL
 public float3 FresnelSchlickRoughness(float cosTheta, float3 F0, float roughness)
@@ -50,14 +60,10 @@ public float D_GGX(float NoH, float roughness) {
 }
  
 // GGX / Trowbridge-Reitz 法线分布项 D
-public float DistributionGGX(float3 N, float3 H, float roughness)
+public float D_GGX_UE(float NoH, float roughness)
 {
-    float a = ClampRoughness(roughness);
-    float a2 = a * a;
-
-    float NdotH = saturate(dot(N, H));
-    float NdotH2 = NdotH * NdotH;
-
+    float a2 = roughness * roughness;
+    float NdotH2 = NoH * NoH;
     float denom = NdotH2 * (a2 - 1.0) + 1.0;
     return a2 / max(PI * denom * denom, PBR_EPSILON);
 }
@@ -108,8 +114,9 @@ public float3 SpecularGGX(
     float NdotV = saturate(dot(N, V));
     float NdotL = saturate(dot(N, L));
     float HdotV = saturate(dot(H, V));
+    float NdotH = saturate(dot(N, H));
 
-    float D = DistributionGGX(N, H, roughness);
+    float D = D_GGX_UE(NdotH, roughness);
     float G = GeometrySmith(N, V, L, roughness);
     float3 F = FresnelSchlick(HdotV, F0);
 

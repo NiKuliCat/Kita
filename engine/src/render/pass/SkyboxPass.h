@@ -4,6 +4,15 @@
 
 namespace Kita {
 
+	struct alignas(16) SkyboxPushConstants
+	{
+		float Intensity = 1.0f;
+		float RotationY = 0.0f;
+		float MipLevel = 0.0f;
+		float Padding = 0.0f;
+	};
+
+	static constexpr uint32_t SkyboxPushConstantSize = sizeof(SkyboxPushConstants);
 
 	class SkyboxPass : public FullscreenPassBase
 	{
@@ -12,6 +21,8 @@ namespace Kita {
 
 		void SetMaterial(const Ref<VulkanMaterial>& material) { m_Material = material; }
 		const Ref<VulkanMaterial>& GetMaterial() const { return m_Material; }
+		void SetPushConstants(const SkyboxPushConstants& pushConstants) { m_PushConstants = pushConstants; }
+		const SkyboxPushConstants& GetPushConstants() const { return m_PushConstants; }
 
 		bool HasValidMaterial() const;
 
@@ -24,8 +35,7 @@ namespace Kita {
 
 	private:
 		Ref<VulkanMaterial> m_Material = nullptr;
-
-
+		SkyboxPushConstants m_PushConstants{};
 
 	};
 

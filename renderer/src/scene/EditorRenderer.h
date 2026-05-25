@@ -16,6 +16,7 @@ namespace Kita {
 		EditorRenderer(
 			VulkanContext& context,
 			VulkanRenderTarget& gbufferRt,
+			VulkanRenderTarget& lightingRt,
 			VulkanRenderTarget& finalRt,
 			VulkanRenderTarget& pickingRt,
 			VulkanResourceFactory& vulkanResFactory,
@@ -38,11 +39,18 @@ namespace Kita {
 		void InitRenderSceneData(ScenePassData& sceneData);
 		void InitGridResources();
 		void InitDeferredLightingResources();
+		void InitTonemapResources();
+		void SyncSkyboxMaterialFromSettings();
 		VulkanGraphicsPipeline* GetPipeline(VulkanRenderTarget& rt, Ref<VulkanGeometry>& geometry, Ref<VulkanMaterial>& material);
 		VulkanGraphicsPipeline* GetDeferredLightingPipeline(VulkanRenderTarget& rt);
+		VulkanGraphicsPipeline* GetTonemapPipeline(VulkanRenderTarget& rt);
 		VulkanGraphicsPipeline* GetGridPipeline(VulkanRenderTarget& rt);
 		VulkanGraphicsPipeline* GetPickingPipeline(VulkanRenderTarget& rt, Ref<VulkanGeometry>& geometry);
 		VulkanGraphicsPipeline* GetSkyboxPipeline(VulkanRenderTarget& rt);
+		void CopyDepthAttachment(
+			const VulkanRenderTarget& sourceRt,
+			VulkanRenderTarget& targetRt,
+			VkCommandBuffer commandBuffer) const;
 	private:
 		VulkanContext* m_Context = nullptr;
 		SceneBindings m_SceneBindings;
@@ -50,19 +58,25 @@ namespace Kita {
 		Unique<BasePass> m_BasePass;
 		Unique<DeferredLightingPass> m_DeferredLightingPass;
 		Unique<ForwardOpaquePass> m_ForwardOpaquePass;
+		Unique<ToneMappingPass> m_TonemapPass;
 		Unique<EditorGridPass> m_EditorGridPass;
 		Unique<ViewportPickingPass> m_ViewportPickingPass;
 		Unique<SkyboxPass> m_SkyboxPass;
+
 		Ref<VulkanMaterial> m_SkyboxMaterial = nullptr;
+		Ref<VulkanTexture> m_DefaultSkyboxTexture = nullptr;
 		Ref<VulkanShader> m_GridVertexShader = nullptr;
 		Ref<VulkanShader> m_GridFragmentShader = nullptr;
 		Ref<VulkanShader> m_DeferredLightingVertexShader = nullptr;
 		Ref<VulkanShader> m_DeferredLightingFragmentShader = nullptr;
+		Ref<VulkanShader> m_TonemapVertexShader = nullptr;
+		Ref<VulkanShader> m_TonemapFragmentShader = nullptr;
 		EditorGridPass::PushConstants m_GridPushConstants{};
 		bool m_IsGridEnabled = true;
 
 		VulkanRenderTarget* m_GBufferRenderTarget = nullptr;
-		VulkanRenderTarget* m_RenderTarget = nullptr;
+		VulkanRenderTarget* m_LightingRenderTarget = nullptr;
+		VulkanRenderTarget* m_FinalRenderTarget = nullptr;
 		Ref<Scene> m_SceneContext = nullptr;
 		EditorPickRegistry* m_PickRegistry = nullptr;
 		ViewportCamera* m_ViewportCamera = nullptr;

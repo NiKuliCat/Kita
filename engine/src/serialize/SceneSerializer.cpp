@@ -27,6 +27,21 @@ namespace Kita {
 		json root;
 		root["version"] = 1;
 		root["scene"]["name"] = m_Scene->GetName();
+		const SceneRenderSettings& renderSettings = m_Scene->GetRenderSettings();
+		root["scene"]["renderSettings"] = {
+			{ "environmentSourceTexHandle", JsonUtils::SerializeAssetHandle(renderSettings.EnvironmentSourceTexHandle) },
+			{ "sourceType", renderSettings.SourceType == EnvironmentSourceType::Cubemap ? "Cubemap" : "Equirectangular" },
+			{ "skyboxTextureHandle", JsonUtils::SerializeAssetHandle(renderSettings.SkyboxTextureHandle) },
+			{ "skyboxIntensity", renderSettings.SkyboxIntensity },
+			{ "skyboxRotationY", renderSettings.SkyboxRotationY },
+			{ "skyboxMipLevel", renderSettings.SkyboxMipLevel },
+			{ "environmentCubeSize", renderSettings.EnvironmentCubeSize },
+			{ "irradianceCubeSize", renderSettings.IrradianceCubeSize },
+			{ "prefilterCubeSize", renderSettings.PrefilterCubeSize },
+			{ "dfgLutSize", renderSettings.DfgLutSize },
+			{ "intensity", renderSettings.Intensity },
+			{ "rotationY", renderSettings.RotationY }
+		};
 		root["objects"] = json::array();
 		auto view = m_Scene->GetRegistry().view<entt::entity>();
 		for (auto entity : view)
@@ -73,6 +88,61 @@ namespace Kita {
 		if (root["scene"].contains("name"))
 		{
 			m_Scene->SetName(root["scene"]["name"].get<std::string>());
+		}
+
+		if (root["scene"].contains("renderSettings") && root["scene"]["renderSettings"].is_object())
+		{
+			const json& renderSettingsJson = root["scene"]["renderSettings"];
+			SceneRenderSettings& renderSettings = m_Scene->GetRenderSettings();
+			auto& assetManager = AssetManager::GetInstance();
+
+			if (renderSettingsJson.contains("environmentSourceTexHandle"))
+			{
+				renderSettings.EnvironmentSourceTexHandle =
+					JsonUtils::DeserializeAssetHandle(renderSettingsJson.at("environmentSourceTexHandle"));
+				if (!Asset::IsValidHandle(renderSettings.EnvironmentSourceTexHandle) ||
+					!assetManager.HasHandle(renderSettings.EnvironmentSourceTexHandle))
+				{
+					renderSettings.EnvironmentSourceTexHandle = InvalidAssetHandle;
+				}
+			}
+
+			if (renderSettingsJson.contains("sourceType"))
+			{
+				const std::string sourceType = renderSettingsJson.at("sourceType").get<std::string>();
+				renderSettings.SourceType =
+					sourceType == "Cubemap" ? EnvironmentSourceType::Cubemap : EnvironmentSourceType::Equirectangular;
+			}
+
+			if (renderSettingsJson.contains("skyboxTextureHandle"))
+			{
+				renderSettings.SkyboxTextureHandle =
+					JsonUtils::DeserializeAssetHandle(renderSettingsJson.at("skyboxTextureHandle"));
+				if (!Asset::IsValidHandle(renderSettings.SkyboxTextureHandle) ||
+					!assetManager.HasHandle(renderSettings.SkyboxTextureHandle))
+				{
+					renderSettings.SkyboxTextureHandle = InvalidAssetHandle;
+				}
+			}
+
+			if (renderSettingsJson.contains("skyboxIntensity"))
+				renderSettings.SkyboxIntensity = renderSettingsJson.at("skyboxIntensity").get<float>();
+			if (renderSettingsJson.contains("skyboxRotationY"))
+				renderSettings.SkyboxRotationY = renderSettingsJson.at("skyboxRotationY").get<float>();
+			if (renderSettingsJson.contains("skyboxMipLevel"))
+				renderSettings.SkyboxMipLevel = renderSettingsJson.at("skyboxMipLevel").get<float>();
+			if (renderSettingsJson.contains("environmentCubeSize"))
+				renderSettings.EnvironmentCubeSize = renderSettingsJson.at("environmentCubeSize").get<uint32_t>();
+			if (renderSettingsJson.contains("irradianceCubeSize"))
+				renderSettings.IrradianceCubeSize = renderSettingsJson.at("irradianceCubeSize").get<uint32_t>();
+			if (renderSettingsJson.contains("prefilterCubeSize"))
+				renderSettings.PrefilterCubeSize = renderSettingsJson.at("prefilterCubeSize").get<uint32_t>();
+			if (renderSettingsJson.contains("dfgLutSize"))
+				renderSettings.DfgLutSize = renderSettingsJson.at("dfgLutSize").get<uint32_t>();
+			if (renderSettingsJson.contains("intensity"))
+				renderSettings.Intensity = renderSettingsJson.at("intensity").get<float>();
+			if (renderSettingsJson.contains("rotationY"))
+				renderSettings.RotationY = renderSettingsJson.at("rotationY").get<float>();
 		}
 
 		const auto& objects = root["objects"];

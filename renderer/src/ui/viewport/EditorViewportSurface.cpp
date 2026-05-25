@@ -87,6 +87,33 @@ namespace Kita {
 			rtInfo.DepthAttachment.Name = createInfo.Name + "_Depth";
 			rtInfo.DepthAttachment.Format = createInfo.DepthFormat;
 			rtInfo.DepthAttachment.CreateSampler = true;
+			rtInfo.DepthAttachment.ExtraUsage = VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+
+			return rtInfo;
+		}
+
+		VulkanRenderTarget::CreateInfo BuildLightingRenderTargetCreateInfo(const EditorViewportSurface::CreateInfo& createInfo)
+		{
+			VulkanRenderTarget::CreateInfo rtInfo{};
+			rtInfo.Name = createInfo.Name + "_Lighting";
+			rtInfo.Width = createInfo.Width;
+			rtInfo.Height = createInfo.Height;
+			rtInfo.Samples = createInfo.Samples;
+
+			VulkanRenderTarget::ColorAttachmentDesc colorAttachment{};
+			colorAttachment.Name = rtInfo.Name + "_Color";
+			colorAttachment.Format = createInfo.ColorFormat;
+			colorAttachment.CreateSampler = true;
+			colorAttachment.CreateResolveImage = false;
+			colorAttachment.Filter = createInfo.SamplerFilter;
+			colorAttachment.AddressMode = createInfo.SamplerAddressMode;
+			rtInfo.ColorAttachments.push_back(colorAttachment);
+
+			rtInfo.DepthAttachment.Enabled = true;
+			rtInfo.DepthAttachment.Name = rtInfo.Name + "_Depth";
+			rtInfo.DepthAttachment.Format = createInfo.DepthFormat;
+			rtInfo.DepthAttachment.CreateSampler = true;
+			rtInfo.DepthAttachment.ExtraUsage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 
 			return rtInfo;
 		}
@@ -202,6 +229,7 @@ namespace Kita {
 		ReleaseTextureID();
 		DestroyPickingResources();
 		m_GBufferRenderTarget.reset();
+		m_LightingRenderTarget.reset();
 		m_FinalRenderTarget.reset();
 		m_Context = nullptr;
 		m_CreateInfo = {};
@@ -241,6 +269,8 @@ namespace Kita {
 		m_CreateInfo.Height = height;
 		if (m_GBufferRenderTarget)
 			m_GBufferRenderTarget->Resize(width, height);
+		if (m_LightingRenderTarget)
+			m_LightingRenderTarget->Resize(width, height);
 		if (m_FinalRenderTarget)
 			m_FinalRenderTarget->Resize(width, height);
 		DestroyPickingResources();
@@ -271,6 +301,18 @@ namespace Kita {
 	{
 		KITA_CORE_ASSERT(m_FinalRenderTarget, "EditorViewportSurface final render target is null");
 		return *m_FinalRenderTarget;
+	}
+
+	VulkanRenderTarget& EditorViewportSurface::GetLightingRenderTarget()
+	{
+		KITA_CORE_ASSERT(m_LightingRenderTarget, "EditorViewportSurface lighting render target is null");
+		return *m_LightingRenderTarget;
+	}
+
+	const VulkanRenderTarget& EditorViewportSurface::GetLightingRenderTarget() const
+	{
+		KITA_CORE_ASSERT(m_LightingRenderTarget, "EditorViewportSurface lighting render target is null");
+		return *m_LightingRenderTarget;
 	}
 
 	VulkanRenderTarget& EditorViewportSurface::GetRenderTarget()
@@ -364,6 +406,9 @@ namespace Kita {
 
 		VulkanRenderTarget::CreateInfo gBufferInfo = BuildGBufferRenderTargetCreateInfo(m_CreateInfo);
 		m_GBufferRenderTarget = CreateUnique<VulkanRenderTarget>(*m_Context, gBufferInfo);
+
+		VulkanRenderTarget::CreateInfo lightingInfo = BuildLightingRenderTargetCreateInfo(m_CreateInfo);
+		m_LightingRenderTarget = CreateUnique<VulkanRenderTarget>(*m_Context, lightingInfo);
 
 		VulkanRenderTarget::CreateInfo finalInfo = BuildFinalRenderTargetCreateInfo(m_CreateInfo);
 		m_FinalRenderTarget = CreateUnique<VulkanRenderTarget>(*m_Context, finalInfo);
