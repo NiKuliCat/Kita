@@ -156,6 +156,7 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\asset\ShaderCompileCache.h" />
     <ClInclude Include="src\EngineCore.h" />
     <ClInclude Include="src\EngineRender.h" />
     <ClInclude Include="src\asset\Asset.h" />
@@ -654,6 +655,7 @@
     <ClCompile Include="src\asset\Asset.cpp" />
     <ClCompile Include="src\asset\AssetFactory.cpp" />
     <ClCompile Include="src\asset\AssetManager.cpp" />
+    <ClCompile Include="src\asset\ShaderCompileCache.cpp" />
     <ClCompile Include="src\component\LightComponent.cpp" />
     <ClCompile Include="src\component\MeshRenderer.cpp" />
     <ClCompile Include="src\component\Object.cpp" />

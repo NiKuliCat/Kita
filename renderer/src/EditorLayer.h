@@ -10,7 +10,6 @@
 #include "ui/asset/AssetEditorManager.h"
 #include "ui/SvgIconAtlas.h"
 #include "ui/ThumbnailCache.h"
-#include "ui/UIColorPanel.h"
 #include "ui/viewport/ViewportInstance.h"
 namespace Kita{
 
@@ -76,7 +75,6 @@ namespace Kita{
 		InspectorPanel m_InspectorPanel;
 		ContentBrowserPanel m_ContentBrowserPanel;
 		AssetEditorManager m_AssetEditorManager;
-		UIColorPanel m_UIColorPanel;
 		IBLPreviewPanel m_IBLPreviewPanel;
 		SceneRenderSettingsPanel m_SceneRenderSettingsPanel;
 		std::vector<ViewportInstance> m_SceneViewportPanels{};

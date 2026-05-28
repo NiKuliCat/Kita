@@ -113,12 +113,13 @@ namespace Kita {
 		const std::filesystem::path canonicalProjectFile = std::filesystem::weakly_canonical(projectFilePath);
 		const std::filesystem::path projectRoot = canonicalProjectFile.parent_path();
 		const std::filesystem::path contentRoot = projectRoot / root.at("contentRoot").get<std::string>();
-
+		const std::filesystem::path cacheRoot = projectRoot / ".cache";
 		outDescriptor.name = root.at("name").get<std::string>();
 		outDescriptor.version = version;
 		outDescriptor.projectFilePath = canonicalProjectFile;
 		outDescriptor.projectRoot = projectRoot;
 		outDescriptor.contentRoot = contentRoot;
+		outDescriptor.cacheRoot = cacheRoot;
 		return true;
 	}
 }

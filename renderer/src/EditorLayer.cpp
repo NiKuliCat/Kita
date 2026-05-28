@@ -138,7 +138,14 @@ namespace Kita {
 
 	void EditorLayer::OnCreate()
 	{
+		const auto project = Project::GetActive();
+		if (project)
+		{
+			ShaderCompileCache::SetCacheRoot(project->GetCacheDirectory() / "shader");
+		}
+
 		EditorProjectBootstrap::Initialize();
+
 
 		m_Scene = CreateRef<Scene>("example scene");
 		m_SceneSerializer = SceneSerializer(m_Scene);
@@ -159,7 +166,7 @@ namespace Kita {
 		});
 
 
-		const auto project = Project::GetActive();
+
 		if (project)
 		{
 			m_ContentBrowserPanel = ContentBrowserPanel(project->GetAssetRootDirectory(),m_EditorSelectionContext);
@@ -342,8 +349,6 @@ namespace Kita {
 				if (ImGui::MenuItem("Viewport"))
 					AddViewportPanel(BuildNextViewportWindowName());
 
-				if (ImGui::MenuItem("UI Color Panel"))
-					m_UIColorPanel.SetOpen(true);
 
 				if (ImGui::MenuItem("Scene Render Settings"))
 					m_SceneRenderSettingsPanel.SetOpen(true);
@@ -389,7 +394,6 @@ namespace Kita {
 		m_InspectorPanel.OnImGuiRender();
 		m_ContentBrowserPanel.OnImGuiRender();
 		m_AssetEditorManager.OnImGuiRender();
-		m_UIColorPanel.OnImGuiRender();
 		RenderTimeSystemPanel();
 		RenderSceneRenderSettingsPanel();
 		RenderIBLPreviewPanel();

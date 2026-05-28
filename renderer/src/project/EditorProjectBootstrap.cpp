@@ -102,6 +102,9 @@ namespace Kita {
 		PreloadConfiguredAssets(m_PreLoadMaterialPath);
 		PreloadConfiguredAssets(m_PreLoadMeshPath);
 		PreloadConfiguredAssets(m_PreLoadTexturePath);
+
+
+
 	}
 
 

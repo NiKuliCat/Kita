@@ -8,6 +8,10 @@
 /bin
 /bin-int
 
+## vibe coding
+/.agents
+/.codex
+**/graphify-out/
 
 # User-specific files
 *.rsuser

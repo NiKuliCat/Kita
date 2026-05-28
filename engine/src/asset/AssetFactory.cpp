@@ -3,9 +3,9 @@
 #include "AssetManager.h"
 #include "core/Log.h"
 #include "serialize/MaterialSerializer.h"
-#include "render/ShaderCompiler.h"
-#include "render/VulkanTextureLoader.h"
 
+#include "render/VulkanTextureLoader.h"
+#include "ShaderCompileCache.h"
 #include "third_party/stb_image/stb_image.h"
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
@@ -96,6 +96,8 @@ namespace Kita{
 		{
 			vs.IncludeDirs.push_back(shaderDirectory);
 		}
+		
+
 
 		ShaderCompiler::CompileRequest fs{};
 		fs.SourcePath = shaderAsset.SourcePath;
@@ -107,24 +109,15 @@ namespace Kita{
 			fs.IncludeDirs.push_back(shaderDirectory);
 		}
 
-		auto vsResult = compiler.CompileToSpirv(vs);
-		auto fsResult = compiler.CompileToSpirv(fs);
-
-		if (!vsResult.Success || !fsResult.Success)
-			return false;
-
 		ShaderStageBinary  vertex;
 		ShaderStageBinary  frag;
 
-		vertex.Spirv = std::move(vsResult.Spirv);
-		vertex.EntryPoint = "main";
+		vertex.Spirv = CompileShaderStageWithCache(compiler, vs).Spirv;
 
-		frag.Spirv = std::move(fsResult.Spirv);
-		frag.EntryPoint = "main";
+		frag.Spirv = CompileShaderStageWithCache(compiler, fs).Spirv;
 
 		shaderAsset.VertexStage = vertex;
 		shaderAsset.FragmentStage = frag;
-
 		return true;
 	}
 	bool AssetBuilder::LoadPixel(TextureAsset& textureAsset)
@@ -187,6 +180,24 @@ namespace Kita{
 
 		ProcessNode(scene->mRootNode, scene,meshAsset);
 		return !meshAsset.MeshRawData.empty();
+	}
+	ShaderCompiler::CompileResult AssetBuilder::CompileShaderStageWithCache(ShaderCompiler& compiler, const ShaderCompiler::CompileRequest& request)
+	{
+		ShaderCompiler::CompileResult result{};
+
+		if (ShaderCompileCache::Load(request, result.Spirv))
+		{
+			result.Success = true;
+			return result;
+		}
+
+		result = compiler.CompileToSpirv(request);
+		if (result.Success)
+		{
+			ShaderCompileCache::Store(request, result.Spirv);
+		}
+
+		return result;
 	}
 	void AssetBuilder::ProcessNode(aiNode* node, const aiScene* scene, MeshAsset& meshAsset)
 	{

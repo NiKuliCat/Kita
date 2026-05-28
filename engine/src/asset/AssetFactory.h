@@ -1,7 +1,6 @@
 #pragma once
 #include "asset/Asset.h"
-
-
+#include "render/ShaderCompiler.h"
 struct aiMesh;
 struct aiNode;
 struct aiScene;
@@ -22,6 +21,9 @@ namespace Kita {
 		static bool LoadMeshData_FBX(MeshAsset& meshAsset);
 
 	private:
+		//shader loader helper
+		static ShaderCompiler::CompileResult CompileShaderStageWithCache(ShaderCompiler& compiler, const ShaderCompiler::CompileRequest& request);
+
 		// mesh loader helper
 		static void ProcessNode(aiNode* node, const aiScene* scene, MeshAsset& meshAsset);
 		static void ProcessMesh(aiMesh* mesh, const aiScene* scene, MeshAsset& meshAsset);

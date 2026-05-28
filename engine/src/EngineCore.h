@@ -18,6 +18,7 @@
 
 #include "asset/Asset.h"
 #include "asset/AssetManager.h"
+#include "asset/ShaderCompileCache.h"
 
 #include "component/Scene.h"
 #include "component/Object.h"

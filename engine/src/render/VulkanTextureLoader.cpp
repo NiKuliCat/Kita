@@ -153,6 +153,18 @@ namespace Kita {
 					0,
 					kCubeFaceCount);
 
+				// 当前目标 mip 初始为 UNDEFINED，blit 前必须先转到 TRANSFER_DST。
+				VulkanImage::TransitionImageLayout(
+					commandBuffer,
+					image.GetHandle(),
+					VK_IMAGE_LAYOUT_UNDEFINED,
+					VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+					VK_IMAGE_ASPECT_COLOR_BIT,
+					mipIndex,
+					1,
+					0,
+					kCubeFaceCount);
+
 				VkImageBlit blit{};
 				blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 				blit.srcSubresource.mipLevel = mipIndex - 1;

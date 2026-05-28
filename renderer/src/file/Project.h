@@ -10,6 +10,7 @@ namespace Kita {
 		std::filesystem::path projectFilePath;
 		std::filesystem::path projectRoot;
 		std::filesystem::path contentRoot;
+		std::filesystem::path cacheRoot;
 	};
 
 	class Project
@@ -29,6 +30,7 @@ namespace Kita {
 		const std::filesystem::path& GetProjectFilePath() const { return m_Descriptor.projectFilePath; }
 		const std::filesystem::path& GetProjectDirectory() const { return m_Descriptor.projectRoot; }
 		const std::filesystem::path& GetContentDirectory() const { return m_Descriptor.contentRoot; }
+		const std::filesystem::path& GetCacheDirectory() const { return m_Descriptor.cacheRoot; }
 		std::filesystem::path GetAssetRootDirectory() const { return m_Descriptor.contentRoot.parent_path(); }
 		std::filesystem::path GetPackagesDirectory() const { return GetAssetRootDirectory() / "packages"; }
 

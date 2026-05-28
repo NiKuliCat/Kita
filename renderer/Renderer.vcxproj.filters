@@ -74,9 +74,6 @@
     <ClInclude Include="src\ui\UIAttributeUtil.h">
       <Filter>ui</Filter>
     </ClInclude>
-    <ClInclude Include="src\ui\UIColorPanel.h">
-      <Filter>ui</Filter>
-    </ClInclude>
     <ClInclude Include="src\ui\asset\AssetDragDrop.h">
       <Filter>ui\asset</Filter>
     </ClInclude>
@@ -164,9 +161,6 @@
       <Filter>ui</Filter>
     </ClCompile>
     <ClCompile Include="src\ui\UIAttributeUtil.cpp">
-      <Filter>ui</Filter>
-    </ClCompile>
-    <ClCompile Include="src\ui\UIColorPanel.cpp">
       <Filter>ui</Filter>
     </ClCompile>
     <ClCompile Include="src\ui\asset\AssetEditorManager.cpp">
