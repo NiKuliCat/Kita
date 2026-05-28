@@ -138,7 +138,7 @@ PSOutput PSMain(VSOutput input)
 
     float metallic = saturate(g_Material.SurfaceParams.x * metallicRoughnessSample.b);
     float roughness = saturate(g_Material.SurfaceParams.y * metallicRoughnessSample.g);
-    float ambientOcclusion = saturate(g_Material.SurfaceParams.z * aoSample);
+    float ambientOcclusion = saturate(lerp(1,aoSample,g_Material.SurfaceParams.z));
 
     float3 emissiveFactor = g_Material.TextureFlags1.x > 0.5
         ? g_EmissiveTexture.Sample(input.uv).rgb
