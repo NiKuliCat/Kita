@@ -17,7 +17,8 @@ namespace Kita {
 			uint32_t Height = 720;
 			VkSampleCountFlagBits Samples = VK_SAMPLE_COUNT_1_BIT;
 
-			VkFormat ColorFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
+			VkFormat LightingColorFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
+			VkFormat FinalColorFormat = VK_FORMAT_R8G8B8A8_UNORM;
 			VkFormat GBufferBaseColorFormat = VK_FORMAT_R8G8B8A8_UNORM;
 			VkFormat GBufferNormalFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
 			VkFormat GBufferMaterialFormat = VK_FORMAT_R8G8B8A8_UNORM;

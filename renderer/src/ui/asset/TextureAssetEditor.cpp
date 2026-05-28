@@ -243,8 +243,25 @@ namespace Kita {
 
 		if (m_WorkingCopy.Shape == TextureShape::TextureCube)
 		{
-			ImGui::TextUnformatted("Cubemap preview is not available yet.");
-			ImGui::TextDisabled("Save to rebuild the runtime cubemap.");
+			const float availWidth = ImGui::GetContentRegionAvail().x;
+			const float availHeight = ImGui::GetContentRegionAvail().y;
+			const float maxPreviewDimension = ImMax(1.0f, ImMin(availWidth, availHeight) * 0.82f);
+			const float previewSize = ImClamp(maxPreviewDimension, kTexturePreviewMinVisibleSize, 360.0f);
+			const uint32_t previewTextureSize = static_cast<uint32_t>(ImClamp(std::ceil(previewSize), 128.0f, 512.0f));
+			const ThumbnailCache::ThumbnailHandle thumbnail =
+				m_ThumbnailCache ? m_ThumbnailCache->GetOrCreate(m_AssetHandle, AssetType::Texture, previewTextureSize) : ThumbnailCache::ThumbnailHandle{};
+
+			if (!thumbnail.IsValid())
+			{
+				ImGui::TextUnformatted("Cubemap preview is unavailable.");
+				ImGui::TextDisabled("Save to rebuild the runtime cubemap.");
+				ImGui::EndChild();
+				return;
+			}
+
+			ImGui::SetCursorPosX(std::max(0.0f, (availWidth - previewSize) * 0.5f));
+			ImGui::SetCursorPosY(ImMax(0.0f, (availHeight - previewSize) * 0.5f));
+			ImGui::Image(thumbnail.TextureID, ImVec2(previewSize, previewSize));
 			ImGui::EndChild();
 			return;
 		}

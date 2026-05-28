@@ -19,7 +19,7 @@ namespace Kita {
 		Clear();
 	}
 
-	ThumbnailCache::ThumbnailHandle ThumbnailCache::GetOrCreate(AssetHandle handle, AssetType type)
+	ThumbnailCache::ThumbnailHandle ThumbnailCache::GetOrCreate(AssetHandle handle, AssetType type, uint32_t preferredSize)
 	{
 		ProcessPendingReleases();
 
@@ -33,7 +33,7 @@ namespace Kita {
 			return {};
 		}
 
-		return GetOrCreateTextureThumbnail(handle);
+		return GetOrCreateTextureThumbnail(handle, preferredSize);
 	}
 
 	void ThumbnailCache::Invalidate(AssetHandle handle)
@@ -75,7 +75,7 @@ namespace Kita {
 		m_RetiredThumbnails.clear();
 	}
 
-	ThumbnailCache::ThumbnailHandle ThumbnailCache::GetOrCreateTextureThumbnail(AssetHandle handle)
+	ThumbnailCache::ThumbnailHandle ThumbnailCache::GetOrCreateTextureThumbnail(AssetHandle handle, uint32_t preferredSize)
 	{
 		auto it = m_Cache.find(handle);
 		if (it != m_Cache.end())
@@ -87,7 +87,7 @@ namespace Kita {
 		if (AssetManager::GetInstance().GetTextureImportSettings(handle, importSettings) &&
 			importSettings.Shape == TextureShape::TextureCube)
 		{
-			return {};
+			return GetOrCreateCubemapThumbnail(handle, preferredSize);
 		}
 
 		Ref<VulkanTexture> texture = m_ResourceFactory.GetOrCreateTexture(handle);
@@ -126,6 +126,27 @@ namespace Kita {
 
 		m_Cache.emplace(handle, thumbnail);
 		return { textureID, texture->GetWidth(), texture->GetHeight() };
+	}
+
+	ThumbnailCache::ThumbnailHandle ThumbnailCache::GetOrCreateCubemapThumbnail(AssetHandle handle, uint32_t size)
+	{
+		if (!m_AssetPreviewRenderer)
+		{
+			return {};
+		}
+
+		AssetPreviewRequest request{};
+		request.Handle = handle;
+		request.Type = AssetPreviewType::CubemapSphere;
+		request.Size = size;
+
+		PreviewThumbnailHandle preview = m_AssetPreviewRenderer->GetOrRender(request);
+		if (!preview.IsValid())
+		{
+			return {};
+		}
+
+		return { preview.TextureID, preview.Width, preview.Height };
 	}
 
 	void ThumbnailCache::ReleaseThumbnail(CachedThumbnail& thumbnail)

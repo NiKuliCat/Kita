@@ -4,6 +4,9 @@
     <Filter Include="file">
       <UniqueIdentifier>{25CB967C-1102-980D-BAEE-7D10A604140F}</UniqueIdentifier>
     </Filter>
+    <Filter Include="preview">
+      <UniqueIdentifier>{47758CC2-B354-0B5E-BC6C-963428CB71BF}</UniqueIdentifier>
+    </Filter>
     <Filter Include="project">
       <UniqueIdentifier>{7CC43AC3-E8A3-B95E-F1BB-44355D1A20C0}</UniqueIdentifier>
     </Filter>
@@ -27,6 +30,15 @@
     <ClInclude Include="src\EditorLayer.h" />
     <ClInclude Include="src\file\Project.h">
       <Filter>file</Filter>
+    </ClInclude>
+    <ClInclude Include="src\preview\AssetPreviewRenderer.h">
+      <Filter>preview</Filter>
+    </ClInclude>
+    <ClInclude Include="src\preview\PreviewSpherePass.h">
+      <Filter>preview</Filter>
+    </ClInclude>
+    <ClInclude Include="src\preview\PreviewThumbnailCache.h">
+      <Filter>preview</Filter>
     </ClInclude>
     <ClInclude Include="src\project\EditorProjectBootstrap.h">
       <Filter>project</Filter>
@@ -56,10 +68,10 @@
     <ClInclude Include="src\ui\InspectorPanel.h">
       <Filter>ui</Filter>
     </ClInclude>
-    <ClInclude Include="src\ui\SceneRenderSettingsPanel.h">
+    <ClInclude Include="src\ui\SceneHierarchyPanel.h">
       <Filter>ui</Filter>
     </ClInclude>
-    <ClInclude Include="src\ui\SceneHierarchyPanel.h">
+    <ClInclude Include="src\ui\SceneRenderSettingsPanel.h">
       <Filter>ui</Filter>
     </ClInclude>
     <ClInclude Include="src\ui\SceneSelectionContext.h">
@@ -120,6 +132,15 @@
     <ClCompile Include="src\file\Project.cpp">
       <Filter>file</Filter>
     </ClCompile>
+    <ClCompile Include="src\preview\AssetPreviewRenderer.cpp">
+      <Filter>preview</Filter>
+    </ClCompile>
+    <ClCompile Include="src\preview\PreviewSpherePass.cpp">
+      <Filter>preview</Filter>
+    </ClCompile>
+    <ClCompile Include="src\preview\PreviewThumbnailCache.cpp">
+      <Filter>preview</Filter>
+    </ClCompile>
     <ClCompile Include="src\project\EditorProjectBootstrap.cpp">
       <Filter>project</Filter>
     </ClCompile>
@@ -148,10 +169,10 @@
     <ClCompile Include="src\ui\InspectorPanel.cpp">
       <Filter>ui</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\SceneRenderSettingsPanel.cpp">
+    <ClCompile Include="src\ui\SceneHierarchyPanel.cpp">
       <Filter>ui</Filter>
     </ClCompile>
-    <ClCompile Include="src\ui\SceneHierarchyPanel.cpp">
+    <ClCompile Include="src\ui\SceneRenderSettingsPanel.cpp">
       <Filter>ui</Filter>
     </ClCompile>
     <ClCompile Include="src\ui\SvgIconAtlas.cpp">

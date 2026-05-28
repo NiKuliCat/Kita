@@ -76,7 +76,7 @@ namespace Kita {
 
 			VulkanRenderTarget::ColorAttachmentDesc colorAttachment{};
 			colorAttachment.Name = rtInfo.Name + "_Color";
-			colorAttachment.Format = createInfo.ColorFormat;
+			colorAttachment.Format = createInfo.FinalColorFormat;
 			colorAttachment.CreateSampler = true;
 			colorAttachment.CreateResolveImage = false;
 			colorAttachment.Filter = createInfo.SamplerFilter;
@@ -102,7 +102,7 @@ namespace Kita {
 
 			VulkanRenderTarget::ColorAttachmentDesc colorAttachment{};
 			colorAttachment.Name = rtInfo.Name + "_Color";
-			colorAttachment.Format = createInfo.ColorFormat;
+			colorAttachment.Format = createInfo.LightingColorFormat;
 			colorAttachment.CreateSampler = true;
 			colorAttachment.CreateResolveImage = false;
 			colorAttachment.Filter = createInfo.SamplerFilter;

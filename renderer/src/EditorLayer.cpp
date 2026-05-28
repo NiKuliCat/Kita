@@ -177,7 +177,11 @@ namespace Kita {
 				EditorProjectBootstrap::GetPreLoadTextureHandle("normal"));
 			m_PipelineFactory = CreateUnique<PipelineFactory>(Application::Get().GetVulkanContext());
 			m_IBLGenerator = CreateUnique<IBLGenerator>(Application::Get().GetVulkanContext());
+			m_AssetPreviewRenderer = CreateUnique<AssetPreviewRenderer>(
+				Application::Get().GetVulkanContext(),
+				*m_EditorVulkanResourceFactory);
 			m_ContentBrowserThumbnailCache = CreateUnique<ThumbnailCache>(*m_EditorVulkanResourceFactory);
+			m_ContentBrowserThumbnailCache->SetAssetPreviewRenderer(m_AssetPreviewRenderer.get());
 			m_ContentBrowserPanel.SetThumbnailCache(m_ContentBrowserThumbnailCache.get());
 			m_AssetEditorManager.SetThumbnailCache(m_ContentBrowserThumbnailCache.get());
 			m_AssetEditorManager.SetResourceFactory(m_EditorVulkanResourceFactory.get());
@@ -234,6 +238,7 @@ namespace Kita {
 		m_ContentBrowserPanel.SetThumbnailCache(nullptr);
 		m_ContentBrowserIconAtlas.reset();
 		m_ContentBrowserThumbnailCache.reset();
+		m_AssetPreviewRenderer.reset();
 		if (m_EditorVulkanResourceFactory)
 			m_EditorVulkanResourceFactory->Clear();
 		m_EditorVulkanResourceFactory.reset();

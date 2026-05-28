@@ -620,7 +620,8 @@ namespace Kita {
 		{
 			SyncSkyboxMaterialFromSettings();
 			m_SkyboxMaterial->EnsureDescriptors(*m_Context, m_Context->GetFramesInFlight());
-			m_SkyboxMaterial->UpdateDescriptorSet(frameIndex);
+			if (m_SkyboxMaterial->IsDescriptorSetDirty(frameIndex))
+				m_SkyboxMaterial->UpdateDescriptorSet(frameIndex);
 			m_SkyboxPass->SetMaterial(m_SkyboxMaterial);
 			m_SkyboxPass->SetPipeline(GetSkyboxPipeline(lightingRt));
 			if (m_SkyboxPass->HasValidMaterial())

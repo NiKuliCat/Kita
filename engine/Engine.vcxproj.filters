@@ -25,14 +25,14 @@
     <Filter Include="src\render">
       <UniqueIdentifier>{1CA98B76-0861-CDC3-7168-A61F5D3F68B4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\render\ibl">
-      <UniqueIdentifier>{7A00E7F0-0D9D-4DDF-9C36-0F77C760A5C1}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\render\deferred">
       <UniqueIdentifier>{6CD87D6E-D839-5B7C-61A7-A12ECD07923B}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\render\font">
       <UniqueIdentifier>{C20F1AC2-2E9B-8786-37AC-0A7BA3B6E386}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\render\ibl">
+      <UniqueIdentifier>{A2684EB8-8E36-42BE-77CA-B2E463371E23}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\render\mesh">
       <UniqueIdentifier>{78BC1DC2-E447-8B86-ED58-0E7B5963E786}</UniqueIdentifier>
@@ -102,6 +102,9 @@
     <ClInclude Include="src\asset\AssetManager.h">
       <Filter>src\asset</Filter>
     </ClInclude>
+    <ClInclude Include="src\asset\ShaderCompileCache.h">
+      <Filter>src\asset</Filter>
+    </ClInclude>
     <ClInclude Include="src\component\LightComponent.h">
       <Filter>src\component</Filter>
     </ClInclude>
@@ -167,9 +170,6 @@
     </ClInclude>
     <ClInclude Include="src\platform\windows\WindowsWindow.h">
       <Filter>src\platform\windows</Filter>
-    </ClInclude>
-    <ClInclude Include="src\render\ibl\IBLGenerator.h">
-      <Filter>src\render\ibl</Filter>
     </ClInclude>
     <ClInclude Include="src\render\BufferLayout.h">
       <Filter>src\render</Filter>
@@ -245,6 +245,9 @@
     </ClInclude>
     <ClInclude Include="src\render\font\FontManager.h">
       <Filter>src\render\font</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\ibl\IBLGenerator.h">
+      <Filter>src\render\ibl</Filter>
     </ClInclude>
     <ClInclude Include="src\render\mesh\Mesh.h">
       <Filter>src\render\mesh</Filter>
@@ -1566,7 +1569,6 @@
     <ClInclude Include="third-party\imguizmo\ImGuizmo.h">
       <Filter>third-party\imguizmo</Filter>
     </ClInclude>
-    <ClInclude Include="src\asset\ShaderCompileCache.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\asset\Asset.cpp">
@@ -1576,6 +1578,9 @@
       <Filter>src\asset</Filter>
     </ClCompile>
     <ClCompile Include="src\asset\AssetManager.cpp">
+      <Filter>src\asset</Filter>
+    </ClCompile>
+    <ClCompile Include="src\asset\ShaderCompileCache.cpp">
       <Filter>src\asset</Filter>
     </ClCompile>
     <ClCompile Include="src\component\LightComponent.cpp">
@@ -1616,9 +1621,6 @@
     </ClCompile>
     <ClCompile Include="src\platform\windows\WindowsWindow.cpp">
       <Filter>src\platform\windows</Filter>
-    </ClCompile>
-    <ClCompile Include="src\render\ibl\IBLGenerator.cpp">
-      <Filter>src\render\ibl</Filter>
     </ClCompile>
     <ClCompile Include="src\render\BufferLayout.cpp">
       <Filter>src\render</Filter>
@@ -1689,6 +1691,9 @@
     <ClCompile Include="src\render\font\FontManager.cpp">
       <Filter>src\render\font</Filter>
     </ClCompile>
+    <ClCompile Include="src\render\ibl\IBLGenerator.cpp">
+      <Filter>src\render\ibl</Filter>
+    </ClCompile>
     <ClCompile Include="src\render\mesh\Mesh.cpp">
       <Filter>src\render\mesh</Filter>
     </ClCompile>
@@ -1743,6 +1748,5 @@
     <ClCompile Include="third-party\imguizmo\ImGuizmo.cpp">
       <Filter>third-party\imguizmo</Filter>
     </ClCompile>
-    <ClCompile Include="src\asset\ShaderCompileCache.cpp" />
   </ItemGroup>
 </Project>

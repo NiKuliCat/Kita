@@ -170,6 +170,9 @@ IF EXIST "C:\VulkanSDK\1.4.341.1\Bin\slang.dll"\ (xcopy /Q /E /Y /I "C:\VulkanSD
   <ItemGroup>
     <ClInclude Include="src\EditorLayer.h" />
     <ClInclude Include="src\file\Project.h" />
+    <ClInclude Include="src\preview\AssetPreviewRenderer.h" />
+    <ClInclude Include="src\preview\PreviewSpherePass.h" />
+    <ClInclude Include="src\preview\PreviewThumbnailCache.h" />
     <ClInclude Include="src\project\EditorProjectBootstrap.h" />
     <ClInclude Include="src\renderer_pch.h" />
     <ClInclude Include="src\scene\EditorGridPass.h" />
@@ -180,8 +183,8 @@ IF EXIST "C:\VulkanSDK\1.4.341.1\Bin\slang.dll"\ (xcopy /Q /E /Y /I "C:\VulkanSD
     <ClInclude Include="src\ui\EditorSelectionContext.h" />
     <ClInclude Include="src\ui\IBLPreviewPanel.h" />
     <ClInclude Include="src\ui\InspectorPanel.h" />
-    <ClInclude Include="src\ui\SceneRenderSettingsPanel.h" />
     <ClInclude Include="src\ui\SceneHierarchyPanel.h" />
+    <ClInclude Include="src\ui\SceneRenderSettingsPanel.h" />
     <ClInclude Include="src\ui\SceneSelectionContext.h" />
     <ClInclude Include="src\ui\SvgIconAtlas.h" />
     <ClInclude Include="src\ui\ThumbnailCache.h" />
@@ -204,6 +207,9 @@ IF EXIST "C:\VulkanSDK\1.4.341.1\Bin\slang.dll"\ (xcopy /Q /E /Y /I "C:\VulkanSD
     <ClCompile Include="src\EditorApp.cpp" />
     <ClCompile Include="src\EditorLayer.cpp" />
     <ClCompile Include="src\file\Project.cpp" />
+    <ClCompile Include="src\preview\AssetPreviewRenderer.cpp" />
+    <ClCompile Include="src\preview\PreviewSpherePass.cpp" />
+    <ClCompile Include="src\preview\PreviewThumbnailCache.cpp" />
     <ClCompile Include="src\project\EditorProjectBootstrap.cpp" />
     <ClCompile Include="src\renderer_pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
@@ -216,8 +222,8 @@ IF EXIST "C:\VulkanSDK\1.4.341.1\Bin\slang.dll"\ (xcopy /Q /E /Y /I "C:\VulkanSD
     <ClCompile Include="src\ui\EditorSelectionContext.cpp" />
     <ClCompile Include="src\ui\IBLPreviewPanel.cpp" />
     <ClCompile Include="src\ui\InspectorPanel.cpp" />
-    <ClCompile Include="src\ui\SceneRenderSettingsPanel.cpp" />
     <ClCompile Include="src\ui\SceneHierarchyPanel.cpp" />
+    <ClCompile Include="src\ui\SceneRenderSettingsPanel.cpp" />
     <ClCompile Include="src\ui\SvgIconAtlas.cpp" />
     <ClCompile Include="src\ui\ThumbnailCache.cpp" />
     <ClCompile Include="src\ui\UIAttributeUtil.cpp" />

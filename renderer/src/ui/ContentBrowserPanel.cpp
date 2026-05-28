@@ -29,6 +29,7 @@ namespace Kita {
 				|| extension == ".jpeg"
 				|| extension == ".tga"
 				|| extension == ".bmp"
+				|| extension == ".hdr"
 				|| extension == ".fbx"
 				|| extension == ".obj"
 				|| extension == ".dae"
@@ -106,7 +107,7 @@ namespace Kita {
 	constexpr float kTileTopPadding = 5.0f;
 	constexpr float kTileIconTextGap = 2.0f;
 	constexpr float kTileBottomPadding = 5.0f;
-	constexpr float kPreviewFillRatio = 0.64f;
+	constexpr float kPreviewFillRatio = 0.58f;
 	constexpr float kPreviewMinSize = 40.0f;
 	constexpr float kTooltipPreviewMaxSize = 256.0f;
 	constexpr float kPreviewCornerRounding = 6.0f;

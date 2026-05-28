@@ -136,7 +136,35 @@ namespace Kita{
 
 		stbi_set_flip_vertically_on_load(0);
 
-		stbi_uc* pixels = stbi_load(normalizedPath.string().c_str(), &width, &height ,&channels, STBI_rgb_alpha);
+		const std::string texturePath = normalizedPath.string();
+
+		if (stbi_is_hdr(texturePath.c_str()))
+		{
+			float* hdrPixels = stbi_loadf(texturePath.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+			if (!hdrPixels)
+			{
+				KITA_CORE_ERROR("VulkanTextureLoader: failed to load HDR texture '{0}', reason: {1}", texturePath, stbi_failure_reason() ? stbi_failure_reason() : "unknown");
+				return false;
+			}
+
+			KITA_CORE_ASSERT(width > 0 && height > 0, "Loaded HDR texture has invalid dimensions");
+
+			const size_t pixelFloatCount = static_cast<size_t>(width) * static_cast<size_t>(height) * 4;
+			const size_t pixelBytes = pixelFloatCount * sizeof(float);
+
+			// HDR 贴图保留线性浮点数据，供环境贴图和 Content 缩略图共用同一套纹理上传链路。
+			textureAsset.TexRawData.Width = width;
+			textureAsset.TexRawData.Height = height;
+			textureAsset.TexRawData.Channels = 4;
+			textureAsset.TexRawData.Format = TexturePixelFormat::R32G32B32A32_Float;
+			textureAsset.TexRawData.Pixels.resize(pixelBytes);
+			std::memcpy(textureAsset.TexRawData.Pixels.data(), hdrPixels, pixelBytes);
+
+			stbi_image_free(hdrPixels);
+			return true;
+		}
+
+		stbi_uc* pixels = stbi_load(texturePath.c_str(), &width, &height ,&channels, STBI_rgb_alpha);
 
 		if (!pixels)
 		{

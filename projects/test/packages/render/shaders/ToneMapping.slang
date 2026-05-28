@@ -42,11 +42,20 @@ float3 ACESFilm(float3 x)
     return saturate((x * (a * x + b)) / (x * (c * x + d) + e));
 }
 
+float3 LinearToSRGB(float3 color)
+{
+    float3 positiveColor = max(color, 0.0.xxx);
+    float3 cutoff = step(float3(0.0031308, 0.0031308, 0.0031308), positiveColor);
+    float3 lower = positiveColor * 12.92;
+    float3 higher = 1.055 * pow(positiveColor, 1.0 / 2.4) - 0.055;
+    return lerp(lower, higher, cutoff);
+}
+
 [shader("fragment")]
 float4 PSMain(VSOutput input) : SV_Target0
 {
     float3 hdrColor = max(g_HDRSource.Sample(input.uv).rgb, 0.0.xxx);
     float exposure = 1.0;
     float3 mapped = ACESFilm(hdrColor * exposure);
-    return float4(mapped, 1.0);
+    return float4(LinearToSRGB(mapped), 1.0);
 }

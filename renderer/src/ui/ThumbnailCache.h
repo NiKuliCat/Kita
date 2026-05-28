@@ -1,6 +1,7 @@
 #pragma once
 #include <EngineCore.h>
 #include <EngineRender.h>
+#include "preview/AssetPreviewRenderer.h"
 
 namespace Kita {
 
@@ -26,8 +27,9 @@ namespace Kita {
 		ThumbnailCache(const ThumbnailCache&) = delete;
 		ThumbnailCache& operator=(const ThumbnailCache&) = delete;
 
-		ThumbnailHandle GetOrCreate(AssetHandle handle, AssetType type);
+		ThumbnailHandle GetOrCreate(AssetHandle handle, AssetType type, uint32_t preferredSize = 128);
 
+		void SetAssetPreviewRenderer(AssetPreviewRenderer* previewRenderer) { m_AssetPreviewRenderer = previewRenderer; }
 		void Invalidate(AssetHandle handle);
 		void Clear();
 
@@ -48,7 +50,8 @@ namespace Kita {
 		};
 
 	private:
-		ThumbnailHandle GetOrCreateTextureThumbnail(AssetHandle handle);
+		ThumbnailHandle GetOrCreateTextureThumbnail(AssetHandle handle, uint32_t preferredSize);
+		ThumbnailHandle GetOrCreateCubemapThumbnail(AssetHandle handle, uint32_t size);
 		void ReleaseThumbnail(CachedThumbnail& thumbnail);
 		void RetireThumbnail(CachedThumbnail& thumbnail);
 		void ProcessPendingReleases();
@@ -56,6 +59,7 @@ namespace Kita {
 
 	private:
 		VulkanResourceFactory& m_ResourceFactory;
+		AssetPreviewRenderer* m_AssetPreviewRenderer = nullptr;
 		std::unordered_map<AssetHandle, CachedThumbnail> m_Cache;
 		std::vector<RetiredThumbnail> m_RetiredThumbnails;
 
