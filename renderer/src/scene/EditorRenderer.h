@@ -41,6 +41,14 @@ namespace Kita {
 		void InitDeferredLightingResources();
 		void InitTonemapResources();
 		void SyncSkyboxMaterialFromSettings();
+
+		void BuildRenderGraph(EditorViewportSurface& surface,
+			VulkanRenderTarget& gbufferRt,
+			VulkanRenderTarget& lightingRt,
+			VulkanRenderTarget& finalRt,
+			VulkanRenderTarget& pickingRt);
+
+
 		VulkanGraphicsPipeline* GetPipeline(VulkanRenderTarget& rt, Ref<VulkanGeometry>& geometry, Ref<VulkanMaterial>& material);
 		VulkanGraphicsPipeline* GetDeferredLightingPipeline(VulkanRenderTarget& rt);
 		VulkanGraphicsPipeline* GetTonemapPipeline(VulkanRenderTarget& rt);

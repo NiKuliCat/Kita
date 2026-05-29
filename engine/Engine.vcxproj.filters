@@ -1572,6 +1572,7 @@
     <ClInclude Include="src\render\graph\RenderGraph.h" />
     <ClInclude Include="src\render\graph\RenderGraphResource.h" />
     <ClInclude Include="src\render\graph\RenderGraphContext.h" />
+    <ClInclude Include="src\render\graph\RenderGraphCompiled.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\asset\Asset.cpp">

@@ -89,6 +89,152 @@ namespace Kita {
 		}
 	}
 
+	void EditorRenderer::BuildRenderGraph(EditorViewportSurface& surface, VulkanRenderTarget& gbufferRt, VulkanRenderTarget& lightingRt, VulkanRenderTarget& finalRt, VulkanRenderTarget& pickingRt)
+	{
+		m_RenderGraph->Reset();
+
+		RenderGraphResourceID gbufferID = m_RenderGraph->ImportRenderTarget("GBuffer", gbufferRt);
+		RenderGraphResourceID lightingID = m_RenderGraph->ImportRenderTarget("Lighting", lightingRt);
+		RenderGraphResourceID finalID = m_RenderGraph->ImportRenderTarget("Final", finalRt);
+		RenderGraphResourceID pickingID = m_RenderGraph->ImportRenderTarget("Picking", pickingRt);
+
+		m_RenderGraph->AddPass("GBuffer")
+			.Write(gbufferID)
+			.SetExecute([this, gbufferID](RenderGraphContext& graphContext)
+				{
+					RenderPassContext passContext(
+						graphContext.GetVulkanContext(),
+						graphContext.GetCommandBuffer(),
+						graphContext.GetRenderTarget(gbufferID));
+
+					m_BasePass->Execute(passContext);
+				});
+
+		if (m_DeferredLightingPass)
+		{
+			m_RenderGraph->AddPass("Lighting")
+				.Read(gbufferID)
+				.Write(lightingID)
+				.SetExecute([this, lightingID](RenderGraphContext& graphContext)
+					{
+						const uint32_t frameIndex = graphContext.GetVulkanContext().GetCurrentFrameIndex();
+						VulkanRenderTarget& lightingRt = graphContext.GetRenderTarget(lightingID);
+
+						m_DeferredLightingPass->UpdateFrameResources(frameIndex);
+						m_DeferredLightingPass->SetPipeline(GetDeferredLightingPipeline(lightingRt));
+
+						RenderPassContext passContext(
+							graphContext.GetVulkanContext(),
+							graphContext.GetCommandBuffer(),
+							lightingRt);
+
+						m_DeferredLightingPass->Execute(passContext);
+					});
+		}
+
+		if (m_SkyboxPass && m_SkyboxMaterial)
+		{
+			m_RenderGraph->AddPass("Skybox")
+				.Read(lightingID)
+				.Write(lightingID)
+				.SetExecute([this, lightingID](RenderGraphContext& graphContext)
+					{
+						const uint32_t frameIndex = graphContext.GetVulkanContext().GetCurrentFrameIndex();
+						VulkanRenderTarget& lightingRt = graphContext.GetRenderTarget(lightingID);
+
+						SyncSkyboxMaterialFromSettings();
+						m_SkyboxMaterial->EnsureDescriptors(
+							graphContext.GetVulkanContext(),
+							graphContext.GetVulkanContext().GetFramesInFlight());
+
+						if (m_SkyboxMaterial->IsDescriptorSetDirty(frameIndex))
+							m_SkyboxMaterial->UpdateDescriptorSet(frameIndex);
+
+						m_SkyboxPass->SetMaterial(m_SkyboxMaterial);
+						m_SkyboxPass->SetPipeline(GetSkyboxPipeline(lightingRt));
+
+						if (!m_SkyboxPass->HasValidMaterial())
+							return;
+
+						RenderPassContext passContext(
+							graphContext.GetVulkanContext(),
+							graphContext.GetCommandBuffer(),
+							lightingRt);
+
+						m_SkyboxPass->Execute(passContext);
+					});
+		}
+
+		m_RenderGraph->AddPass("CopyDepth")
+			.Read(lightingID)
+			.Write(finalID)
+			.SetExecute([this, lightingID, finalID](RenderGraphContext& graphContext)
+				{
+					CopyDepthAttachment(
+						graphContext.GetRenderTarget(lightingID),
+						graphContext.GetRenderTarget(finalID),
+						graphContext.GetCommandBuffer());
+				});
+
+		if (m_TonemapPass)
+		{
+			m_RenderGraph->AddPass("ToneMap")
+				.Read(lightingID)
+				.Write(finalID)
+				.SetExecute([this, finalID](RenderGraphContext& graphContext)
+					{
+						const uint32_t frameIndex = graphContext.GetVulkanContext().GetCurrentFrameIndex();
+						VulkanRenderTarget& finalRt = graphContext.GetRenderTarget(finalID);
+
+						m_TonemapPass->UpdateFrameResources(frameIndex);
+						m_TonemapPass->SetPipeline(GetTonemapPipeline(finalRt));
+
+						RenderPassContext passContext(
+							graphContext.GetVulkanContext(),
+							graphContext.GetCommandBuffer(),
+							finalRt);
+
+						m_TonemapPass->Execute(passContext);
+					});
+		}
+
+		if (m_EditorGridPass && m_IsGridEnabled)
+		{
+			m_RenderGraph->AddPass("EditorGrid")
+				.Read(finalID)
+				.Write(finalID)
+				.SetExecute([this, finalID](RenderGraphContext& graphContext)
+					{
+						VulkanRenderTarget& finalRt = graphContext.GetRenderTarget(finalID);
+
+						m_EditorGridPass->SetPipeline(GetGridPipeline(finalRt));
+						m_EditorGridPass->SetPushConstants(m_GridPushConstants);
+
+						RenderPassContext passContext(
+							graphContext.GetVulkanContext(),
+							graphContext.GetCommandBuffer(),
+							finalRt);
+
+						m_EditorGridPass->Execute(passContext);
+					});
+		}
+
+		if (m_ViewportPickingPass)
+		{
+			m_RenderGraph->AddPass("Picking")
+				.Write(pickingID)
+				.SetExecute([this, pickingID](RenderGraphContext& graphContext)
+					{
+						RenderPassContext passContext(
+							graphContext.GetVulkanContext(),
+							graphContext.GetCommandBuffer(),
+							graphContext.GetRenderTarget(pickingID));
+
+						m_ViewportPickingPass->Execute(passContext);
+					});
+		}
+	}
+
 	void EditorRenderer::OnDestroy()
 	{
 		m_GridVertexShader.reset();
@@ -465,135 +611,12 @@ namespace Kita {
 		if (cmd == VK_NULL_HANDLE)
 			return;
 
-		m_RenderGraph->Reset();
+
 
 		VulkanRenderTarget& gbufferRt = surface.GetGBufferRenderTarget();
 		VulkanRenderTarget& lightingRt = surface.GetLightingRenderTarget();
 		VulkanRenderTarget& finalRt = surface.GetFinalRenderTarget();
 		VulkanRenderTarget& pickingRt = surface.GetPickingRenderTarget();
-
-		RenderGraphResourceID gbufferID = m_RenderGraph->ImportRenderTarget("GBuffer", gbufferRt);
-		RenderGraphResourceID lightingID = m_RenderGraph->ImportRenderTarget("Lighting", lightingRt);
-		RenderGraphResourceID finalID = m_RenderGraph->ImportRenderTarget("Final", finalRt);
-		RenderGraphResourceID pickingID = m_RenderGraph->ImportRenderTarget("Picking", pickingRt);
-
-		m_RenderGraph->AddPass("GBuffer")
-			.Write(gbufferID)
-			.SetExecute([&](RenderGraphContext& graphContext)
-				{
-					RenderPassContext passContext(
-						graphContext.GetVulkanContext(),
-						graphContext.GetCommandBuffer(),
-						graphContext.GetRenderTarget(gbufferID));
-
-					m_BasePass->Execute(passContext);
-				});
-
-		m_RenderGraph->AddPass("Lighting")
-			.Read(gbufferID)
-			.Write(lightingID)
-			.SetExecute([&](RenderGraphContext& graphContext)
-				{
-					const uint32_t frameIndex = graphContext.GetVulkanContext().GetCurrentFrameIndex();
-
-					m_DeferredLightingPass->UpdateFrameResources(frameIndex);
-					m_DeferredLightingPass->SetPipeline(GetDeferredLightingPipeline(graphContext.GetRenderTarget(lightingID)));
-
-					RenderPassContext passContext(
-						graphContext.GetVulkanContext(),
-						graphContext.GetCommandBuffer(),
-						graphContext.GetRenderTarget(lightingID));
-
-					m_DeferredLightingPass->Execute(passContext);
-				});
-
-		m_RenderGraph->AddPass("Skybox")
-			.Read(lightingID)
-			.Write(lightingID)
-			.SetExecute([&](RenderGraphContext& graphContext)
-				{
-					const uint32_t frameIndex = graphContext.GetVulkanContext().GetCurrentFrameIndex();
-					VulkanRenderTarget& lightingRt = graphContext.GetRenderTarget(lightingID);
-
-					SyncSkyboxMaterialFromSettings();
-
-					m_SkyboxMaterial->EnsureDescriptors(
-						graphContext.GetVulkanContext(),
-						graphContext.GetVulkanContext().GetFramesInFlight());
-
-					if (m_SkyboxMaterial->IsDescriptorSetDirty(frameIndex))
-						m_SkyboxMaterial->UpdateDescriptorSet(frameIndex);
-
-					m_SkyboxPass->SetMaterial(m_SkyboxMaterial);
-					m_SkyboxPass->SetPipeline(GetSkyboxPipeline(lightingRt));
-
-					if (m_SkyboxPass->HasValidMaterial())
-					{
-						RenderPassContext passContext(
-							graphContext.GetVulkanContext(),
-							graphContext.GetCommandBuffer(),
-							lightingRt);
-
-						m_SkyboxPass->Execute(passContext);
-					}
-				});
-
-		m_RenderGraph->AddPass("CopyDepth")
-			.Read(lightingID)
-			.Write(finalID)
-			.SetExecute([&, lightingID, finalID](RenderGraphContext& graphContext)
-				{
-					CopyDepthAttachment(
-						graphContext.GetRenderTarget(lightingID),
-						graphContext.GetRenderTarget(finalID),
-						graphContext.GetCommandBuffer());
-				});
-
-		m_RenderGraph->AddPass("ToneMap")
-			.Read(lightingID)
-			.Write(finalID)
-			.SetExecute([&](RenderGraphContext& graphContext)
-				{
-					const uint32_t frameIndex = graphContext.GetVulkanContext().GetCurrentFrameIndex();
-					m_TonemapPass->UpdateFrameResources(frameIndex);
-					m_TonemapPass->SetPipeline(GetTonemapPipeline(finalRt));
-
-					RenderPassContext passContext(
-						graphContext.GetVulkanContext(),
-						graphContext.GetCommandBuffer(),
-						graphContext.GetRenderTarget(finalID));
-
-					m_TonemapPass->Execute(passContext);
-				});
-
-
-		m_RenderGraph->AddPass("Gizmo")
-			.Read(finalID)
-			.Write(finalID)
-			.SetExecute([&](RenderGraphContext& graphContext)
-				{
-					m_EditorGridPass->SetPipeline(GetGridPipeline(finalRt));
-					m_EditorGridPass->SetPushConstants(m_GridPushConstants);
-
-					RenderPassContext passContext(
-						graphContext.GetVulkanContext(),
-						graphContext.GetCommandBuffer(),
-						graphContext.GetRenderTarget(finalID));
-
-					m_EditorGridPass->Execute(passContext);
-				});
-
-		m_RenderGraph->AddPass("Picking")
-			.Write(pickingID)
-			.SetExecute([&](RenderGraphContext& graphContext)
-				{
-					RenderPassContext passContext(
-						graphContext.GetVulkanContext(),
-						graphContext.GetCommandBuffer(),
-						graphContext.GetRenderTarget(pickingID));
-
-					m_ViewportPickingPass->Execute(passContext);
-				});
 
 
 		ScenePassData sceneData{};
@@ -735,6 +758,8 @@ namespace Kita {
 		}
 
 
+		BuildRenderGraph(surface, gbufferRt, lightingRt, finalRt, pickingRt);
+		m_RenderGraph->Compile();
 		m_RenderGraph->Execute(*m_Context, cmd);
 	}
 

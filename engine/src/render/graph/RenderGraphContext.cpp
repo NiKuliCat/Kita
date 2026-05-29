@@ -20,7 +20,7 @@ namespace Kita {
 			resource.Type == RenderGraphResourceType::ImportedRenderTarget,
 			"RenderGraph resource is not an imported render target");
 
-		KITA_CORE_ASSERT(resource.ImportedRenderTarget, "RenderGraph imported render target is null");
+		KITA_CORE_ASSERT(resource.RT, "RenderGraph imported render target is null");
 
 		return *resource.RT;
 	}

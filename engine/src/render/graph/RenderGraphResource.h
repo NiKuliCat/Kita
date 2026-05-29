@@ -21,6 +21,8 @@ namespace Kita {
 		std::string Name;
 		RenderGraphResourceType Type = RenderGraphResourceType::UnKown;
 		VulkanRenderTarget* RT = nullptr;
+		bool Imported = false;
+
 	};
 
 

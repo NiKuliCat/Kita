@@ -186,6 +186,7 @@
     <ClInclude Include="src\platform\windows\WindowsWindow.h" />
     <ClInclude Include="src\render\BufferLayout.h" />
     <ClInclude Include="src\render\graph\RenderGraph.h" />
+    <ClInclude Include="src\render\graph\RenderGraphCompiled.h" />
     <ClInclude Include="src\render\graph\RenderGraphContext.h" />
     <ClInclude Include="src\render\graph\RenderGraphResource.h" />
     <ClInclude Include="src\render\Light.h" />
