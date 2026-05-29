@@ -185,6 +185,9 @@
     <ClInclude Include="src\kita_pch.h" />
     <ClInclude Include="src\platform\windows\WindowsWindow.h" />
     <ClInclude Include="src\render\BufferLayout.h" />
+    <ClInclude Include="src\render\graph\RenderGraph.h" />
+    <ClInclude Include="src\render\graph\RenderGraphContext.h" />
+    <ClInclude Include="src\render\graph\RenderGraphResource.h" />
     <ClInclude Include="src\render\Light.h" />
     <ClInclude Include="src\render\ShaderCompiler.h" />
     <ClInclude Include="src\render\VulkanBuffer.h" />
@@ -672,6 +675,8 @@
     <ClCompile Include="src\platform\windows\WindowsInput.cpp" />
     <ClCompile Include="src\platform\windows\WindowsWindow.cpp" />
     <ClCompile Include="src\render\BufferLayout.cpp" />
+    <ClCompile Include="src\render\graph\RenderGraph.cpp" />
+    <ClCompile Include="src\render\graph\RenderGraphContext.cpp" />
     <ClCompile Include="src\render\ShaderCompiler.cpp" />
     <ClCompile Include="src\render\VulkanBuffer.cpp" />
     <ClCompile Include="src\render\VulkanContext.cpp" />

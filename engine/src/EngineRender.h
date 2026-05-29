@@ -13,3 +13,7 @@
 
 #include "render/ibl/IBLGenerator.h"
 #include "render/pass/ToneMappingPass.h"
+
+#include "render/graph/RenderGraph.h"
+#include "render/graph/RenderGraphContext.h"
+#include "render/graph/RenderGraphResource.h"

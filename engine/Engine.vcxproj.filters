@@ -1569,6 +1569,9 @@
     <ClInclude Include="third-party\imguizmo\ImGuizmo.h">
       <Filter>third-party\imguizmo</Filter>
     </ClInclude>
+    <ClInclude Include="src\render\graph\RenderGraph.h" />
+    <ClInclude Include="src\render\graph\RenderGraphResource.h" />
+    <ClInclude Include="src\render\graph\RenderGraphContext.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\asset\Asset.cpp">
@@ -1748,5 +1751,7 @@
     <ClCompile Include="third-party\imguizmo\ImGuizmo.cpp">
       <Filter>third-party\imguizmo</Filter>
     </ClCompile>
+    <ClCompile Include="src\render\graph\RenderGraph.cpp" />
+    <ClCompile Include="src\render\graph\RenderGraphContext.cpp" />
   </ItemGroup>
 </Project>

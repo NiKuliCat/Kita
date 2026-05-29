@@ -87,6 +87,8 @@ namespace Kita {
 		//ibl
 		Ref<ImageBasedLighting> m_IBL = nullptr;
 
+		//graph
+		Unique<RenderGraph> m_RenderGraph = nullptr;
 	};
 
 }
