@@ -83,12 +83,12 @@ namespace Kita {
 	}
 
 
-	RenderPassDesc MakeViewportPickingPassDesc(const VulkanRenderTarget& renderTarget)
+	RenderPassDesc MakeViewportPickingPassDesc(const VulkanRenderTargetView& renderTarget)
 	{
 		RenderPassDesc desc{};
 		desc.Name = "ViewportPickingPass";
 		desc.Type = PassType::EditorPicking;
-		desc.Samples = renderTarget.GetCreateInfo().Samples;
+		desc.Samples = renderTarget.GetSamples();
 
 		const uint32_t colorCount = renderTarget.GetColorAttachmentCount();
 		desc.ColorFormats.reserve(colorCount);

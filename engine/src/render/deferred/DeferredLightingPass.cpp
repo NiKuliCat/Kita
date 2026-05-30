@@ -202,10 +202,10 @@ namespace Kita {
 		m_FallbackBrdfLut.reset();
 		m_FallbackEnvironmentCube.reset();
 		m_Context = nullptr;
-		m_GBufferRenderTarget = nullptr;
+		m_GBufferRenderTarget.Reset();
 	}
 
-	void DeferredLightingPass::SetGBufferInput(const VulkanRenderTarget* gbufferRenderTarget)
+	void DeferredLightingPass::SetGBufferInput(const VulkanRenderTargetView& gbufferRenderTarget)
 	{
 		m_GBufferRenderTarget = gbufferRenderTarget;
 	}
@@ -262,16 +262,16 @@ namespace Kita {
 
 	void DeferredLightingPass::UpdateDescriptorSet(uint32_t frameIndex)
 	{
-		if (!m_Context || !m_GBufferRenderTarget)
+		if (!m_Context || !m_GBufferRenderTarget.IsValid())
 			return;
 		if (frameIndex >= m_DescriptorSets.size())
 			return;
 
-		m_DescriptorSets[frameIndex].WriteImageSampler(0, m_GBufferRenderTarget->GetSampledColorDescriptorInfo(0));
-		m_DescriptorSets[frameIndex].WriteImageSampler(1, m_GBufferRenderTarget->GetSampledColorDescriptorInfo(1));
-		m_DescriptorSets[frameIndex].WriteImageSampler(2, m_GBufferRenderTarget->GetSampledColorDescriptorInfo(2));
-		m_DescriptorSets[frameIndex].WriteImageSampler(3, m_GBufferRenderTarget->GetSampledColorDescriptorInfo(3));
-		m_DescriptorSets[frameIndex].WriteImageSampler(4, m_GBufferRenderTarget->GetDepthDescriptorInfo());
+		m_DescriptorSets[frameIndex].WriteImageSampler(0, m_GBufferRenderTarget.GetSampledColorDescriptorInfo(0));
+		m_DescriptorSets[frameIndex].WriteImageSampler(1, m_GBufferRenderTarget.GetSampledColorDescriptorInfo(1));
+		m_DescriptorSets[frameIndex].WriteImageSampler(2, m_GBufferRenderTarget.GetSampledColorDescriptorInfo(2));
+		m_DescriptorSets[frameIndex].WriteImageSampler(3, m_GBufferRenderTarget.GetSampledColorDescriptorInfo(3));
+		m_DescriptorSets[frameIndex].WriteImageSampler(4, m_GBufferRenderTarget.GetDepthDescriptorInfo());
 
 		const Ref<VulkanTexture>& irradianceTexture =
 			(m_IBL && m_IBL->IsValid() && m_IBL->IrradianceCube)
@@ -301,12 +301,12 @@ namespace Kita {
 		m_DescriptorSets[frameIndex].WriteImageSampler(8, environmentTexture->GetDescriptorInfo());
 	}
 
-	RenderPassDesc MakeDeferredLightingPassDesc(const VulkanRenderTarget& renderTarget)
+	RenderPassDesc MakeDeferredLightingPassDesc(const VulkanRenderTargetView& renderTarget)
 	{
 		RenderPassDesc desc{};
 		desc.Name = "DeferredLightingPass";
 		desc.Type = PassType::DeferredLighting;
-		desc.Samples = renderTarget.GetCreateInfo().Samples;
+		desc.Samples = renderTarget.GetSamples();
 		desc.UseDepthAttachment = renderTarget.HasDepthAttachment();
 
 		const uint32_t colorCount = renderTarget.GetColorAttachmentCount();

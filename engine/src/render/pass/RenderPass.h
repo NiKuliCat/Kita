@@ -2,7 +2,7 @@
 #include "RenderDataStruct.h"
 #include "RenderContext.h"
 #include "SceneBindings.h"
-#include "render/VulkanRenderTarget.h"
+#include "render/VulkanRenderTargetView.h"
 namespace Kita {
 
 	class IRenderPass
@@ -25,7 +25,7 @@ namespace Kita {
 		const RenderPassDesc& GetDesc() const override { return m_Desc; }
 
 	protected:
-		void ValidateRenderTarget(const VulkanRenderTarget& renderTarget) const;
+		void ValidateRenderTarget(const VulkanRenderTargetView& renderTarget) const;
 
 		void BeginPass(
 			RenderPassContext& context,

@@ -33,6 +33,6 @@ namespace Kita {
 		PushConstants m_PushConstants{};
 	};
 
-	RenderPassDesc MakeEditorGridPassDesc(const VulkanRenderTarget& renderTarget);
+	RenderPassDesc MakeEditorGridPassDesc(const VulkanRenderTargetView& renderTarget);
 
 }

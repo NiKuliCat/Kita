@@ -31,6 +31,9 @@
     <Filter Include="src\render\font">
       <UniqueIdentifier>{C20F1AC2-2E9B-8786-37AC-0A7BA3B6E386}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\render\graph">
+      <UniqueIdentifier>{3D8E6F05-2987-8E57-52B9-73DC3E116E63}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\render\ibl">
       <UniqueIdentifier>{A2684EB8-8E36-42BE-77CA-B2E463371E23}</UniqueIdentifier>
     </Filter>
@@ -245,6 +248,21 @@
     </ClInclude>
     <ClInclude Include="src\render\font\FontManager.h">
       <Filter>src\render\font</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\graph\RenderGraph.h">
+      <Filter>src\render\graph</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\graph\RenderGraphAllocator.h">
+      <Filter>src\render\graph</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\graph\RenderGraphCompiled.h">
+      <Filter>src\render\graph</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\graph\RenderGraphContext.h">
+      <Filter>src\render\graph</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\graph\RenderGraphResource.h">
+      <Filter>src\render\graph</Filter>
     </ClInclude>
     <ClInclude Include="src\render\ibl\IBLGenerator.h">
       <Filter>src\render\ibl</Filter>
@@ -1569,10 +1587,8 @@
     <ClInclude Include="third-party\imguizmo\ImGuizmo.h">
       <Filter>third-party\imguizmo</Filter>
     </ClInclude>
-    <ClInclude Include="src\render\graph\RenderGraph.h" />
-    <ClInclude Include="src\render\graph\RenderGraphResource.h" />
-    <ClInclude Include="src\render\graph\RenderGraphContext.h" />
-    <ClInclude Include="src\render\graph\RenderGraphCompiled.h" />
+    <ClInclude Include="src\render\graph\RenderGraphTransientRenderTarget.h" />
+    <ClInclude Include="src\render\deferred\GbufferRenderTarget.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\asset\Asset.cpp">
@@ -1695,6 +1711,15 @@
     <ClCompile Include="src\render\font\FontManager.cpp">
       <Filter>src\render\font</Filter>
     </ClCompile>
+    <ClCompile Include="src\render\graph\RenderGraph.cpp">
+      <Filter>src\render\graph</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\graph\RenderGraphAllocator.cpp">
+      <Filter>src\render\graph</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\graph\RenderGraphContext.cpp">
+      <Filter>src\render\graph</Filter>
+    </ClCompile>
     <ClCompile Include="src\render\ibl\IBLGenerator.cpp">
       <Filter>src\render\ibl</Filter>
     </ClCompile>
@@ -1752,7 +1777,5 @@
     <ClCompile Include="third-party\imguizmo\ImGuizmo.cpp">
       <Filter>third-party\imguizmo</Filter>
     </ClCompile>
-    <ClCompile Include="src\render\graph\RenderGraph.cpp" />
-    <ClCompile Include="src\render\graph\RenderGraphContext.cpp" />
   </ItemGroup>
 </Project>

@@ -34,6 +34,6 @@ namespace Kita {
 		std::vector<ViewportPickingDrawItem> m_DrawItems;
 	};
 
-	RenderPassDesc MakeViewportPickingPassDesc(const VulkanRenderTarget& renderTarget);
+	RenderPassDesc MakeViewportPickingPassDesc(const VulkanRenderTargetView& renderTarget);
 
 }

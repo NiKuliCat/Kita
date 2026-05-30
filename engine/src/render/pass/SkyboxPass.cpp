@@ -59,12 +59,12 @@ namespace Kita {
 		m_Material->GetDescriptorSet(frameIndex).Bind(commandBuffer,pipeline.GetLayout(),1);
 	}
 
-	RenderPassDesc MakeSkyboxPassDesc(const VulkanRenderTarget& renderTarget)
+	RenderPassDesc MakeSkyboxPassDesc(const VulkanRenderTargetView& renderTarget)
 	{
 		RenderPassDesc desc{};
 		desc.Name = "SkyboxPass";
 		desc.Type = PassType::PostProcess;
-		desc.Samples = renderTarget.GetCreateInfo().Samples;
+		desc.Samples = renderTarget.GetSamples();
 		desc.UseDepthAttachment = renderTarget.HasDepthAttachment();
 
 		const uint32_t colorCount = renderTarget.GetColorAttachmentCount();

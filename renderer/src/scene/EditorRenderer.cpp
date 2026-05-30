@@ -8,12 +8,14 @@
 #include "ui/viewport/EditorPickRegistry.h"
 #include "ui/viewport/EditorViewportSurface.h"
 
+#include <backends/imgui_impl_vulkan.h>
+
 namespace Kita {
 
 	EditorRenderer::EditorRenderer(
 		VulkanContext& context,
-		VulkanRenderTarget& gbufferRt,
-		VulkanRenderTarget& lightingRt,
+		const RenderGraphTransientRenderTargetDesc& gbufferTargetDesc,
+		const RenderGraphTransientRenderTargetDesc& lightingTargetDesc,
 		VulkanRenderTarget& finalRt,
 		VulkanRenderTarget& pickingRt,
 		VulkanResourceFactory& vulkanResFactory,
@@ -23,9 +25,9 @@ namespace Kita {
 		EditorPickRegistry& pickRegistry)
 		: m_Context(&context)
 		, m_VulkanResFactory(&vulkanResFactory)
-		, m_GBufferRenderTarget(&gbufferRt)
-		, m_LightingRenderTarget(&lightingRt)
 		, m_FinalRenderTarget(&finalRt)
+		, m_GBufferTargetDesc(gbufferTargetDesc)
+		, m_LightingTargetDesc(lightingTargetDesc)
 		, m_SceneContext(scene)
 		, m_PickRegistry(&pickRegistry)
 		, m_ViewportCamera(&camera)
@@ -33,13 +35,29 @@ namespace Kita {
 	{
 		Init();
 		m_SceneBindings.Init(context, context.GetFramesInFlight());
-		m_BasePass = CreateUnique<BasePass>(m_SceneBindings, MakeBasePassDesc(gbufferRt));
-		m_DeferredLightingPass = CreateUnique<DeferredLightingPass>(m_SceneBindings, MakeDeferredLightingPassDesc(lightingRt));
+
+		m_BasePass = CreateUnique<BasePass>(
+			m_SceneBindings, 
+			MakeRenderPassDesc(m_GBufferTargetDesc,"BasePass",PassType::GBuffer)
+		);
+
+		m_DeferredLightingPass = CreateUnique<DeferredLightingPass>(
+			m_SceneBindings, 
+			MakeRenderPassDesc(m_LightingTargetDesc,"DeferredLightingPass", PassType::DeferredLighting)
+		);
+
 		m_DeferredLightingPass->Init(context, context.GetFramesInFlight());
-		m_EditorGridPass = CreateUnique<EditorGridPass>(m_SceneBindings, MakeEditorGridPassDesc(finalRt));
-		m_ViewportPickingPass = CreateUnique<ViewportPickingPass>(m_SceneBindings, MakeViewportPickingPassDesc(pickingRt));
-		m_SkyboxPass = CreateUnique<SkyboxPass>(m_SceneBindings, MakeSkyboxPassDesc(lightingRt));
-		m_TonemapPass = CreateUnique<ToneMappingPass>(m_SceneBindings, MakeTonemappingPassDesc(finalRt));
+
+
+		m_SkyboxPass = CreateUnique<SkyboxPass>(
+			m_SceneBindings,
+			MakeRenderPassDesc(m_LightingTargetDesc, "SkyboxPass", PassType::PostProcess));
+
+		m_EditorGridPass = CreateUnique<EditorGridPass>(m_SceneBindings, MakeEditorGridPassDesc(finalRt.CreateView()));
+		m_ViewportPickingPass = CreateUnique<ViewportPickingPass>(m_SceneBindings, MakeViewportPickingPassDesc(pickingRt.CreateView()));
+
+
+		m_TonemapPass = CreateUnique<ToneMappingPass>(m_SceneBindings, MakeTonemappingPassDesc(finalRt.CreateView()));
 		m_TonemapPass->Init(context, context.GetFramesInFlight());
 
 		m_RenderGraph = CreateUnique<RenderGraph>();
@@ -89,37 +107,107 @@ namespace Kita {
 		}
 	}
 
-	void EditorRenderer::BuildRenderGraph(EditorViewportSurface& surface, VulkanRenderTarget& gbufferRt, VulkanRenderTarget& lightingRt, VulkanRenderTarget& finalRt, VulkanRenderTarget& pickingRt)
+	void EditorRenderer::BuildRenderGraph(EditorViewportSurface& surface,VulkanRenderTarget& finalRt, VulkanRenderTarget& pickingRt)
 	{
 		m_RenderGraph->Reset();
+		ResetRenderGraphResourceIDs();
 
-		RenderGraphResourceID gbufferID = m_RenderGraph->ImportRenderTarget("GBuffer", gbufferRt);
-		RenderGraphResourceID lightingID = m_RenderGraph->ImportRenderTarget("Lighting", lightingRt);
+
 		RenderGraphResourceID finalID = m_RenderGraph->ImportRenderTarget("Final", finalRt);
 		RenderGraphResourceID pickingID = m_RenderGraph->ImportRenderTarget("Picking", pickingRt);
 
-		m_RenderGraph->AddPass("GBuffer")
-			.Write(gbufferID)
-			.SetExecute([this, gbufferID](RenderGraphContext& graphContext)
-				{
-					RenderPassContext passContext(
-						graphContext.GetVulkanContext(),
-						graphContext.GetCommandBuffer(),
-						graphContext.GetRenderTarget(gbufferID));
 
-					m_BasePass->Execute(passContext);
-				});
+		RenderGraphTransientRenderTargetDesc gbufferDesc = m_GBufferTargetDesc;
+		gbufferDesc.Width = surface.GetWidth();
+		gbufferDesc.Height = surface.GetHeight();
+
+		RenderGraphTransientRenderTarget gbuffer = CreateTransientRenderTarget(*m_RenderGraph, gbufferDesc);
+		m_GBufferColorGraphResourceIDs = gbuffer.ColorResourceIDs;
+		m_GBufferDepthGraphResourceID = gbuffer.DepthResourceID;
+
+
+		// Lighting 从这里开始由 RenderGraph 创建 transient image。
+		// 当前 RenderGraphTextureDesc 表示单张 image，因此 Lighting color/depth 拆成两个资源。
+		RenderGraphTransientRenderTargetDesc lightingDesc = m_LightingTargetDesc;
+		lightingDesc.Width = surface.GetWidth();
+		lightingDesc.Height = surface.GetHeight();
+
+		RenderGraphTransientRenderTarget lighting = CreateTransientRenderTarget(*m_RenderGraph, lightingDesc);
+
+		KITA_CORE_ASSERT(
+			!lighting.ColorAttachments.empty(),
+			"Lighting target requires at least one color attachment");
+		KITA_CORE_ASSERT(
+			lighting.HasDepth(),
+			"Lighting target requires depth attachment");
+
+
+		m_LightingGraphResourceID = lighting.ColorResourceIDs[0];
+
+
+		m_FinalGraphResourceID = finalID;
+		m_PickingGraphResourceID = pickingID;
+
+
+		const RenderGraphAttachmentRef lightingColor = lighting.ColorAttachments[0];
+		const RenderGraphAttachmentRef lightingDepth = lighting.DepthAttachment;
+
+		const RenderGraphAttachmentRef finalColor = RenderGraphAttachmentRef::MakeColor(finalID, 0);
+		const RenderGraphAttachmentRef finalDepth = RenderGraphAttachmentRef::MakeDepth(finalID);
+		const RenderGraphAttachmentRef pickingColor = RenderGraphAttachmentRef::MakeColor(pickingID, 0);
+
+		RenderGraphPass& gbufferPass = m_RenderGraph->AddPass("GBuffer");
+		for (const RenderGraphAttachmentRef& color : gbuffer.ColorAttachments)
+		{
+			gbufferPass.WriteColor(color);
+		}
+
+		gbufferPass.SetExecute([this, gbuffer](RenderGraphContext& graphContext)
+			{
+				VulkanRenderTargetView gbufferRt = graphContext.BuildRenderTargetView(
+					"GBuffer",
+					gbuffer.ColorAttachments,
+					gbuffer.HasDepth() ? &gbuffer.DepthAttachment : nullptr);
+
+				RenderPassContext passContext(
+					graphContext.GetVulkanContext(),
+					graphContext.GetCommandBuffer(),
+					gbufferRt);
+
+				m_BasePass->Execute(passContext);
+			});
+
 
 		if (m_DeferredLightingPass)
 		{
+			KITA_CORE_ASSERT(gbuffer.ColorAttachments.size() >= 4, "Current DeferredLighting shader requires at least 4 GBuffer color attachments");
+			KITA_CORE_ASSERT(gbuffer.HasDepth(), "Current DeferredLighting shader requires GBuffer depth");
+
+
 			m_RenderGraph->AddPass("Lighting")
-				.Read(gbufferID)
-				.Write(lightingID)
-				.SetExecute([this, lightingID](RenderGraphContext& graphContext)
+				.ReadTexture(gbuffer.ColorAttachments[0])
+				.ReadTexture(gbuffer.ColorAttachments[1])
+				.ReadTexture(gbuffer.ColorAttachments[2])
+				.ReadTexture(gbuffer.ColorAttachments[3])
+				.ReadDepth(gbuffer.DepthAttachment)
+				.WriteColor(lightingColor)
+				.WriteDepth(lightingDepth)
+				.SetExecute([this, gbuffer, lightingColor, lightingDepth](RenderGraphContext& graphContext)
 					{
 						const uint32_t frameIndex = graphContext.GetVulkanContext().GetCurrentFrameIndex();
-						VulkanRenderTarget& lightingRt = graphContext.GetRenderTarget(lightingID);
 
+						VulkanRenderTargetView gbufferRt = graphContext.BuildRenderTargetView(
+							"GBuffer",
+							gbuffer.ColorAttachments,
+							gbuffer.HasDepth() ? &gbuffer.DepthAttachment : nullptr);
+
+						VulkanRenderTargetView lightingRt = graphContext.BuildRenderTargetView(
+							"Lighting",
+							{ lightingColor },
+							&lightingDepth);
+
+
+						m_DeferredLightingPass->SetGBufferInput(gbufferRt);
 						m_DeferredLightingPass->UpdateFrameResources(frameIndex);
 						m_DeferredLightingPass->SetPipeline(GetDeferredLightingPipeline(lightingRt));
 
@@ -135,12 +223,19 @@ namespace Kita {
 		if (m_SkyboxPass && m_SkyboxMaterial)
 		{
 			m_RenderGraph->AddPass("Skybox")
-				.Read(lightingID)
-				.Write(lightingID)
-				.SetExecute([this, lightingID](RenderGraphContext& graphContext)
+				.ReadTexture(lightingColor)
+				.ReadDepth(lightingDepth)
+				.WriteColor(lightingColor)
+				.WriteDepth(lightingDepth)
+				.SetExecute([this, lightingColor, lightingDepth](RenderGraphContext& graphContext)
 					{
 						const uint32_t frameIndex = graphContext.GetVulkanContext().GetCurrentFrameIndex();
-						VulkanRenderTarget& lightingRt = graphContext.GetRenderTarget(lightingID);
+
+						VulkanRenderTargetView lightingRt = graphContext.BuildRenderTargetView(
+							"Lighting",
+							{ lightingColor },
+							&lightingDepth);
+
 
 						SyncSkyboxMaterialFromSettings();
 						m_SkyboxMaterial->EnsureDescriptors(
@@ -166,26 +261,49 @@ namespace Kita {
 		}
 
 		m_RenderGraph->AddPass("CopyDepth")
-			.Read(lightingID)
-			.Write(finalID)
-			.SetExecute([this, lightingID, finalID](RenderGraphContext& graphContext)
+			.TransferRead(lightingDepth)
+			.TransferWrite(finalDepth)
+			.SetExecute([this, lightingColor, lightingDepth, finalColor, finalDepth](RenderGraphContext& graphContext)
 				{
+					// CopyDepth 只拷贝 depth，但这里仍然通过 RT view 统一拿到 transient/imported attachment。
+					VulkanRenderTargetView lightingRt = graphContext.BuildRenderTargetView(
+						"Lighting.CopyDepthSource",
+						{ lightingColor },
+						&lightingDepth);
+
+					VulkanRenderTargetView finalRt = graphContext.BuildRenderTargetView(
+						"Final.CopyDepthTarget",
+						{ finalColor },
+						&finalDepth);
+
 					CopyDepthAttachment(
-						graphContext.GetRenderTarget(lightingID),
-						graphContext.GetRenderTarget(finalID),
+						lightingRt,
+						finalRt,
 						graphContext.GetCommandBuffer());
 				});
 
 		if (m_TonemapPass)
 		{
 			m_RenderGraph->AddPass("ToneMap")
-				.Read(lightingID)
-				.Write(finalID)
-				.SetExecute([this, finalID](RenderGraphContext& graphContext)
+				.ReadTexture(lightingColor)
+				.ReadDepth(finalDepth)
+				.WriteColor(finalColor)
+				.WriteDepth(finalDepth)
+				.SetExecute([this, lightingColor, lightingDepth, finalColor, finalDepth](RenderGraphContext& graphContext)
 					{
 						const uint32_t frameIndex = graphContext.GetVulkanContext().GetCurrentFrameIndex();
-						VulkanRenderTarget& finalRt = graphContext.GetRenderTarget(finalID);
 
+						VulkanRenderTargetView lightingRt = graphContext.BuildRenderTargetView(
+							"Lighting",
+							{ lightingColor },
+							&lightingDepth);
+
+						VulkanRenderTargetView finalRt = graphContext.BuildRenderTargetView(
+							"Final",
+							{ finalColor },
+							&finalDepth);
+
+						m_TonemapPass->SetSourceInput(lightingRt);
 						m_TonemapPass->UpdateFrameResources(frameIndex);
 						m_TonemapPass->SetPipeline(GetTonemapPipeline(finalRt));
 
@@ -201,11 +319,13 @@ namespace Kita {
 		if (m_EditorGridPass && m_IsGridEnabled)
 		{
 			m_RenderGraph->AddPass("EditorGrid")
-				.Read(finalID)
-				.Write(finalID)
+				.ReadTexture(finalColor)
+				.ReadDepth(finalDepth)
+				.WriteColor(finalColor)
+				.WriteDepth(finalDepth)
 				.SetExecute([this, finalID](RenderGraphContext& graphContext)
 					{
-						VulkanRenderTarget& finalRt = graphContext.GetRenderTarget(finalID);
+						VulkanRenderTargetView finalRt = graphContext.GetRenderTargetView(finalID);
 
 						m_EditorGridPass->SetPipeline(GetGridPipeline(finalRt));
 						m_EditorGridPass->SetPushConstants(m_GridPushConstants);
@@ -222,13 +342,13 @@ namespace Kita {
 		if (m_ViewportPickingPass)
 		{
 			m_RenderGraph->AddPass("Picking")
-				.Write(pickingID)
+				.WriteColor(pickingColor)
 				.SetExecute([this, pickingID](RenderGraphContext& graphContext)
 					{
 						RenderPassContext passContext(
 							graphContext.GetVulkanContext(),
 							graphContext.GetCommandBuffer(),
-							graphContext.GetRenderTarget(pickingID));
+							graphContext.GetRenderTargetView(pickingID));
 
 						m_ViewportPickingPass->Execute(passContext);
 					});
@@ -237,6 +357,8 @@ namespace Kita {
 
 	void EditorRenderer::OnDestroy()
 	{
+		ReleaseRenderGraphPreviewTextures();
+
 		m_GridVertexShader.reset();
 		m_GridFragmentShader.reset();
 		m_DeferredLightingVertexShader.reset();
@@ -248,6 +370,151 @@ namespace Kita {
 			m_DeferredLightingPass->Destroy();
 		if (m_TonemapPass)
 			m_TonemapPass->Destroy();
+	}
+
+	void EditorRenderer::ResetRenderGraphResourceIDs()
+	{
+		m_GBufferGraphResourceID = InvalidRenderGraphResourceID;
+		m_LightingGraphResourceID = InvalidRenderGraphResourceID;
+		m_FinalGraphResourceID = InvalidRenderGraphResourceID;
+		m_PickingGraphResourceID = InvalidRenderGraphResourceID;
+	}
+
+	void EditorRenderer::UpdateRenderGraphPreviewTextures(const VulkanRenderTarget& finalRt)
+	{
+		for (RenderGraphPreviewTexture& previewTexture : m_RenderGraphPreviewTextures)
+			previewTexture.ActiveThisFrame = false;
+
+		for (uint32_t i = 0; i < static_cast<uint32_t>(m_GBufferColorGraphResourceIDs.size()); ++i)
+		{
+			const RenderGraphResourceID resourceID = m_GBufferColorGraphResourceIDs[i];
+			if (!m_RenderGraph || resourceID == InvalidRenderGraphResourceID)
+				continue;
+
+			const VulkanImage* image = m_RenderGraph->GetTransientImage(resourceID);
+			if (!image)
+				continue;
+
+			RegisterRenderGraphPreviewTexture(
+				"GBuffer.Color" + std::to_string(i),
+				resourceID,
+				i,
+				*image);
+		}
+
+		// Lighting 已经迁移为 transient，预览直接读取 RenderGraph allocator 当前帧 image。
+		if (m_RenderGraph && m_LightingGraphResourceID != InvalidRenderGraphResourceID)
+		{
+			const VulkanImage* lightingImage = m_RenderGraph->GetTransientImage(m_LightingGraphResourceID);
+			if (lightingImage)
+			{
+				RegisterRenderGraphPreviewTexture(
+					"Lighting.Color0",
+					m_LightingGraphResourceID,
+					0,
+					*lightingImage);
+			}
+		}
+
+		if (finalRt.GetColorAttachmentCount() > 0)
+		{
+			RegisterRenderGraphPreviewTexture(
+				"Final.Color0",
+				m_FinalGraphResourceID,
+				0,
+				finalRt.GetSampledColorAttachment(0));
+		}
+
+		RemoveInactiveRenderGraphPreviewTextures();
+	}
+
+	void EditorRenderer::RegisterRenderGraphPreviewTexture(
+		const std::string& name,
+		RenderGraphResourceID resourceID,
+		uint32_t attachmentIndex,
+		const VulkanImage& image)
+	{
+		if (!image.IsValid() || !image.HasSampler())
+			return;
+
+		KITA_CORE_ASSERT(
+			image.GetView() != VK_NULL_HANDLE,
+			"RenderGraph preview image view is null");
+
+		RenderGraphPreviewTexture* previewTexture = nullptr;
+		for (RenderGraphPreviewTexture& candidate : m_RenderGraphPreviewTextures)
+		{
+			if (candidate.Name == name)
+			{
+				previewTexture = &candidate;
+				break;
+			}
+		}
+
+		if (!previewTexture)
+		{
+			m_RenderGraphPreviewTextures.push_back({});
+			previewTexture = &m_RenderGraphPreviewTextures.back();
+			previewTexture->Name = name;
+		}
+
+		const VkExtent3D extent = image.GetExtent();
+		const bool descriptorChanged =
+			previewTexture->ImageHandle != image.GetHandle() ||
+			!previewTexture->TextureID;
+
+		if (descriptorChanged)
+		{
+			ReleaseRenderGraphPreviewTexture(*previewTexture);
+			previewTexture->TextureID = static_cast<ImTextureID>(reinterpret_cast<uint64_t>(
+				ImGui_ImplVulkan_AddTexture(
+					image.GetSampler(),
+					image.GetView(),
+					VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)));
+		}
+
+		previewTexture->ResourceID = resourceID;
+		previewTexture->AttachmentIndex = attachmentIndex;
+		previewTexture->ImageHandle = image.GetHandle();
+		previewTexture->Width = extent.width;
+		previewTexture->Height = extent.height;
+		previewTexture->Format = image.GetFormat();
+		previewTexture->ActiveThisFrame = true;
+	}
+
+	void EditorRenderer::ReleaseRenderGraphPreviewTexture(RenderGraphPreviewTexture& previewTexture)
+	{
+		if (!previewTexture.TextureID)
+			return;
+
+		ImGui_ImplVulkan_RemoveTexture(
+			reinterpret_cast<VkDescriptorSet>(
+				static_cast<uint64_t>(previewTexture.TextureID)));
+		previewTexture.TextureID = 0;
+		previewTexture.ImageHandle = VK_NULL_HANDLE;
+	}
+
+	void EditorRenderer::ReleaseRenderGraphPreviewTextures()
+	{
+		for (RenderGraphPreviewTexture& previewTexture : m_RenderGraphPreviewTextures)
+			ReleaseRenderGraphPreviewTexture(previewTexture);
+
+		m_RenderGraphPreviewTextures.clear();
+	}
+
+	void EditorRenderer::RemoveInactiveRenderGraphPreviewTextures()
+	{
+		for (auto it = m_RenderGraphPreviewTextures.begin(); it != m_RenderGraphPreviewTextures.end();)
+		{
+			if (it->ActiveThisFrame)
+			{
+				++it;
+				continue;
+			}
+
+			ReleaseRenderGraphPreviewTexture(*it);
+			it = m_RenderGraphPreviewTextures.erase(it);
+		}
 	}
 
 	void EditorRenderer::InitRenderSceneData(ScenePassData& sceneData)
@@ -340,7 +607,7 @@ namespace Kita {
 		m_TonemapFragmentShader = shaderBundle.FragmentShader;
 	}
 
-	VulkanGraphicsPipeline* EditorRenderer::GetPipeline(VulkanRenderTarget& rt, Ref<VulkanGeometry>& geometry, Ref<VulkanMaterial>& material)
+VulkanGraphicsPipeline* EditorRenderer::GetPipeline(const RenderGraphTransientRenderTargetDesc& targetDesc, Ref<VulkanGeometry>& geometry, Ref<VulkanMaterial>& material)
 	{
 		PipelineRequest request{};
 		request.Pass = PassType::GBuffer;
@@ -349,11 +616,12 @@ namespace Kita {
 		request.FragmentShader = material->GetFragmentShader().get();
 
 		request.ColorFormats.clear();
-		for (uint32_t i = 0; i < rt.GetColorAttachmentCount(); ++i)
-			request.ColorFormats.push_back(rt.GetColorFormat(i));
+		request.ColorFormats.reserve(targetDesc.Colors.size());
+		for (const RenderGraphColorAttachmentDesc& color : targetDesc.Colors)
+			request.ColorFormats.push_back(color.Format);
 
-		request.DepthFormat = rt.GetDepthFormat();
-		request.Samples = rt.GetCreateInfo().Samples;
+		request.DepthFormat = targetDesc.Depth.Enabled ? targetDesc.Depth.Format : VK_FORMAT_UNDEFINED;
+		request.Samples = targetDesc.Samples;
 		request.DescriptorSetLayouts = {
 			m_SceneBindings.GetDescriptorSet(0).GetLayout(),
 			material->GetDescriptorSet(0).GetLayout()
@@ -372,7 +640,7 @@ namespace Kita {
 		return m_PipelineFactory->GetOrCreate(request);
 	}
 
-	VulkanGraphicsPipeline* EditorRenderer::GetDeferredLightingPipeline(VulkanRenderTarget& rt)
+VulkanGraphicsPipeline* EditorRenderer::GetDeferredLightingPipeline(const VulkanRenderTargetView& rt)
 	{
 		if (!m_DeferredLightingVertexShader || !m_DeferredLightingFragmentShader || !m_DeferredLightingPass)
 			return nullptr;
@@ -388,7 +656,7 @@ namespace Kita {
 			request.ColorFormats.push_back(rt.GetColorFormat(i));
 
 		request.DepthFormat = rt.HasDepthAttachment() ? rt.GetDepthFormat() : VK_FORMAT_UNDEFINED;
-		request.Samples = rt.GetCreateInfo().Samples;
+		request.Samples = rt.GetSamples();
 		request.DescriptorSetLayouts = {
 			m_SceneBindings.GetDescriptorSet(0).GetLayout(),
 			m_DeferredLightingPass->GetDescriptorSet(0).GetLayout()
@@ -407,7 +675,7 @@ namespace Kita {
 		return m_PipelineFactory->GetOrCreate(request);
 	}
 
-	VulkanGraphicsPipeline* EditorRenderer::GetGridPipeline(VulkanRenderTarget& rt)
+VulkanGraphicsPipeline* EditorRenderer::GetGridPipeline(const VulkanRenderTargetView& rt)
 	{
 		if (!m_GridVertexShader || !m_GridFragmentShader)
 			return nullptr;
@@ -423,7 +691,7 @@ namespace Kita {
 			request.ColorFormats.push_back(rt.GetColorFormat(i));
 
 		request.DepthFormat = rt.HasDepthAttachment() ? rt.GetDepthFormat() : VK_FORMAT_UNDEFINED;
-		request.Samples = rt.GetCreateInfo().Samples;
+		request.Samples = rt.GetSamples();
 		request.DescriptorSetLayouts = {
 			m_SceneBindings.GetDescriptorSet(0).GetLayout()
 		};
@@ -441,7 +709,7 @@ namespace Kita {
 		return m_PipelineFactory->GetOrCreate(request);
 	}
 
-	VulkanGraphicsPipeline* EditorRenderer::GetTonemapPipeline(VulkanRenderTarget& rt)
+VulkanGraphicsPipeline* EditorRenderer::GetTonemapPipeline(const VulkanRenderTargetView& rt)
 	{
 		if (!m_TonemapVertexShader || !m_TonemapFragmentShader || !m_TonemapPass)
 			return nullptr;
@@ -457,7 +725,7 @@ namespace Kita {
 			request.ColorFormats.push_back(rt.GetColorFormat(i));
 
 		request.DepthFormat = rt.HasDepthAttachment() ? rt.GetDepthFormat() : VK_FORMAT_UNDEFINED;
-		request.Samples = rt.GetCreateInfo().Samples;
+		request.Samples = rt.GetSamples();
 		request.DescriptorSetLayouts = {
 			m_SceneBindings.GetDescriptorSet(0).GetLayout(),
 			m_TonemapPass->GetDescriptorSet(0).GetLayout()
@@ -476,7 +744,7 @@ namespace Kita {
 		return m_PipelineFactory->GetOrCreate(request);
 	}
 
-	VulkanGraphicsPipeline* EditorRenderer::GetPickingPipeline(VulkanRenderTarget& rt, Ref<VulkanGeometry>& geometry)
+VulkanGraphicsPipeline* EditorRenderer::GetPickingPipeline(const VulkanRenderTargetView& rt, Ref<VulkanGeometry>& geometry)
 	{
 		if (!m_ViewportPickingPass)
 			return nullptr;
@@ -493,7 +761,7 @@ namespace Kita {
 		for (uint32_t i = 0; i < rt.GetColorAttachmentCount(); ++i)
 			request.ColorFormats.push_back(rt.GetColorFormat(i));
 		request.DepthFormat = rt.HasDepthAttachment() ? rt.GetDepthFormat() : VK_FORMAT_UNDEFINED;
-		request.Samples = rt.GetCreateInfo().Samples;
+		request.Samples = rt.GetSamples();
 		request.DescriptorSetLayouts = {
 			m_SceneBindings.GetDescriptorSet(0).GetLayout()
 		};
@@ -511,7 +779,7 @@ namespace Kita {
 		return m_PipelineFactory->GetOrCreate(request);
 	}
 
-	VulkanGraphicsPipeline* EditorRenderer::GetSkyboxPipeline(VulkanRenderTarget& rt)
+VulkanGraphicsPipeline* EditorRenderer::GetSkyboxPipeline(const VulkanRenderTargetView& rt)
 	{
 		if (!m_SkyboxMaterial || !m_SkyboxMaterial->GetVertexShader() || !m_SkyboxMaterial->GetFragmentShader())
 			return nullptr;
@@ -526,7 +794,7 @@ namespace Kita {
 		for (uint32_t i = 0; i < rt.GetColorAttachmentCount(); ++i)
 			request.ColorFormats.push_back(rt.GetColorFormat(i));
 		request.DepthFormat = rt.HasDepthAttachment() ? rt.GetDepthFormat() : VK_FORMAT_UNDEFINED;
-		request.Samples = rt.GetCreateInfo().Samples;
+		request.Samples = rt.GetSamples();
 		request.DescriptorSetLayouts = {
 			m_SceneBindings.GetDescriptorSet(0).GetLayout(),
 			m_SkyboxMaterial->GetDescriptorSet(0).GetLayout()
@@ -546,8 +814,8 @@ namespace Kita {
 	}
 
 	void EditorRenderer::CopyDepthAttachment(
-		const VulkanRenderTarget& sourceRt,
-		VulkanRenderTarget& targetRt,
+		const VulkanRenderTargetView& sourceRt,
+		const VulkanRenderTargetView& targetRt,
 		VkCommandBuffer commandBuffer) const
 	{
 		if (!sourceRt.HasDepthAttachment() || !targetRt.HasDepthAttachment())
@@ -614,7 +882,6 @@ namespace Kita {
 
 
 		VulkanRenderTarget& gbufferRt = surface.GetGBufferRenderTarget();
-		VulkanRenderTarget& lightingRt = surface.GetLightingRenderTarget();
 		VulkanRenderTarget& finalRt = surface.GetFinalRenderTarget();
 		VulkanRenderTarget& pickingRt = surface.GetPickingRenderTarget();
 
@@ -634,7 +901,7 @@ namespace Kita {
 			lightingSceneData.BeginInfo.TransitionSampledColors = true;
 			lightingSceneData.BeginInfo.TransitionSampledDepth = true;
 			m_DeferredLightingPass->SetSceneData(lightingSceneData);
-			m_DeferredLightingPass->SetGBufferInput(&gbufferRt);
+			m_DeferredLightingPass->SetGBufferInput(gbufferRt.CreateView());
 			m_DeferredLightingPass->SetIBLInput(m_IBL);
 		}
 
@@ -646,7 +913,6 @@ namespace Kita {
 			tonemapSceneData.BeginInfo.TransitionSampledColors = true;
 			tonemapSceneData.BeginInfo.TransitionSampledDepth = false;
 			m_TonemapPass->SetSceneData(tonemapSceneData);
-			m_TonemapPass->SetSourceInput(&lightingRt);
 		}
 
 		if (m_EditorGridPass)
@@ -730,7 +996,12 @@ namespace Kita {
 					materialHandle,
 					m_Context->GetCurrentFrameIndex());
 
-				VulkanGraphicsPipeline* pipeline = GetPipeline(gbufferRt, geometry, material);
+				RenderGraphTransientRenderTargetDesc gbufferDesc = m_GBufferTargetDesc;
+				gbufferDesc.Width = surface.GetWidth();
+				gbufferDesc.Height = surface.GetHeight();
+
+				VulkanGraphicsPipeline* pipeline = GetPipeline(gbufferDesc, geometry, material);
+
 				if (!pipeline)
 					continue;
 
@@ -743,7 +1014,7 @@ namespace Kita {
 
 				if (m_ViewportPickingPass)
 				{
-					VulkanGraphicsPipeline* pickingPipeline = GetPickingPipeline(pickingRt, geometry);
+					VulkanGraphicsPipeline* pickingPipeline = GetPickingPipeline(pickingRt.CreateView(), geometry);
 					if (!pickingPipeline)
 						continue;
 
@@ -758,8 +1029,9 @@ namespace Kita {
 		}
 
 
-		BuildRenderGraph(surface, gbufferRt, lightingRt, finalRt, pickingRt);
+		BuildRenderGraph(surface,finalRt, pickingRt);
 		m_RenderGraph->Execute(*m_Context, cmd);
+		UpdateRenderGraphPreviewTextures(finalRt);
 	}
 
 }

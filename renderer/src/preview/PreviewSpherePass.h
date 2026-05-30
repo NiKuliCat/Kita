@@ -28,6 +28,6 @@ namespace Kita {
 		PreviewSphereDrawItem m_DrawItem{};
 	};
 
-	RenderPassDesc MakePreviewSpherePassDesc(const VulkanRenderTarget& renderTarget);
+	RenderPassDesc MakePreviewSpherePassDesc(const VulkanRenderTargetView& renderTarget);
 
 }

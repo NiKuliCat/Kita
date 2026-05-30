@@ -39,5 +39,5 @@ namespace Kita {
 
 	};
 
-	RenderPassDesc MakeSkyboxPassDesc(const VulkanRenderTarget& renderTarget);
+	RenderPassDesc MakeSkyboxPassDesc(const VulkanRenderTargetView& renderTarget);
 }

@@ -8,6 +8,7 @@
 #include "render/deferred/BasePass.h"
 #include "render/deferred/DeferredLightingPass.h"
 #include "render/pipeline/PipelineFactory.h"
+#include "render/VulkanRenderTarget.h"
 #include "render/VulkanResourceFactory.h"
 #include "render/mesh/Mesh.h"
 
@@ -17,3 +18,6 @@
 #include "render/graph/RenderGraph.h"
 #include "render/graph/RenderGraphContext.h"
 #include "render/graph/RenderGraphResource.h"
+
+#include "render/graph/RenderGraphTransientRenderTarget.h"
+#include "render/deferred/GbufferRenderTarget.h"

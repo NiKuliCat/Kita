@@ -90,12 +90,12 @@ namespace Kita {
 		EndPass(context, sceneData.BeginInfo);
 	}
 
-	RenderPassDesc MakeBasePassDesc(const VulkanRenderTarget& renderTarget)
+	RenderPassDesc MakeBasePassDesc(const VulkanRenderTargetView& renderTarget)
 	{
 		RenderPassDesc desc{};
 		desc.Name = "BasePass";
 		desc.Type = PassType::GBuffer;
-		desc.Samples = renderTarget.GetCreateInfo().Samples;
+		desc.Samples = renderTarget.GetSamples();
 		desc.UseDepthAttachment = renderTarget.HasDepthAttachment();
 
 		const uint32_t colorCount = renderTarget.GetColorAttachmentCount();

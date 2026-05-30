@@ -15,7 +15,8 @@ namespace Kita {
 		void Init(VulkanContext& context, uint32_t framesInFlight);
 		void Destroy();
 
-		void SetSourceInput(const VulkanRenderTarget* sourceRenderTarget);
+		// 设置色调映射阶段采样的 HDR 源视图，统一 sampled input 的 view 级入口。
+		void SetSourceInput(const VulkanRenderTargetView& sourceRenderTarget);
 		void UpdateFrameResources(uint32_t frameIndex);
 		const VulkanDescriptorSet& GetDescriptorSet(uint32_t frameIndex) const { return m_DescriptorSets.at(frameIndex); }
 
@@ -31,12 +32,12 @@ namespace Kita {
 		void UpdateDescriptorSet(uint32_t frameIndex);
 
 	private:
-		const VulkanRenderTarget* m_SourceRenderTarget = nullptr;
+		VulkanRenderTargetView m_SourceRenderTarget;
 		VulkanContext* m_Context = nullptr;
 		std::vector<VulkanDescriptorSet> m_DescriptorSets;
 	};
 
-	RenderPassDesc MakeTonemappingPassDesc(const VulkanRenderTarget& renderTarget);
+	RenderPassDesc MakeTonemappingPassDesc(const VulkanRenderTargetView& renderTarget);
 
 
 }

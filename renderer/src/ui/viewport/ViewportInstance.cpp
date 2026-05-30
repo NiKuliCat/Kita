@@ -28,10 +28,22 @@ namespace Kita {
 
 		if (m_Surface && m_ViewportCamera)
 		{
+			RenderGraphTransientRenderTargetDesc lightingTargetDesc = MakeDefaultLightingTargetDesc(
+				m_Surface->GetWidth(),
+				m_Surface->GetHeight(),
+				surfaceInfo.Samples,
+				surfaceInfo.DepthFormat);
+
+			RenderGraphTransientRenderTargetDesc gbufferTargetDesc = MakeDefaultGBufferRTargeDesc(
+				m_Surface->GetWidth(),
+				m_Surface->GetHeight(),
+				surfaceInfo.Samples,
+				surfaceInfo.DepthFormat);
+
 			m_Renderer = CreateUnique<EditorRenderer>(
 				context,
-				m_Surface->GetGBufferRenderTarget(),
-				m_Surface->GetLightingRenderTarget(),
+				gbufferTargetDesc,
+				lightingTargetDesc,
 				m_Surface->GetRenderTarget(),
 				m_Surface->GetPickingRenderTarget(),
 				resFactory,

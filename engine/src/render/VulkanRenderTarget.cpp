@@ -104,6 +104,44 @@ namespace Kita {
 		Init(*m_Context, resizedInfo);
 	}
 
+	VulkanRenderTargetView VulkanRenderTarget::CreateView()
+	{
+		return const_cast<const VulkanRenderTarget*>(this)->CreateView();
+	}
+
+	VulkanRenderTargetView VulkanRenderTarget::CreateView() const
+	{
+		KITA_CORE_ASSERT(m_Context, "VulkanRenderTarget context is null");
+		KITA_CORE_ASSERT(!m_ColorAttachments.empty(), "VulkanRenderTarget has no color attachments");
+
+		VulkanRenderTargetView::CreateInfo viewInfo{};
+		viewInfo.Name = m_CreateInfo.Name;
+		viewInfo.Context = m_Context;
+		viewInfo.Width = m_CreateInfo.Width;
+		viewInfo.Height = m_CreateInfo.Height;
+		viewInfo.Samples = m_CreateInfo.Samples;
+		viewInfo.ColorAttachments.reserve(m_ColorAttachments.size());
+
+		for (const ColorAttachment& colorAttachment : m_ColorAttachments)
+		{
+			VulkanRenderTargetView::ColorAttachmentView attachmentView{};
+			attachmentView.Image = const_cast<VulkanImage*>(&colorAttachment.Image);
+			attachmentView.ResolveImage = colorAttachment.ResolveImage.get();
+			attachmentView.LoadOp = colorAttachment.Desc.LoadOp;
+			attachmentView.StoreOp = colorAttachment.Desc.StoreOp;
+			viewInfo.ColorAttachments.push_back(attachmentView);
+		}
+
+		if (m_DepthAttachment)
+		{
+			viewInfo.DepthAttachment.Image = m_DepthAttachment.get();
+			viewInfo.DepthAttachment.LoadOp = m_CreateInfo.DepthAttachment.LoadOp;
+			viewInfo.DepthAttachment.StoreOp = m_CreateInfo.DepthAttachment.StoreOp;
+		}
+
+		return VulkanRenderTargetView(viewInfo);
+	}
+
 	void VulkanRenderTarget::BeginRendering(
 		VkCommandBuffer commandBuffer,
 		const std::vector<VkClearValue>& colorClearValues,

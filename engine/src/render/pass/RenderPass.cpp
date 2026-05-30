@@ -12,7 +12,7 @@ namespace Kita {
 
 	}
 
-	void RenderPassBase::ValidateRenderTarget(const VulkanRenderTarget& renderTarget) const
+	void RenderPassBase::ValidateRenderTarget(const VulkanRenderTargetView& renderTarget) const
 	{
 		const uint32_t colorCount = renderTarget.GetColorAttachmentCount();
 		KITA_CORE_ASSERT(colorCount == static_cast<uint32_t>(m_Desc.ColorFormats.size()),"RenderPass color attachment count does not match render target");
@@ -33,7 +33,7 @@ namespace Kita {
 
 	void RenderPassBase::BeginPass(RenderPassContext& context, const RenderPassBeginInfo& beginInfo) const
 	{
-		VulkanRenderTarget& rt = context.GetRenderTarget();
+		VulkanRenderTargetView& rt = context.GetRenderTargetView();
 		ValidateRenderTarget(rt);
 
 		std::vector<VkClearValue> colorClearValues;
@@ -42,7 +42,7 @@ namespace Kita {
 		for (uint32_t i = 0; i < rt.GetColorAttachmentCount(); ++i)
 		{
 			colorClearValues.push_back(
-				VulkanRenderTarget::MakeColorClearValue(
+				VulkanRenderTargetView::MakeColorClearValue(
 					beginInfo.ClearColor.r,
 					beginInfo.ClearColor.g,
 					beginInfo.ClearColor.b,
@@ -50,7 +50,7 @@ namespace Kita {
 		}
 
 		VkClearValue depthClearValue =
-			VulkanRenderTarget::MakeDepthClearValue(
+			VulkanRenderTargetView::MakeDepthClearValue(
 				beginInfo.ClearDepth,
 				beginInfo.ClearStencil);
 
@@ -80,7 +80,7 @@ namespace Kita {
 
 	void RenderPassBase::EndPass(RenderPassContext& context, const RenderPassBeginInfo& beginInfo) const
 	{
-		context.GetRenderTarget().EndRendering(
+		context.GetRenderTargetView().EndRendering(
 			context.GetCommandBuffer(),
 			beginInfo.TransitionSampledColors,
 			beginInfo.TransitionSampledDepth);

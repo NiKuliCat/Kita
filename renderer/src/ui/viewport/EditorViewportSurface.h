@@ -17,7 +17,6 @@ namespace Kita {
 			uint32_t Height = 720;
 			VkSampleCountFlagBits Samples = VK_SAMPLE_COUNT_1_BIT;
 
-			VkFormat LightingColorFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
 			VkFormat FinalColorFormat = VK_FORMAT_R8G8B8A8_UNORM;
 			VkFormat GBufferBaseColorFormat = VK_FORMAT_R8G8B8A8_UNORM;
 			VkFormat GBufferNormalFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
@@ -69,8 +68,6 @@ namespace Kita {
 		const VulkanRenderTarget& GetRenderTarget() const;
 		VulkanRenderTarget& GetPickingRenderTarget();
 		const VulkanRenderTarget& GetPickingRenderTarget() const;
-		VulkanRenderTarget& GetLightingRenderTarget();
-		const VulkanRenderTarget& GetLightingRenderTarget() const;
 
 		uint32_t ReadPickingPixel(uint32_t x, uint32_t y);
 
@@ -86,7 +83,6 @@ namespace Kita {
 		CreateInfo m_CreateInfo{};
 
 		Unique<VulkanRenderTarget> m_GBufferRenderTarget = nullptr;
-		Unique<VulkanRenderTarget> m_LightingRenderTarget = nullptr;
 		Unique<VulkanRenderTarget> m_FinalRenderTarget = nullptr;
 		Unique<VulkanRenderTarget> m_PickingRenderTarget = nullptr;
 		Unique<VulkanBuffer> m_PickingReadbackBuffer = nullptr;

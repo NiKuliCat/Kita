@@ -64,12 +64,12 @@ namespace Kita {
 		EndPass(context, sceneData.BeginInfo);
 	}
 
-	RenderPassDesc MakePreviewSpherePassDesc(const VulkanRenderTarget& renderTarget)
+	RenderPassDesc MakePreviewSpherePassDesc(const VulkanRenderTargetView& renderTarget)
 	{
 		RenderPassDesc desc{};
 		desc.Name = "PreviewSpherePass";
 		desc.Type = PassType::ForwardOpaque;
-		desc.Samples = renderTarget.GetCreateInfo().Samples;
+		desc.Samples = renderTarget.GetSamples();
 		desc.UseDepthAttachment = renderTarget.HasDepthAttachment();
 
 		const uint32_t colorCount = renderTarget.GetColorAttachmentCount();

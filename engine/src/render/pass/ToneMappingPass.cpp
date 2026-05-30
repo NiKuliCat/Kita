@@ -30,10 +30,10 @@ namespace Kita {
 		}
 		m_DescriptorSets.clear();
 		m_Context = nullptr;
-		m_SourceRenderTarget = nullptr;
+		m_SourceRenderTarget.Reset();
 	}
 
-	void ToneMappingPass::SetSourceInput(const VulkanRenderTarget* sourceRenderTarget)
+	void ToneMappingPass::SetSourceInput(const VulkanRenderTargetView& sourceRenderTarget)
 	{
 		m_SourceRenderTarget = sourceRenderTarget;
 	}
@@ -77,22 +77,22 @@ namespace Kita {
 
 	void ToneMappingPass::UpdateDescriptorSet(uint32_t frameIndex)
 	{
-		if (!m_Context || !m_SourceRenderTarget)
+		if (!m_Context || !m_SourceRenderTarget.IsValid())
 			return;
 		if (frameIndex >= m_DescriptorSets.size())
 			return;
 
 		m_DescriptorSets[frameIndex].WriteImageSampler(
 			0,
-			m_SourceRenderTarget->GetSampledColorDescriptorInfo(0));
+			m_SourceRenderTarget.GetSampledColorDescriptorInfo(0));
 	}
 
-	RenderPassDesc MakeTonemappingPassDesc(const VulkanRenderTarget& renderTarget)
+	RenderPassDesc MakeTonemappingPassDesc(const VulkanRenderTargetView& renderTarget)
 	{
 		RenderPassDesc desc{};
 		desc.Name = "TonemapPass";
 		desc.Type = PassType::PostProcess;
-		desc.Samples = renderTarget.GetCreateInfo().Samples;
+		desc.Samples = renderTarget.GetSamples();
 		desc.UseDepthAttachment = renderTarget.HasDepthAttachment();
 
 		const uint32_t colorCount = renderTarget.GetColorAttachmentCount();

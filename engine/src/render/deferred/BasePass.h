@@ -30,6 +30,6 @@ namespace Kita {
 
 	};
 
-	RenderPassDesc MakeBasePassDesc(const VulkanRenderTarget& renderTarget);
+	RenderPassDesc MakeBasePassDesc(const VulkanRenderTargetView& renderTarget);
 
 }

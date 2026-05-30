@@ -27,5 +27,5 @@ namespace Kita {
         std::vector<ForwardOpaqueDrawItem> m_DrawItems;
 	};
 
-    RenderPassDesc MakeForwardOpaquePassDesc(const VulkanRenderTarget& renderTarget);
+    RenderPassDesc MakeForwardOpaquePassDesc(const VulkanRenderTargetView& renderTarget);
 }

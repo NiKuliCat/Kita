@@ -271,7 +271,8 @@ namespace Kita {
 		target.SpherePass->SetDrawItem(drawItem);
 		target.SpherePass->SetSceneData(BuildPreviewSceneData());
 
-		RenderPassContext passContext(*m_Context, m_Context->GetCurrentCommandBuffer(), *target.RenderTarget);
+		VulkanRenderTargetView targetView = target.RenderTarget->CreateView();
+		RenderPassContext passContext(*m_Context, m_Context->GetCurrentCommandBuffer(), targetView);
 		target.SpherePass->Execute(passContext);
 		return &target.RenderTarget->GetSampledColorAttachment(0);
 	}
@@ -312,7 +313,7 @@ namespace Kita {
 		target.RenderTarget = CreateUnique<VulkanRenderTarget>(*m_Context, BuildPreviewTargetCreateInfo(normalizedSize));
 		if (m_SceneBindings)
 		{
-			target.SpherePass = CreateUnique<PreviewSpherePass>(*m_SceneBindings, MakePreviewSpherePassDesc(*target.RenderTarget));
+			target.SpherePass = CreateUnique<PreviewSpherePass>(*m_SceneBindings, MakePreviewSpherePassDesc(target.RenderTarget->CreateView()));
 		}
 
 		auto [insertedIt, inserted] = m_Targets.emplace(normalizedSize, std::move(target));
@@ -337,7 +338,7 @@ namespace Kita {
 				(void)size;
 				if (target.RenderTarget && !target.SpherePass)
 				{
-					target.SpherePass = CreateUnique<PreviewSpherePass>(*m_SceneBindings, MakePreviewSpherePassDesc(*target.RenderTarget));
+					target.SpherePass = CreateUnique<PreviewSpherePass>(*m_SceneBindings, MakePreviewSpherePassDesc(target.RenderTarget->CreateView()));
 				}
 			}
 		}
@@ -441,7 +442,7 @@ namespace Kita {
 		request.FragmentShader = material.GetFragmentShader().get();
 		request.ColorFormats.push_back(target.RenderTarget->GetColorFormat(0));
 		request.DepthFormat = target.RenderTarget->HasDepthAttachment() ? target.RenderTarget->GetDepthFormat() : VK_FORMAT_UNDEFINED;
-		request.Samples = target.RenderTarget->GetCreateInfo().Samples;
+		request.Samples = target.RenderTarget->CreateView().GetSamples();
 		request.DescriptorSetLayouts = {
 			m_SceneBindings->GetDescriptorSet(m_Context->GetCurrentFrameIndex()).GetLayout(),
 			material.GetDescriptorSet(m_Context->GetCurrentFrameIndex()).GetLayout()

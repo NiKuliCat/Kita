@@ -90,12 +90,13 @@ namespace Kita {
         EndPass(context, sceneData.BeginInfo);
     }
 
-    RenderPassDesc MakeForwardOpaquePassDesc(const VulkanRenderTarget& renderTarget)
+    RenderPassDesc MakeForwardOpaquePassDesc(const VulkanRenderTargetView& renderTarget)
     {
         RenderPassDesc desc{}; 
         desc.Name = "ForwardOpaquePass";
         desc.Type = PassType::ForwardOpaque;
-        desc.Samples = renderTarget.GetCreateInfo().Samples;
+        desc.Samples = renderTarget.GetSamples();
+        desc.UseDepthAttachment = renderTarget.HasDepthAttachment();
 
         const uint32_t colorCount = renderTarget.GetColorAttachmentCount();
         desc.ColorFormats.reserve(colorCount);

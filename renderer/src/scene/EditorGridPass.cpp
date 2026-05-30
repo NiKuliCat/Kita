@@ -24,12 +24,12 @@ namespace Kita {
 			&m_PushConstants);
 	}
 
-	RenderPassDesc MakeEditorGridPassDesc(const VulkanRenderTarget& renderTarget)
+	RenderPassDesc MakeEditorGridPassDesc(const VulkanRenderTargetView& renderTarget)
 	{
 		RenderPassDesc desc{};
 		desc.Name = "EditorGridPass";
 		desc.Type = PassType::PostProcess;
-		desc.Samples = renderTarget.GetCreateInfo().Samples;
+		desc.Samples = renderTarget.GetSamples();
 		desc.UseDepthAttachment = renderTarget.HasDepthAttachment();
 
 		const uint32_t colorCount = renderTarget.GetColorAttachmentCount();

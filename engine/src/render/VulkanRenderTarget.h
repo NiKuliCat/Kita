@@ -2,6 +2,7 @@
 
 #include "core/Core.h"
 #include "render/VulkanImage.h"
+#include "render/VulkanRenderTargetView.h"
 
 #include <vulkan/vulkan.h>
 #include <string>
@@ -85,6 +86,8 @@ namespace Kita {
 		bool IsValid() const { return m_Context != nullptr && !m_ColorAttachments.empty(); }
 		bool HasDepthAttachment() const { return m_DepthAttachment != nullptr; }
 		bool IsMultisampled() const { return m_CreateInfo.Samples != VK_SAMPLE_COUNT_1_BIT; }
+		VulkanRenderTargetView CreateView();
+		VulkanRenderTargetView CreateView() const;
 
 		void BeginRendering(
 			VkCommandBuffer commandBuffer,
