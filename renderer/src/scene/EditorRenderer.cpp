@@ -759,7 +759,6 @@ namespace Kita {
 
 
 		BuildRenderGraph(surface, gbufferRt, lightingRt, finalRt, pickingRt);
-		m_RenderGraph->Compile();
 		m_RenderGraph->Execute(*m_Context, cmd);
 	}
 

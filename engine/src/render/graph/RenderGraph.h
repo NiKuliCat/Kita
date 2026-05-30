@@ -47,9 +47,14 @@ namespace Kita {
 		const RenderGraphCompileResult& Compile();
 		void Execute(VulkanContext& context, VkCommandBuffer commandBuffer);
 
+		// 创建一个 RenderGraph 内部声明的临时纹理。
+		// 当前阶段只保存描述，不创建 Vulkan image。
+		RenderGraphResourceID CreateTexture(const RenderGraphTextureDesc& desc);
 
 		const RenderGraphResource& GetResource(RenderGraphResourceID id) const;
 		void Dump() const;
+		void SetDebugDumpEnabled(bool enabled) { m_DebugDumpEnabled = enabled; }
+		bool IsDebugDumpEnabled() const { return m_DebugDumpEnabled; }
 
 	private:
 		bool IsValidResource(RenderGraphResourceID id) const;
@@ -58,5 +63,6 @@ namespace Kita {
 		std::vector<RenderGraphResource> m_Resources;
 		std::vector<RenderGraphPass> m_Passes;
 		RenderGraphCompileResult m_CompileResult;
+		bool m_DebugDumpEnabled = false;
 	};
 }
