@@ -162,6 +162,9 @@ namespace Kita {
 			gbufferPass.WriteColor(color);
 		}
 
+		if (gbuffer.HasDepth())
+			gbufferPass.WriteDepth(gbuffer.DepthAttachment);
+
 		gbufferPass.SetExecute([this, gbuffer](RenderGraphContext& graphContext)
 			{
 				VulkanRenderTargetView gbufferRt = graphContext.BuildRenderTargetView(
@@ -880,8 +883,6 @@ VulkanGraphicsPipeline* EditorRenderer::GetSkyboxPipeline(const VulkanRenderTarg
 			return;
 
 
-
-		VulkanRenderTarget& gbufferRt = surface.GetGBufferRenderTarget();
 		VulkanRenderTarget& finalRt = surface.GetFinalRenderTarget();
 		VulkanRenderTarget& pickingRt = surface.GetPickingRenderTarget();
 
@@ -901,7 +902,6 @@ VulkanGraphicsPipeline* EditorRenderer::GetSkyboxPipeline(const VulkanRenderTarg
 			lightingSceneData.BeginInfo.TransitionSampledColors = true;
 			lightingSceneData.BeginInfo.TransitionSampledDepth = true;
 			m_DeferredLightingPass->SetSceneData(lightingSceneData);
-			m_DeferredLightingPass->SetGBufferInput(gbufferRt.CreateView());
 			m_DeferredLightingPass->SetIBLInput(m_IBL);
 		}
 

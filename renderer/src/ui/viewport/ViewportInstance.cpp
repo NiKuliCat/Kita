@@ -34,7 +34,7 @@ namespace Kita {
 				surfaceInfo.Samples,
 				surfaceInfo.DepthFormat);
 
-			RenderGraphTransientRenderTargetDesc gbufferTargetDesc = MakeDefaultGBufferRTargeDesc(
+			RenderGraphTransientRenderTargetDesc gbufferTargetDesc = MakeDefaultGBufferRTargetDesc(
 				m_Surface->GetWidth(),
 				m_Surface->GetHeight(),
 				surfaceInfo.Samples,
@@ -44,7 +44,7 @@ namespace Kita {
 				context,
 				gbufferTargetDesc,
 				lightingTargetDesc,
-				m_Surface->GetRenderTarget(),
+				m_Surface->GetFinalRenderTarget(),
 				m_Surface->GetPickingRenderTarget(),
 				resFactory,
 				pipelineFactory,

@@ -185,7 +185,7 @@
     <ClInclude Include="src\kita_pch.h" />
     <ClInclude Include="src\platform\windows\WindowsWindow.h" />
     <ClInclude Include="src\render\BufferLayout.h" />
-    <ClInclude Include="src\render\deferred\GbufferRenderTarget.h" />
+    <ClInclude Include="src\render\deferred\GBufferRenderTarget.h" />
     <ClInclude Include="src\render\graph\RenderGraphTransientRenderTarget.h" />
     <ClInclude Include="src\render\Light.h" />
     <ClInclude Include="src\render\ShaderCompiler.h" />
@@ -209,7 +209,7 @@
     <ClInclude Include="src\render\VulkanVertexBuffer.h" />
     <ClInclude Include="src\render\deferred\BasePass.h" />
     <ClInclude Include="src\render\deferred\DeferredLightingPass.h" />
-    <ClInclude Include="src\render\deferred\Gbuffer.h" />
+    <ClInclude Include="src\render\deferred\GBuffer.h" />
     <ClInclude Include="src\render\font\FontManager.h" />
     <ClInclude Include="src\render\graph\RenderGraph.h" />
     <ClInclude Include="src\render\graph\RenderGraphAllocator.h" />

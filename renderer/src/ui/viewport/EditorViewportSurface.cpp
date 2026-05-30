@@ -92,57 +92,6 @@ namespace Kita {
 			return rtInfo;
 		}
 
-		VulkanRenderTarget::CreateInfo BuildGBufferRenderTargetCreateInfo(const EditorViewportSurface::CreateInfo& createInfo)
-		{
-			VulkanRenderTarget::CreateInfo rtInfo{};
-			rtInfo.Name = createInfo.Name + "_GBuffer";
-			rtInfo.Width = createInfo.Width;
-			rtInfo.Height = createInfo.Height;
-			rtInfo.Samples = createInfo.Samples;
-
-			VulkanRenderTarget::ColorAttachmentDesc baseColorAttachment{};
-			baseColorAttachment.Name = rtInfo.Name + "_BaseColor";
-			baseColorAttachment.Format = createInfo.GBufferBaseColorFormat;
-			baseColorAttachment.CreateSampler = true;
-			baseColorAttachment.CreateResolveImage = false;
-			baseColorAttachment.Filter = createInfo.SamplerFilter;
-			baseColorAttachment.AddressMode = createInfo.SamplerAddressMode;
-			rtInfo.ColorAttachments.push_back(baseColorAttachment);
-
-			VulkanRenderTarget::ColorAttachmentDesc normalAttachment{};
-			normalAttachment.Name = rtInfo.Name + "_Normal";
-			normalAttachment.Format = createInfo.GBufferNormalFormat;
-			normalAttachment.CreateSampler = true;
-			normalAttachment.CreateResolveImage = false;
-			normalAttachment.Filter = createInfo.SamplerFilter;
-			normalAttachment.AddressMode = createInfo.SamplerAddressMode;
-			rtInfo.ColorAttachments.push_back(normalAttachment);
-
-			VulkanRenderTarget::ColorAttachmentDesc materialAttachment{};
-			materialAttachment.Name = rtInfo.Name + "_Material";
-			materialAttachment.Format = createInfo.GBufferMaterialFormat;
-			materialAttachment.CreateSampler = true;
-			materialAttachment.CreateResolveImage = false;
-			materialAttachment.Filter = createInfo.SamplerFilter;
-			materialAttachment.AddressMode = createInfo.SamplerAddressMode;
-			rtInfo.ColorAttachments.push_back(materialAttachment);
-
-			VulkanRenderTarget::ColorAttachmentDesc emissiveAttachment{};
-			emissiveAttachment.Name = rtInfo.Name + "_Emissive";
-			emissiveAttachment.Format = createInfo.GBufferEmissiveFormat;
-			emissiveAttachment.CreateSampler = true;
-			emissiveAttachment.CreateResolveImage = false;
-			emissiveAttachment.Filter = createInfo.SamplerFilter;
-			emissiveAttachment.AddressMode = createInfo.SamplerAddressMode;
-			rtInfo.ColorAttachments.push_back(emissiveAttachment);
-
-			rtInfo.DepthAttachment.Enabled = true;
-			rtInfo.DepthAttachment.Name = rtInfo.Name + "_Depth";
-			rtInfo.DepthAttachment.Format = createInfo.DepthFormat;
-			rtInfo.DepthAttachment.CreateSampler = true;
-
-			return rtInfo;
-		}
 
 		VulkanRenderTarget::CreateInfo BuildPickingRenderTargetCreateInfo(const EditorViewportSurface::CreateInfo& createInfo)
 		{
@@ -202,7 +151,6 @@ namespace Kita {
 
 		ReleaseTextureID();
 		DestroyPickingResources();
-		m_GBufferRenderTarget.reset();
 		m_FinalRenderTarget.reset();
 		m_Context = nullptr;
 		m_CreateInfo = {};
@@ -240,8 +188,7 @@ namespace Kita {
 
 		m_CreateInfo.Width = width;
 		m_CreateInfo.Height = height;
-		if (m_GBufferRenderTarget)
-			m_GBufferRenderTarget->Resize(width, height);
+
 		if (m_FinalRenderTarget)
 			m_FinalRenderTarget->Resize(width, height);
 		DestroyPickingResources();
@@ -250,17 +197,6 @@ namespace Kita {
 		RecreateTextureID();
 	}
 
-	VulkanRenderTarget& EditorViewportSurface::GetGBufferRenderTarget()
-	{
-		KITA_CORE_ASSERT(m_GBufferRenderTarget, "EditorViewportSurface GBuffer render target is null");
-		return *m_GBufferRenderTarget;
-	}
-
-	const VulkanRenderTarget& EditorViewportSurface::GetGBufferRenderTarget() const
-	{
-		KITA_CORE_ASSERT(m_GBufferRenderTarget, "EditorViewportSurface GBuffer render target is null");
-		return *m_GBufferRenderTarget;
-	}
 
 	VulkanRenderTarget& EditorViewportSurface::GetFinalRenderTarget()
 	{
@@ -274,15 +210,6 @@ namespace Kita {
 		return *m_FinalRenderTarget;
 	}
 
-	VulkanRenderTarget& EditorViewportSurface::GetRenderTarget()
-	{
-		return GetFinalRenderTarget();
-	}
-
-	const VulkanRenderTarget& EditorViewportSurface::GetRenderTarget() const
-	{
-		return GetFinalRenderTarget();
-	}
 
 	VulkanRenderTarget& EditorViewportSurface::GetPickingRenderTarget()
 	{
@@ -363,8 +290,6 @@ namespace Kita {
 	{
 		KITA_CORE_ASSERT(m_Context, "EditorViewportSurface context is null");
 
-		VulkanRenderTarget::CreateInfo gBufferInfo = BuildGBufferRenderTargetCreateInfo(m_CreateInfo);
-		m_GBufferRenderTarget = CreateUnique<VulkanRenderTarget>(*m_Context, gBufferInfo);
 
 		VulkanRenderTarget::CreateInfo finalInfo = BuildFinalRenderTargetCreateInfo(m_CreateInfo);
 		m_FinalRenderTarget = CreateUnique<VulkanRenderTarget>(*m_Context, finalInfo);

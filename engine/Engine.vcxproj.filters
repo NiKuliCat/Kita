@@ -243,7 +243,7 @@
     <ClInclude Include="src\render\deferred\DeferredLightingPass.h">
       <Filter>src\render\deferred</Filter>
     </ClInclude>
-    <ClInclude Include="src\render\deferred\Gbuffer.h">
+    <ClInclude Include="src\render\deferred\GBuffer.h">
       <Filter>src\render\deferred</Filter>
     </ClInclude>
     <ClInclude Include="src\render\font\FontManager.h">
@@ -1588,7 +1588,7 @@
       <Filter>third-party\imguizmo</Filter>
     </ClInclude>
     <ClInclude Include="src\render\graph\RenderGraphTransientRenderTarget.h" />
-    <ClInclude Include="src\render\deferred\GbufferRenderTarget.h" />
+    <ClInclude Include="src\render\deferred\GBufferRenderTarget.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\asset\Asset.cpp">

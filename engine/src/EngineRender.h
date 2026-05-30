@@ -20,4 +20,4 @@
 #include "render/graph/RenderGraphResource.h"
 
 #include "render/graph/RenderGraphTransientRenderTarget.h"
-#include "render/deferred/GbufferRenderTarget.h"
+#include "render/deferred/GBufferRenderTarget.h"

@@ -18,10 +18,6 @@ namespace Kita {
 			VkSampleCountFlagBits Samples = VK_SAMPLE_COUNT_1_BIT;
 
 			VkFormat FinalColorFormat = VK_FORMAT_R8G8B8A8_UNORM;
-			VkFormat GBufferBaseColorFormat = VK_FORMAT_R8G8B8A8_UNORM;
-			VkFormat GBufferNormalFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
-			VkFormat GBufferMaterialFormat = VK_FORMAT_R8G8B8A8_UNORM;
-			VkFormat GBufferEmissiveFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
 			VkFormat DepthFormat = VK_FORMAT_D32_SFLOAT;
 
 			VkFilter SamplerFilter = VK_FILTER_LINEAR;
@@ -60,12 +56,10 @@ namespace Kita {
 		VkFormat GetPickingFormat() const { return VK_FORMAT_R32_UINT; }
 		VkFormat GetPickingDepthFormat() const { return m_CreateInfo.DepthFormat; }
 
-		VulkanRenderTarget& GetGBufferRenderTarget();
-		const VulkanRenderTarget& GetGBufferRenderTarget() const;
+
 		VulkanRenderTarget& GetFinalRenderTarget();
 		const VulkanRenderTarget& GetFinalRenderTarget() const;
-		VulkanRenderTarget& GetRenderTarget();
-		const VulkanRenderTarget& GetRenderTarget() const;
+		 
 		VulkanRenderTarget& GetPickingRenderTarget();
 		const VulkanRenderTarget& GetPickingRenderTarget() const;
 
@@ -81,8 +75,6 @@ namespace Kita {
 	private:
 		VulkanContext* m_Context = nullptr;
 		CreateInfo m_CreateInfo{};
-
-		Unique<VulkanRenderTarget> m_GBufferRenderTarget = nullptr;
 		Unique<VulkanRenderTarget> m_FinalRenderTarget = nullptr;
 		Unique<VulkanRenderTarget> m_PickingRenderTarget = nullptr;
 		Unique<VulkanBuffer> m_PickingReadbackBuffer = nullptr;

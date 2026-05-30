@@ -7,7 +7,7 @@
 
 namespace Kita {
 
-	inline RenderGraphTransientRenderTargetDesc MakeDefaultGBufferRTargeDesc(
+	inline RenderGraphTransientRenderTargetDesc MakeDefaultGBufferRTargetDesc(
 		uint32_t width,
 		uint32_t height,
 		VkSampleCountFlagBits samples,
