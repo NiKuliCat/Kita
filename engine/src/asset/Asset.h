@@ -1,9 +1,15 @@
 #pragma once
 #include <filesystem>
+#include <cstdint>
+#include <string>
+#include <unordered_map>
+#include <variant>
+#include <vector>
+
 #include <glm/glm.hpp>
+
 #include "core/UUID.h"
 #include "render/mesh/Mesh.h"
-#include "render/VulkanMaterial.h"
 #include "render/VulkanTexture.h"
 
 namespace Kita {
@@ -15,7 +21,8 @@ namespace Kita {
 		Material,
 		Shader,
 		Texture,
-		Mesh
+		Mesh,
+		ShaderLab
 	};
 
 
@@ -67,10 +74,55 @@ namespace Kita {
 		AssetHandle Opacity = InvalidAssetHandle;
 	};
 
+	enum class MaterialValueType : uint8_t
+	{
+		Bool,
+		Int,
+		Float,
+		Float2,
+		Float3,
+		Float4,
+		Color,
+		Texture2D,
+		TextureCube
+	};
+
+	struct MaterialPropertyValue
+	{
+		MaterialValueType ValueType = MaterialValueType::Float;
+		std::variant<bool, int32_t, float, glm::vec2, glm::vec3, glm::vec4, AssetHandle, std::string> Data = 0.0f;
+	};
+
+	struct MaterialPropertyUIHint
+	{
+		bool HasRange = false;
+		float MinValue = 0.0f;
+		float MaxValue = 1.0f;
+		float Step = 0.01f;
+		bool HDR = false;
+	};
+
+	struct MaterialPropertyDesc
+	{
+		std::string Name;
+		std::string DisplayName;
+		MaterialValueType ValueType = MaterialValueType::Float;
+		MaterialPropertyValue DefaultValue{};
+		MaterialPropertyUIHint UIHint{};
+	};
+
+	struct MaterialPropertyBlock
+	{
+		std::unordered_map<std::string, MaterialPropertyValue> Values;
+		std::unordered_map<std::string, MaterialPropertyValue> OrphanValues;
+	};
+
 
 	struct MaterialAsset : public Asset
 	{
 		virtual AssetType GetType() const override { return AssetType::Material; }
+		AssetHandle ShaderLabHandle = InvalidAssetHandle;
+		MaterialPropertyBlock PropertyBlock;
 		AssetHandle ShaderHandle = InvalidAssetHandle;
 		MaterialSurfaceParams m_SurfaceParams;
 		MaterialTextures m_Textures;

@@ -91,6 +91,19 @@ namespace Kita {
 		return true;
 	}
 
+	void AssetEditorManager::OnUpdate()
+	{
+		for (auto& entry : m_OpenEditors)
+		{
+			if (!entry.Editor || !entry.IsOpen)
+			{
+				continue;
+			}
+
+			entry.Editor->OnUpdate();
+		}
+	}
+
 	void AssetEditorManager::OnImGuiRender()
 	{
 		DrawFloatingHostWindow();

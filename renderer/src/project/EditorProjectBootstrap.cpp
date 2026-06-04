@@ -76,6 +76,15 @@ namespace Kita {
 			auto& assetManager = AssetManager::GetInstance();
 			for (const auto& [name, path] : pathMap)
 			{
+				if (name == "deferredLighting")
+				{
+					KITA_CORE_WARN(
+						"EditorProjectBootstrap: preload shader '{}' is deprecated and skipped. path='{}'",
+						name,
+						path);
+					continue;
+				}
+
 				const AssetHandle handle = assetManager.GetHandleByPath(path);
 				if (!Asset::IsValidHandle(handle))
 				{

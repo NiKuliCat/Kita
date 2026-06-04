@@ -5,6 +5,8 @@
 #include "serialize/MaterialSerializer.h"
 
 #include "render/VulkanTextureLoader.h"
+#include "render/shaderLab/ShaderLabCompiler.h"
+#include "render/shaderLab/ShaderLabParser.h"
 #include "ShaderCompileCache.h"
 #include "third_party/stb_image/stb_image.h"
 #include <assimp/Importer.hpp>
@@ -28,6 +30,51 @@ namespace Kita{
 			}
 
 			return materialAsset;
+		}
+
+		case AssetType::ShaderLab:
+		{
+			// 第一步只建立 ShaderLab 资产骨架。
+			// 第二步接入 Parser 后，再把解析结果写入 ShaderLabAsset。
+			Ref<ShaderLabAsset> shaderLabAsset = CreateRef<ShaderLabAsset>();
+			shaderLabAsset->m_Handle = metadata.handle;
+			shaderLabAsset->SourcePath = assetPath.lexically_normal();
+
+			const ShaderLabParseResult parseResult = ShaderLabParser::ParseFile(shaderLabAsset->SourcePath);
+			if (!parseResult.Success)
+			{
+				KITA_CORE_WARN(
+					"AssetFactory: failed to parse ShaderLab asset: {}, error: {}",
+					assetPath.string(),
+					parseResult.Error.Message);
+				return nullptr;
+			}
+
+			ShaderLabCompiler compiler{};
+			const ShaderLabCompileResult compileResult =
+				compiler.CompileAsset(parseResult.Asset, shaderLabAsset->SourcePath);
+			if (!compileResult.Success)
+			{
+				KITA_CORE_WARN(
+					"AssetFactory: failed to compile ShaderLab asset: {}, diagnostics: {}",
+					assetPath.string(),
+					compileResult.Diagnostics);
+				return nullptr;
+			}
+
+			if (!compileResult.Diagnostics.empty())
+			{
+				KITA_CORE_WARN(
+					"AssetFactory: ShaderLab asset compiled with diagnostics: {}, diagnostics: {}",
+					assetPath.string(),
+					compileResult.Diagnostics);
+			}
+
+			shaderLabAsset->Desc = std::make_shared<ShaderLabAssetDesc>(compileResult.SourceAsset);
+			shaderLabAsset->RuntimeLayout = std::make_shared<MaterialRuntimeLayout>(compileResult.MaterialLayout);
+			shaderLabAsset->LightingRuntime = std::make_shared<ShaderLabLightingRuntimeDesc>(compileResult.LightingRuntime);
+			shaderLabAsset->CompiledPasses = compileResult.Passes;
+			return shaderLabAsset;
 		}
 
 		case AssetType::Shader:

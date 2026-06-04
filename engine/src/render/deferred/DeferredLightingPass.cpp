@@ -245,11 +245,12 @@ namespace Kita {
 			{ 1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT }, // normal
 			{ 2, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT }, // material
 			{ 3, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT }, // emissive
-			{ 4, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT }, // depth
-			{ 5, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT }, // irradiance cube
-			{ 6, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT }, // prefilter cube
-			{ 7, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT }, // brdf lut
-			{ 8, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT }  // environment cube(optional debug / fallback)
+			{ 4, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT }, // custom data
+			{ 5, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT }, // depth
+			{ 6, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT }, // irradiance cube
+			{ 7, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT }, // prefilter cube
+			{ 8, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT }, // brdf lut
+			{ 9, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1, VK_SHADER_STAGE_FRAGMENT_BIT }  // environment cube(optional debug / fallback)
 		};
 
 		for (uint32_t i = 0; i < frameCount; ++i)
@@ -271,7 +272,8 @@ namespace Kita {
 		m_DescriptorSets[frameIndex].WriteImageSampler(1, m_GBufferRenderTarget.GetSampledColorDescriptorInfo(1));
 		m_DescriptorSets[frameIndex].WriteImageSampler(2, m_GBufferRenderTarget.GetSampledColorDescriptorInfo(2));
 		m_DescriptorSets[frameIndex].WriteImageSampler(3, m_GBufferRenderTarget.GetSampledColorDescriptorInfo(3));
-		m_DescriptorSets[frameIndex].WriteImageSampler(4, m_GBufferRenderTarget.GetDepthDescriptorInfo());
+		m_DescriptorSets[frameIndex].WriteImageSampler(4, m_GBufferRenderTarget.GetSampledColorDescriptorInfo(4));
+		m_DescriptorSets[frameIndex].WriteImageSampler(5, m_GBufferRenderTarget.GetDepthDescriptorInfo());
 
 		const Ref<VulkanTexture>& irradianceTexture =
 			(m_IBL && m_IBL->IsValid() && m_IBL->IrradianceCube)
@@ -295,10 +297,10 @@ namespace Kita {
 		KITA_CORE_ASSERT(brdfTexture && brdfTexture->IsValid(), "DeferredLightingPass requires a valid brdf lut texture");
 		KITA_CORE_ASSERT(environmentTexture && environmentTexture->IsValid(), "DeferredLightingPass requires a valid environment texture");
 
-		m_DescriptorSets[frameIndex].WriteImageSampler(5, irradianceTexture->GetDescriptorInfo());
-		m_DescriptorSets[frameIndex].WriteImageSampler(6, prefilterTexture->GetDescriptorInfo());
-		m_DescriptorSets[frameIndex].WriteImageSampler(7, brdfTexture->GetDescriptorInfo());
-		m_DescriptorSets[frameIndex].WriteImageSampler(8, environmentTexture->GetDescriptorInfo());
+		m_DescriptorSets[frameIndex].WriteImageSampler(6, irradianceTexture->GetDescriptorInfo());
+		m_DescriptorSets[frameIndex].WriteImageSampler(7, prefilterTexture->GetDescriptorInfo());
+		m_DescriptorSets[frameIndex].WriteImageSampler(8, brdfTexture->GetDescriptorInfo());
+		m_DescriptorSets[frameIndex].WriteImageSampler(9, environmentTexture->GetDescriptorInfo());
 	}
 
 	RenderPassDesc MakeDeferredLightingPassDesc(const VulkanRenderTargetView& renderTarget)

@@ -1,16 +1,16 @@
 module IBL;
 import pbr_common;
 
-[[vk::binding(5, 1)]]
+[[vk::binding(6, 1)]]
 public SamplerCube g_IrradianceCube;
 
-[[vk::binding(6, 1)]]
+[[vk::binding(7, 1)]]
 public SamplerCube g_PrefilteredSpecularCube;
 
-[[vk::binding(7, 1)]]
+[[vk::binding(8, 1)]]
 public Sampler2D g_BrdfLut;
 
-[[vk::binding(8, 1)]]
+[[vk::binding(9, 1)]]
 public SamplerCube g_EnvironmentCube;
 
 public float3 EvaluateDiffuseIBL(float3 N,float3 baseColor,float metallic)

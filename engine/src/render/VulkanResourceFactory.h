@@ -1,6 +1,7 @@
 #pragma once
 #include "core/Core.h"
 #include "asset/Asset.h"
+#include "asset/ShaderLabAsset.h"
 
 //=============================================================================================
 //		本层负责使用数据层创建运行时渲染所需资源 asset data > > > render runtime object
@@ -34,7 +35,13 @@ namespace Kita {
 		VulkanResourceFactory(VulkanContext& context, AssetManager& assetManager);
 
 		ShaderBundle GetOrCreateShaderBundle(AssetHandle handle);
+		// 为 fullscreen / post-process 这类非材质 pass 直接从 ShaderLab pass 构建运行时 shader。
+		ShaderBundle BuildShaderLabPassBundle(AssetHandle handle, PassType passType);
 		Ref<VulkanTexture> GetOrCreateTexture(AssetHandle handle);
+		ShaderBundle BuildShaderBundleFromStageBinaries(
+			const std::string& shaderName,
+			const ShaderStageBinary& vertexStage,
+			const ShaderStageBinary& fragmentStage);
 
 		Ref<VulkanMaterial> CreateMaterial(AssetHandle handle);
 		Ref<VulkanMaterial> CreateMaterial(const MaterialAsset& materialAsset);
@@ -61,6 +68,12 @@ namespace Kita {
 	private:
 		Ref<VulkanShader> BuildShader(
 			const ShaderAsset& shaderAsset,
+			const ShaderStageBinary& stageBinary,
+			VkShaderStageFlagBits stage,
+			const char* suffix);
+
+		Ref<VulkanShader> BuildShader(
+			const std::string& shaderName,
 			const ShaderStageBinary& stageBinary,
 			VkShaderStageFlagBits stage,
 			const char* suffix);

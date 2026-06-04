@@ -17,6 +17,7 @@ namespace Kita {
 		void SetDockSpaceId(ImGuiID dockSpaceId) { m_DockSpaceId = dockSpaceId; }
 
 		bool OpenEditor(AssetHandle handle);
+		void OnUpdate();
 		void OnImGuiRender();
 
 	private:

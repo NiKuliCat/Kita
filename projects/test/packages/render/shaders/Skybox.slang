@@ -27,9 +27,6 @@ ConstantBuffer<SceneCameraData> gCamera;
 [[vk::binding(1, 0)]]
 ConstantBuffer<SceneDirectionalLightData> gMainLight;
 
-[[vk::binding(0, 1)]]
-SamplerCube gSkyboxTexture;
-
 struct SkyboxParams
 {
     float intensity;
@@ -83,6 +80,6 @@ float4 PSMain(VSOutput input) : SV_Target0
     direction = normalize(RotateAroundY(direction, gSkyboxParams.rotationY));
     float mipLevel = max(gSkyboxParams.mipLevel, 0.0);
     float intensity = max(gSkyboxParams.intensity, 0.0);
-    float3 color = gSkyboxTexture.SampleLevel(direction, mipLevel).rgb * intensity;
+    float3 color = _Albedo.SampleLevel(direction, mipLevel).rgb * intensity;
     return float4(color, 1.0);
 }

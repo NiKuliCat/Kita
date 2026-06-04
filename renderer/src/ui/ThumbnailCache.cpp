@@ -28,6 +28,11 @@ namespace Kita {
 			return {};
 		}
 
+		if (type == AssetType::Material)
+		{
+			return GetOrCreateMaterialThumbnail(handle, preferredSize);
+		}
+
 		if (type != AssetType::Texture)
 		{
 			return {};
@@ -41,13 +46,16 @@ namespace Kita {
 		ProcessPendingReleases();
 
 		auto it = m_Cache.find(handle);
-		if (it == m_Cache.end())
+		if (it != m_Cache.end())
 		{
-			return;
+			RetireThumbnail(it->second);
+			m_Cache.erase(it);
 		}
 
-		RetireThumbnail(it->second);
-		m_Cache.erase(it);
+		if (m_AssetPreviewRenderer)
+		{
+			m_AssetPreviewRenderer->Invalidate(handle);
+		}
 	}
 
 	void ThumbnailCache::Clear()
@@ -138,6 +146,27 @@ namespace Kita {
 		AssetPreviewRequest request{};
 		request.Handle = handle;
 		request.Type = AssetPreviewType::CubemapSphere;
+		request.Size = size;
+
+		PreviewThumbnailHandle preview = m_AssetPreviewRenderer->GetOrRender(request);
+		if (!preview.IsValid())
+		{
+			return {};
+		}
+
+		return { preview.TextureID, preview.Width, preview.Height };
+	}
+
+	ThumbnailCache::ThumbnailHandle ThumbnailCache::GetOrCreateMaterialThumbnail(AssetHandle handle, uint32_t size)
+	{
+		if (!m_AssetPreviewRenderer)
+		{
+			return {};
+		}
+
+		AssetPreviewRequest request{};
+		request.Handle = handle;
+		request.Type = AssetPreviewType::MaterialSphere;
 		request.Size = size;
 
 		PreviewThumbnailHandle preview = m_AssetPreviewRenderer->GetOrRender(request);

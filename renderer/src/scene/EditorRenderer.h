@@ -8,6 +8,8 @@
 #include "ViewportPickingPass.h"
 #include "imgui.h"
 
+#include <unordered_set>
+
 namespace Kita {
 
 	class EditorPickRegistry;
@@ -54,14 +56,17 @@ namespace Kita {
 
 		void SetIBLSource(const Ref<ImageBasedLighting>& ibl) { m_IBL = ibl; }
 
-		// RenderGraph 管线资源预览列表。
-		const std::vector<RenderGraphPreviewTexture>& GetRenderGraphPreviewTextures() const { return m_RenderGraphPreviewTextures; }
+		const std::vector<RenderGraphPreviewTexture>& GetRenderGraphPreviewTextures() const
+		{
+			return m_RenderGraphPreviewTextures;
+		}
 
 	private:
 		void InitRenderSceneData(ScenePassData& sceneData);
 		void InitGridResources();
 		void InitDeferredLightingResources();
 		void InitTonemapResources();
+		void InitPickingResources();
 		void SyncSkyboxMaterialFromSettings();
 		void ResetRenderGraphResourceIDs();
 		void UpdateRenderGraphPreviewTextures(const VulkanRenderTarget& finalRt);
@@ -79,7 +84,46 @@ namespace Kita {
 			VulkanRenderTarget& finalRt,
 			VulkanRenderTarget& pickingRt);
 
-		VulkanGraphicsPipeline* GetPipeline(const RenderGraphTransientRenderTargetDesc& targetDesc, Ref<VulkanGeometry>& geometry, Ref<VulkanMaterial>& material);
+		const VulkanMaterial::PassRuntime* FindMaterialPassForScene(
+			const VulkanMaterial& material,
+			PassType passType) const;
+		void LogMaterialDiagnosticOnce(
+			AssetHandle materialHandle,
+			const std::string& objectName,
+			PassType passType,
+			const std::string& reason,
+			const VulkanMaterial* runtimeMaterial = nullptr) const;
+		void LogMaterialQueueSuccessOnce(
+			AssetHandle materialHandle,
+			const std::string& objectName,
+			PassType passType,
+			const VulkanGraphicsPipeline& pipeline,
+			const VulkanMaterial* runtimeMaterial = nullptr) const;
+		std::string BuildMaterialDiagnosticLabel(AssetHandle materialHandle) const;
+		std::string BuildShaderLabPropertyDiagnostic(
+			AssetHandle materialHandle,
+			const VulkanMaterial* runtimeMaterial = nullptr) const;
+		std::string BuildResolvedTextureDiagnostic(
+			AssetHandle materialHandle,
+			const VulkanMaterial& material) const;
+		std::string BuildRuntimePassDiagnostic(const VulkanMaterial& material) const;
+		bool FillMaterialPipelineRequest(
+			PipelineRequest& request,
+			const RenderGraphTransientRenderTargetDesc& targetDesc,
+			const VulkanGeometry& geometry,
+			const VulkanMaterial& material,
+			PassType passType,
+			std::string* failureReason = nullptr) const;
+		void ApplyMaterialRenderState(
+			PipelineRequest& request,
+			const VulkanMaterial::PassRuntime& materialPass,
+			bool useLegacyDefaults) const;
+		VulkanGraphicsPipeline* GetPipeline(
+			const RenderGraphTransientRenderTargetDesc& targetDesc,
+			Ref<VulkanGeometry>& geometry,
+			Ref<VulkanMaterial>& material,
+			PassType passType,
+			std::string* failureReason = nullptr);
 		VulkanGraphicsPipeline* GetDeferredLightingPipeline(const VulkanRenderTargetView& rt);
 		VulkanGraphicsPipeline* GetTonemapPipeline(const VulkanRenderTargetView& rt);
 		VulkanGraphicsPipeline* GetGridPipeline(const VulkanRenderTargetView& rt);
@@ -110,9 +154,13 @@ namespace Kita {
 		Ref<VulkanShader> m_DeferredLightingFragmentShader = nullptr;
 		Ref<VulkanShader> m_TonemapVertexShader = nullptr;
 		Ref<VulkanShader> m_TonemapFragmentShader = nullptr;
+		Ref<VulkanShader> m_PickingVertexShader = nullptr;
+		Ref<VulkanShader> m_PickingFragmentShader = nullptr;
+		ShaderLabRenderStateDesc m_GridRenderState{};
+		ShaderLabRenderStateDesc m_TonemapRenderState{};
+		ShaderLabRenderStateDesc m_PickingRenderState{};
 		EditorGridPass::PushConstants m_GridPushConstants{};
 		bool m_IsGridEnabled = true;
-
 
 		VulkanRenderTarget* m_FinalRenderTarget = nullptr;
 
@@ -122,10 +170,7 @@ namespace Kita {
 		VulkanResourceFactory* m_VulkanResFactory = nullptr;
 		PipelineFactory* m_PipelineFactory = nullptr;
 
-		// ibl
 		Ref<ImageBasedLighting> m_IBL = nullptr;
-
-		// graph
 		Unique<RenderGraph> m_RenderGraph = nullptr;
 
 		RenderGraphTransientRenderTargetDesc m_LightingTargetDesc{};
@@ -138,6 +183,9 @@ namespace Kita {
 		RenderGraphResourceID m_FinalGraphResourceID = InvalidRenderGraphResourceID;
 		RenderGraphResourceID m_PickingGraphResourceID = InvalidRenderGraphResourceID;
 		std::vector<RenderGraphPreviewTexture> m_RenderGraphPreviewTextures;
+		mutable std::unordered_set<std::string> m_LoggedMaterialDiagnosticKeys;
+		bool m_LoggedDeferredLightingInit = false;
+		bool m_LoggedSceneSubmissionSummary = false;
 	};
 
 }

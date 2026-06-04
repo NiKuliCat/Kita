@@ -1,31 +1,64 @@
 {
-    "version": 2,
+    "version": 3,
+    "shaderLab": "832084914854843335",
     "shader": "13780338159838875874",
-    "textures": {
-        "albedo": "959932025476332735",
-        "normal": "11559724930493683611",
-        "metallicRoughness": "17801129151415753472",
-        "ambientOcclusion": "15999489999238696433",
-        "emissive": "2446733649158233510",
-        "opacity": "0"
+    "properties": {
+        "_BaseColor": {
+            "kind": "Color",
+            "value": [1.0, 1.0, 1.0, 1.0]
+        },
+        "_Emissive": {
+            "kind": "Float3",
+            "value": [1.0, 1.0, 1.0]
+        },
+        "_Metallic": {
+            "kind": "Float",
+            "value": 1.0
+        },
+        "_Roughness": {
+            "kind": "Float",
+            "value": 1.0
+        },
+        "_AmbientOcclusion": {
+            "kind": "Float",
+            "value": 1.0
+        },
+        "_Opacity": {
+            "kind": "Float",
+            "value": 1.0
+        },
+        "_NormalScale": {
+            "kind": "Float",
+            "value": 1.0
+        },
+        "_AlphaCutoff": {
+            "kind": "Float",
+            "value": 0.0
+        },
+        "_Albedo": {
+            "kind": "Texture2D",
+            "asset": "959932025476332735"
+        },
+        "_Normal": {
+            "kind": "Texture2D",
+            "asset": "11559724930493683611"
+        },
+        "_MetallicRoughness": {
+            "kind": "Texture2D",
+            "asset": "17801129151415753472"
+        },
+        "_AmbientOcclusionTexture": {
+            "kind": "Texture2D",
+            "asset": "15999489999238696433"
+        },
+        "_EmissionMask": {
+            "kind": "Texture2D",
+            "asset": "2446733649158233510"
+        },
+        "_OpacityTexture": {
+            "kind": "Texture2D",
+            "asset": "0"
+        }
     },
-    "params": {
-        "baseColor": [
-            1.0,
-            1.0,
-            1.0,
-            1.0
-        ],
-        "emissive": [
-            1.0,
-            1.0,
-            1.0
-        ],
-        "metallic": 1.0,
-        "roughness": 1.0,
-        "ambientOcclusion": 1.0,
-        "opacity": 1.0,
-        "normalScale": 1.0,
-        "alphaCutoff": 0.0
-    }
+    "orphans": {}
 }

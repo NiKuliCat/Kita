@@ -2,6 +2,7 @@
 
 #include "PreviewThumbnailCache.h"
 #include "core/Core.h"
+#include "render/VulkanMaterial.h"
 #include "render/pass/RenderDataStruct.h"
 
 namespace Kita {
@@ -13,7 +14,6 @@ namespace Kita {
 	class VulkanGeometry;
 	class VulkanGraphicsPipeline;
 	class VulkanImage;
-	class VulkanMaterial;
 	class VulkanRenderTarget;
 	class VulkanResourceFactory;
 	class VulkanTexture;
@@ -57,6 +57,12 @@ namespace Kita {
 		PreviewTarget& GetOrCreateTarget(uint32_t size);
 		bool EnsureSharedResources();
 		Ref<VulkanMaterial> GetOrCreateCubemapPreviewMaterial(AssetHandle handle, const Ref<VulkanTexture>& texture);
+		const VulkanMaterial::PassRuntime* FindPreviewPass(const VulkanMaterial& material) const;
+		VulkanGraphicsPipeline* GetMaterialPreviewPipeline(
+			PreviewTarget& target,
+			VulkanMaterial& material,
+			const VulkanMaterial::PassRuntime& materialPass,
+			bool useLegacyDefaults);
 		VulkanGraphicsPipeline* GetCubemapPreviewPipeline(PreviewTarget& target, VulkanMaterial& material);
 
 		static ScenePassData BuildPreviewSceneData();

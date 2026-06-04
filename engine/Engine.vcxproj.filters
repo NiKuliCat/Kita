@@ -37,6 +37,9 @@
     <Filter Include="src\render\ibl">
       <UniqueIdentifier>{A2684EB8-8E36-42BE-77CA-B2E463371E23}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\render\material">
+      <UniqueIdentifier>{5A738DA9-C6D4-6AB7-4F42-B169BBA2A176}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\render\mesh">
       <UniqueIdentifier>{78BC1DC2-E447-8B86-ED58-0E7B5963E786}</UniqueIdentifier>
     </Filter>
@@ -48,6 +51,9 @@
     </Filter>
     <Filter Include="src\render\scene">
       <UniqueIdentifier>{598B4006-4584-5F58-6EB6-44DD5A0E3F64}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\render\shaderLab">
+      <UniqueIdentifier>{51022552-3D91-AE1B-E6AF-C216D21DBFC1}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\serialize">
       <UniqueIdentifier>{44B52BFF-B075-A735-79B0-F0B2E52FEC11}</UniqueIdentifier>
@@ -106,6 +112,9 @@
       <Filter>src\asset</Filter>
     </ClInclude>
     <ClInclude Include="src\asset\ShaderCompileCache.h">
+      <Filter>src\asset</Filter>
+    </ClInclude>
+    <ClInclude Include="src\asset\ShaderLabAsset.h">
       <Filter>src\asset</Filter>
     </ClInclude>
     <ClInclude Include="src\component\LightComponent.h">
@@ -213,6 +222,9 @@
     <ClInclude Include="src\render\VulkanRenderTarget.h">
       <Filter>src\render</Filter>
     </ClInclude>
+    <ClInclude Include="src\render\VulkanRenderTargetView.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
     <ClInclude Include="src\render\VulkanRenderer.h">
       <Filter>src\render</Filter>
     </ClInclude>
@@ -243,7 +255,13 @@
     <ClInclude Include="src\render\deferred\DeferredLightingPass.h">
       <Filter>src\render\deferred</Filter>
     </ClInclude>
+    <ClInclude Include="src\render\deferred\DeferredLightingUberShaderBuilder.h">
+      <Filter>src\render\deferred</Filter>
+    </ClInclude>
     <ClInclude Include="src\render\deferred\GBuffer.h">
+      <Filter>src\render\deferred</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\deferred\GBufferRenderTarget.h">
       <Filter>src\render\deferred</Filter>
     </ClInclude>
     <ClInclude Include="src\render\font\FontManager.h">
@@ -264,8 +282,14 @@
     <ClInclude Include="src\render\graph\RenderGraphResource.h">
       <Filter>src\render\graph</Filter>
     </ClInclude>
+    <ClInclude Include="src\render\graph\RenderGraphTransientRenderTarget.h">
+      <Filter>src\render\graph</Filter>
+    </ClInclude>
     <ClInclude Include="src\render\ibl\IBLGenerator.h">
       <Filter>src\render\ibl</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\material\MaterialRuntimeLayout.h">
+      <Filter>src\render\material</Filter>
     </ClInclude>
     <ClInclude Include="src\render\mesh\Mesh.h">
       <Filter>src\render\mesh</Filter>
@@ -308,6 +332,15 @@
     </ClInclude>
     <ClInclude Include="src\render\scene\SceneRenderConfig.h">
       <Filter>src\render\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\shaderLab\ShaderLabCompiler.h">
+      <Filter>src\render\shaderLab</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\shaderLab\ShaderLabParser.h">
+      <Filter>src\render\shaderLab</Filter>
+    </ClInclude>
+    <ClInclude Include="src\render\shaderLab\ShaderLabType.h">
+      <Filter>src\render\shaderLab</Filter>
     </ClInclude>
     <ClInclude Include="src\serialize\JsonUtils.h">
       <Filter>src\serialize</Filter>
@@ -1587,8 +1620,6 @@
     <ClInclude Include="third-party\imguizmo\ImGuizmo.h">
       <Filter>third-party\imguizmo</Filter>
     </ClInclude>
-    <ClInclude Include="src\render\graph\RenderGraphTransientRenderTarget.h" />
-    <ClInclude Include="src\render\deferred\GBufferRenderTarget.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\asset\Asset.cpp">
@@ -1678,6 +1709,9 @@
     <ClCompile Include="src\render\VulkanRenderTarget.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
+    <ClCompile Include="src\render\VulkanRenderTargetView.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
     <ClCompile Include="src\render\VulkanRenderer.cpp">
       <Filter>src\render</Filter>
     </ClCompile>
@@ -1706,6 +1740,9 @@
       <Filter>src\render\deferred</Filter>
     </ClCompile>
     <ClCompile Include="src\render\deferred\DeferredLightingPass.cpp">
+      <Filter>src\render\deferred</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\deferred\DeferredLightingUberShaderBuilder.cpp">
       <Filter>src\render\deferred</Filter>
     </ClCompile>
     <ClCompile Include="src\render\font\FontManager.cpp">
@@ -1755,6 +1792,12 @@
     </ClCompile>
     <ClCompile Include="src\render\scene\PerspectiveCamera.cpp">
       <Filter>src\render\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\shaderLab\ShaderLabCompiler.cpp">
+      <Filter>src\render\shaderLab</Filter>
+    </ClCompile>
+    <ClCompile Include="src\render\shaderLab\ShaderLabParser.cpp">
+      <Filter>src\render\shaderLab</Filter>
     </ClCompile>
     <ClCompile Include="src\serialize\JsonUtils.cpp">
       <Filter>src\serialize</Filter>

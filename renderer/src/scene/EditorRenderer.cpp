@@ -5,12 +5,229 @@
 #include "component/MeshRenderer.h"
 #include "component/Transform.h"
 #include "project/EditorProjectBootstrap.h"
+#include "render/deferred/DeferredLightingUberShaderBuilder.h"
 #include "ui/viewport/EditorPickRegistry.h"
 #include "ui/viewport/EditorViewportSurface.h"
 
 #include <backends/imgui_impl_vulkan.h>
+#include <sstream>
 
 namespace Kita {
+
+	namespace
+	{
+		const ShaderLabCompiledPass* FindShaderLabCompiledPass(
+			const ShaderLabAsset& shaderLabAsset,
+			PassType passType)
+		{
+			for (const ShaderLabCompiledPass& compiledPass : shaderLabAsset.CompiledPasses)
+			{
+				if (compiledPass.Type == passType)
+					return &compiledPass;
+			}
+
+			return nullptr;
+		}
+
+		const char* PassTypeToString(PassType passType)
+		{
+			switch (passType)
+			{
+			case PassType::GBuffer: return "GBuffer";
+			case PassType::DeferredLighting: return "DeferredLighting";
+			case PassType::ShadowCaster: return "ShadowCaster";
+			case PassType::DepthOnly: return "DepthOnly";
+			case PassType::ForwardOpaque: return "ForwardOpaque";
+			case PassType::ForwardTransparent: return "ForwardTransparent";
+			case PassType::PostProcess: return "PostProcess";
+			case PassType::EditorPicking: return "EditorPicking";
+			case PassType::UI: return "UI";
+			default: return "Unknown";
+			}
+		}
+
+		struct PreloadedShaderLabPassResources
+		{
+			VulkanResourceFactory::ShaderBundle ShaderBundle{};
+			ShaderLabRenderStateDesc RenderState{};
+			PassType Type = PassType::Unknown;
+
+			bool IsValid() const
+			{
+				return ShaderBundle.IsValid();
+			}
+		};
+/*
+
+		// 统一加载 editor 预配置的 ShaderLab pass，避免 grid / tonemap / picking 各自重复解析 pass 和 render state。
+*/
+		bool TryLoadPreloadedShaderLabPassResources(
+			const char* preloadName,
+			PassType passType,
+			VulkanResourceFactory& resourceFactory,
+			PreloadedShaderLabPassResources& outResources,
+			std::string& outReason)
+		{
+			auto& assetManager = AssetManager::GetInstance();
+			const AssetHandle shaderLabHandle = EditorProjectBootstrap::GetPreLoadShaderHandle(preloadName);
+			if (!Asset::IsValidHandle(shaderLabHandle))
+			{
+				outReason = "preload shader handle '" + std::string(preloadName) + "' is invalid";
+				return false;
+			}
+
+			const AssetMetadata* metadata = assetManager.GetMetadata(shaderLabHandle);
+			if (!metadata)
+			{
+				outReason = "preload shader '" + std::string(preloadName) + "' metadata is missing";
+				return false;
+			}
+
+			if (metadata->type != AssetType::ShaderLab)
+			{
+				outReason =
+					"preload shader '" + std::string(preloadName) +
+					"' must reference a ShaderLab asset in the unified runtime path";
+				return false;
+			}
+
+			Ref<ShaderLabAsset> shaderLabAsset = assetManager.GetShaderLabAsset(shaderLabHandle);
+			if (!shaderLabAsset)
+			{
+				outReason = "failed to load ShaderLab asset for preload shader '" + std::string(preloadName) + "'";
+				return false;
+			}
+
+			const ShaderLabCompiledPass* compiledPass = FindShaderLabCompiledPass(*shaderLabAsset, passType);
+			if (!compiledPass)
+			{
+				outReason =
+					"ShaderLab asset '" + shaderLabAsset->SourcePath.generic_string() +
+					"' has no pass for type '" + std::string(PassTypeToString(passType)) + "'";
+				return false;
+			}
+
+			VulkanResourceFactory::ShaderBundle shaderBundle =
+				resourceFactory.BuildShaderLabPassBundle(shaderLabHandle, passType);
+			if (!shaderBundle.IsValid())
+			{
+				outReason =
+					"failed to build ShaderLab pass bundle for '" +
+					shaderLabAsset->SourcePath.generic_string() + "'";
+				return false;
+			}
+
+			outResources.ShaderBundle = std::move(shaderBundle);
+			outResources.RenderState = compiledPass->RenderState;
+			outResources.Type = compiledPass->Type;
+			return true;
+		}
+
+		void ApplyShaderLabRenderState(
+			PipelineRequest& request,
+			const ShaderLabRenderStateDesc& renderState)
+		{
+			request.CullMode = renderState.CullMode;
+			request.EnableDepthTest = renderState.DepthTest;
+			request.EnableDepthWrite = renderState.DepthWrite;
+			request.DepthCompareOp = renderState.DepthCompareOp;
+			request.EnableBlending = renderState.Blend;
+		}
+
+		const char* MaterialValueTypeToString(MaterialValueType valueType)
+		{
+			switch (valueType)
+			{
+			case MaterialValueType::Bool: return "Bool";
+			case MaterialValueType::Int: return "Int";
+			case MaterialValueType::Float: return "Float";
+			case MaterialValueType::Float2: return "Float2";
+			case MaterialValueType::Float3: return "Float3";
+			case MaterialValueType::Float4: return "Float4";
+			case MaterialValueType::Color: return "Color";
+			case MaterialValueType::Texture2D: return "Texture2D";
+			case MaterialValueType::TextureCube: return "TextureCube";
+			default: return "Unknown";
+			}
+		}
+
+		const char* CullModeToString(VkCullModeFlags cullMode)
+		{
+			switch (cullMode)
+			{
+			case VK_CULL_MODE_NONE: return "None";
+			case VK_CULL_MODE_FRONT_BIT: return "Front";
+			case VK_CULL_MODE_BACK_BIT: return "Back";
+			case VK_CULL_MODE_FRONT_AND_BACK: return "FrontAndBack";
+			default: return "Unknown";
+			}
+		}
+
+		const char* CompareOpToString(VkCompareOp compareOp)
+		{
+			switch (compareOp)
+			{
+			case VK_COMPARE_OP_NEVER: return "Never";
+			case VK_COMPARE_OP_LESS: return "Less";
+			case VK_COMPARE_OP_EQUAL: return "Equal";
+			case VK_COMPARE_OP_LESS_OR_EQUAL: return "LessEqual";
+			case VK_COMPARE_OP_GREATER: return "Greater";
+			case VK_COMPARE_OP_NOT_EQUAL: return "NotEqual";
+			case VK_COMPARE_OP_GREATER_OR_EQUAL: return "GreaterEqual";
+			case VK_COMPARE_OP_ALWAYS: return "Always";
+			default: return "Unknown";
+			}
+		}
+
+		static std::string FormatFloatList(std::initializer_list<float> values)
+		{
+			std::ostringstream oss;
+			oss << "(";
+			size_t index = 0;
+			for (float value : values)
+			{
+				if (index++ > 0)
+					oss << ", ";
+				oss << value;
+			}
+			oss << ")";
+			return oss.str();
+		}
+
+		static std::string MaterialPropertyValueToString(const MaterialPropertyValue& value)
+		{
+			switch (value.ValueType)
+			{
+			case MaterialValueType::Bool:
+				return std::get<bool>(value.Data) ? "true" : "false";
+			case MaterialValueType::Int:
+				return std::to_string(std::get<int32_t>(value.Data));
+			case MaterialValueType::Float:
+				return std::to_string(std::get<float>(value.Data));
+			case MaterialValueType::Float2:
+			{
+				const glm::vec2 vec = std::get<glm::vec2>(value.Data);
+				return FormatFloatList({ vec.x, vec.y });
+			}
+			case MaterialValueType::Float3:
+			{
+				const glm::vec3 vec = std::get<glm::vec3>(value.Data);
+				return FormatFloatList({ vec.x, vec.y, vec.z });
+			}
+			case MaterialValueType::Float4:
+			case MaterialValueType::Color:
+			{
+				const glm::vec4 vec = std::get<glm::vec4>(value.Data);
+				return FormatFloatList({ vec.x, vec.y, vec.z, vec.w });
+			}
+			case MaterialValueType::Texture2D:
+			case MaterialValueType::TextureCube:
+				return std::to_string(static_cast<uint64_t>(std::get<AssetHandle>(value.Data)));
+			default:
+				return "<unsupported>";
+			}
+		}
+	}
 
 	EditorRenderer::EditorRenderer(
 		VulkanContext& context,
@@ -48,6 +265,10 @@ namespace Kita {
 
 		m_DeferredLightingPass->Init(context, context.GetFramesInFlight());
 
+		m_ForwardOpaquePass = CreateUnique<ForwardOpaquePass>(
+			m_SceneBindings,
+			MakeRenderPassDesc(m_LightingTargetDesc, "ForwardOpaquePass", PassType::ForwardOpaque)
+		);
 
 		m_SkyboxPass = CreateUnique<SkyboxPass>(
 			m_SceneBindings,
@@ -64,6 +285,7 @@ namespace Kita {
 		InitGridResources();
 		InitDeferredLightingResources();
 		InitTonemapResources();
+		InitPickingResources();
 	}
 
 	void EditorRenderer::Init()
@@ -183,7 +405,7 @@ namespace Kita {
 
 		if (m_DeferredLightingPass)
 		{
-			KITA_CORE_ASSERT(gbuffer.ColorAttachments.size() >= 4, "Current DeferredLighting shader requires at least 4 GBuffer color attachments");
+			KITA_CORE_ASSERT(gbuffer.ColorAttachments.size() >= 5, "DeferredLighting Uber shader requires 5 GBuffer color attachments");
 			KITA_CORE_ASSERT(gbuffer.HasDepth(), "Current DeferredLighting shader requires GBuffer depth");
 
 
@@ -192,6 +414,7 @@ namespace Kita {
 				.ReadTexture(gbuffer.ColorAttachments[1])
 				.ReadTexture(gbuffer.ColorAttachments[2])
 				.ReadTexture(gbuffer.ColorAttachments[3])
+				.ReadTexture(gbuffer.ColorAttachments[4])
 				.ReadDepth(gbuffer.DepthAttachment)
 				.WriteColor(lightingColor)
 				.WriteDepth(lightingDepth)
@@ -260,6 +483,29 @@ namespace Kita {
 							lightingRt);
 
 						m_SkyboxPass->Execute(passContext);
+					});
+		}
+
+		if (m_ForwardOpaquePass)
+		{
+			m_RenderGraph->AddPass("ForwardOpaque")
+				.ReadTexture(lightingColor)
+				.ReadDepth(lightingDepth)
+				.WriteColor(lightingColor)
+				.WriteDepth(lightingDepth)
+				.SetExecute([this, lightingColor, lightingDepth](RenderGraphContext& graphContext)
+					{
+						VulkanRenderTargetView lightingRt = graphContext.BuildRenderTargetView(
+							"Lighting.ForwardOpaque",
+							{ lightingColor },
+							&lightingDepth);
+
+						RenderPassContext passContext(
+							graphContext.GetVulkanContext(),
+							graphContext.GetCommandBuffer(),
+							lightingRt);
+
+						m_ForwardOpaquePass->Execute(passContext);
 					});
 		}
 
@@ -368,6 +614,8 @@ namespace Kita {
 		m_DeferredLightingFragmentShader.reset();
 		m_TonemapVertexShader.reset();
 		m_TonemapFragmentShader.reset();
+		m_PickingVertexShader.reset();
+		m_PickingFragmentShader.reset();
 
 		if (m_DeferredLightingPass)
 			m_DeferredLightingPass->Destroy();
@@ -543,25 +791,25 @@ namespace Kita {
 
 	void EditorRenderer::InitGridResources()
 	{
-		if (!m_Context || !m_EditorGridPass)
+		if (!m_Context || !m_EditorGridPass || !m_VulkanResFactory)
 			return;
 
-		const AssetHandle gridShaderHandle = EditorProjectBootstrap::GetPreLoadShaderHandle("grid");
-		if (!Asset::IsValidHandle(gridShaderHandle))
+		PreloadedShaderLabPassResources resources{};
+		std::string failureReason;
+		if (!TryLoadPreloadedShaderLabPassResources(
+			"grid",
+			PassType::PostProcess,
+			*m_VulkanResFactory,
+			resources,
+			failureReason))
 		{
-			KITA_CORE_WARN("EditorRenderer: preload shader handle 'grid' is invalid.");
+			KITA_CORE_WARN("EditorRenderer: {}", failureReason);
 			return;
 		}
 
-		VulkanResourceFactory::ShaderBundle shaderBundle = m_VulkanResFactory->GetOrCreateShaderBundle(gridShaderHandle);
-		if (!shaderBundle.IsValid())
-		{
-			KITA_CORE_WARN("EditorRenderer: failed to create shader bundle for preload shader 'grid'.");
-			return;
-		}
-
-		m_GridVertexShader = shaderBundle.VertexShader;
-		m_GridFragmentShader = shaderBundle.FragmentShader;
+		m_GridVertexShader = resources.ShaderBundle.VertexShader;
+		m_GridFragmentShader = resources.ShaderBundle.FragmentShader;
+		m_GridRenderState = resources.RenderState;
 	}
 
 	void EditorRenderer::InitDeferredLightingResources()
@@ -569,76 +817,586 @@ namespace Kita {
 		if (!m_Context || !m_DeferredLightingPass)
 			return;
 
-		const AssetHandle deferredLightingShaderHandle = EditorProjectBootstrap::GetPreLoadShaderHandle("deferredLighting");
-		if (!Asset::IsValidHandle(deferredLightingShaderHandle))
+		const std::filesystem::path deprecatedDeferredLightingPath =
+			EditorProjectBootstrap::GetPreLoadShaderPath("deferredLighting");
+		if (!deprecatedDeferredLightingPath.empty())
 		{
-			KITA_CORE_WARN("EditorRenderer: preload shader handle 'deferredLighting' is invalid.");
+			KITA_CORE_WARN(
+				"EditorRenderer: config 'asset.shader.deferredLighting' is deprecated and ignored in the Uber deferred lighting path. configured='{}'.",
+				deprecatedDeferredLightingPath.generic_string());
+		}
+
+		DeferredLightingUberShaderBuildResult buildResult =
+			DeferredLightingUberShaderBuilder::BuildForProject(
+				AssetManager::GetInstance(),
+				*m_VulkanResFactory);
+
+		if (!buildResult.Diagnostics.empty())
+		{
+			KITA_CORE_WARN(buildResult.Diagnostics);
+		}
+
+		if (!buildResult.Success || !buildResult.ShaderBundle.IsValid())
+		{
+			KITA_CORE_ERROR("EditorRenderer: failed to build deferred lighting Uber shader.");
 			return;
 		}
 
-		VulkanResourceFactory::ShaderBundle shaderBundle = m_VulkanResFactory->GetOrCreateShaderBundle(deferredLightingShaderHandle);
-		if (!shaderBundle.IsValid())
+		if (!m_LoggedDeferredLightingInit)
 		{
-			KITA_CORE_WARN("EditorRenderer: failed to create shader bundle for preload shader 'deferredLighting'.");
-			return;
+			m_LoggedDeferredLightingInit = true;
+			std::ostringstream diagnostic;
+			diagnostic
+				<< "EditorRenderer deferred lighting diagnostic: source=UberShader"
+				<< ", surfaceShaders=" << buildResult.SurfaceShaderCount
+				<< ", customShadingModels=" << buildResult.CustomShadingModelCount
+				<< ", VS='" << buildResult.ShaderBundle.VertexShader->GetName()
+				<< "', FS='" << buildResult.ShaderBundle.FragmentShader->GetName()
+				<< "', state={Cull=" << CullModeToString(VK_CULL_MODE_NONE)
+				<< ", DepthTest=On"
+				<< ", DepthWrite=On"
+				<< ", DepthOp=" << CompareOpToString(VK_COMPARE_OP_ALWAYS)
+				<< ", Blend=Off}";
+			KITA_CORE_WARN(diagnostic.str());
 		}
 
-		m_DeferredLightingVertexShader = shaderBundle.VertexShader;
-		m_DeferredLightingFragmentShader = shaderBundle.FragmentShader;
+		m_DeferredLightingVertexShader = buildResult.ShaderBundle.VertexShader;
+		m_DeferredLightingFragmentShader = buildResult.ShaderBundle.FragmentShader;
 	}
 
 	void EditorRenderer::InitTonemapResources()
 	{
-		if (!m_Context || !m_TonemapPass)
+		if (!m_Context || !m_TonemapPass || !m_VulkanResFactory)
 			return;
 
-		const AssetHandle tonemapShaderHandle = EditorProjectBootstrap::GetPreLoadShaderHandle("tonemap");
-		if (!Asset::IsValidHandle(tonemapShaderHandle))
+		PreloadedShaderLabPassResources resources{};
+		std::string failureReason;
+		if (!TryLoadPreloadedShaderLabPassResources(
+			"tonemap",
+			PassType::PostProcess,
+			*m_VulkanResFactory,
+			resources,
+			failureReason))
 		{
-			KITA_CORE_WARN("EditorRenderer: preload shader handle 'tonemap' is invalid.");
+			KITA_CORE_WARN("EditorRenderer: {}", failureReason);
 			return;
 		}
 
-		VulkanResourceFactory::ShaderBundle shaderBundle = m_VulkanResFactory->GetOrCreateShaderBundle(tonemapShaderHandle);
-		if (!shaderBundle.IsValid())
-		{
-			KITA_CORE_WARN("EditorRenderer: failed to create shader bundle for preload shader 'tonemap'.");
-			return;
-		}
-
-		m_TonemapVertexShader = shaderBundle.VertexShader;
-		m_TonemapFragmentShader = shaderBundle.FragmentShader;
+		m_TonemapVertexShader = resources.ShaderBundle.VertexShader;
+		m_TonemapFragmentShader = resources.ShaderBundle.FragmentShader;
+		m_TonemapRenderState = resources.RenderState;
 	}
 
-VulkanGraphicsPipeline* EditorRenderer::GetPipeline(const RenderGraphTransientRenderTargetDesc& targetDesc, Ref<VulkanGeometry>& geometry, Ref<VulkanMaterial>& material)
+	void EditorRenderer::InitPickingResources()
 	{
-		PipelineRequest request{};
-		request.Pass = PassType::GBuffer;
-		request.Geometry = geometry.get();
-		request.VertexShader = material->GetVertexShader().get();
-		request.FragmentShader = material->GetFragmentShader().get();
+		if (!m_Context || !m_ViewportPickingPass || !m_VulkanResFactory)
+			return;
 
-		request.ColorFormats.clear();
+		PreloadedShaderLabPassResources resources{};
+		std::string failureReason;
+		if (!TryLoadPreloadedShaderLabPassResources(
+			"picking",
+			PassType::EditorPicking,
+			*m_VulkanResFactory,
+			resources,
+			failureReason))
+		{
+			KITA_CORE_WARN("EditorRenderer: {}", failureReason);
+			return;
+		}
+
+		m_PickingVertexShader = resources.ShaderBundle.VertexShader;
+		m_PickingFragmentShader = resources.ShaderBundle.FragmentShader;
+		m_PickingRenderState = resources.RenderState;
+	}
+
+	const VulkanMaterial::PassRuntime* EditorRenderer::FindMaterialPassForScene(
+		const VulkanMaterial& material,
+		PassType passType) const
+	{
+		const bool useRuntimePasses =
+			material.GetRuntimeLayout() != nullptr &&
+			!material.GetPasses().empty();
+		if (!useRuntimePasses)
+		{
+			return passType == PassType::GBuffer
+				? material.FindPass(PassType::GBuffer)
+				: nullptr;
+		}
+
+		if (const VulkanMaterial::PassRuntime* exactPass = material.FindPass(passType))
+		{
+			if (exactPass->Type == passType)
+				return exactPass;
+		}
+
+		if (passType == PassType::ShadowCaster)
+		{
+			if (const VulkanMaterial::PassRuntime* depthOnlyPass = material.FindPass(PassType::DepthOnly))
+			{
+				if (depthOnlyPass->Type == PassType::DepthOnly)
+					return depthOnlyPass;
+			}
+		}
+
+		if (passType == PassType::DepthOnly)
+		{
+			if (const VulkanMaterial::PassRuntime* shadowPass = material.FindPass(PassType::ShadowCaster))
+			{
+				if (shadowPass->Type == PassType::ShadowCaster)
+					return shadowPass;
+			}
+		}
+
+		return nullptr;
+	}
+
+	void EditorRenderer::LogMaterialDiagnosticOnce(
+		AssetHandle materialHandle,
+		const std::string& objectName,
+		PassType passType,
+		const std::string& reason,
+		const VulkanMaterial* runtimeMaterial) const
+	{
+		std::ostringstream keyStream;
+		keyStream
+			<< static_cast<uint64_t>(materialHandle)
+			<< "|" << PassTypeToString(passType)
+			<< "|" << reason;
+		const std::string key = keyStream.str();
+		if (!m_LoggedMaterialDiagnosticKeys.insert(key).second)
+		{
+			return;
+		}
+
+		std::ostringstream message;
+		message
+			<< "EditorRenderer material diagnostic: object='"
+			<< objectName
+			<< "', material="
+			<< BuildMaterialDiagnosticLabel(materialHandle)
+			<< ", pass="
+			<< PassTypeToString(passType)
+			<< ", reason="
+			<< reason;
+
+		const std::string shaderLabDiagnostic = BuildShaderLabPropertyDiagnostic(materialHandle, runtimeMaterial);
+		if (!shaderLabDiagnostic.empty())
+		{
+			message << ", " << shaderLabDiagnostic;
+		}
+
+		if (runtimeMaterial)
+		{
+			message << ", runtimePasses=" << BuildRuntimePassDiagnostic(*runtimeMaterial);
+			const std::string textureDiagnostic = BuildResolvedTextureDiagnostic(materialHandle, *runtimeMaterial);
+			if (!textureDiagnostic.empty())
+			{
+				message << ", " << textureDiagnostic;
+			}
+		}
+
+		KITA_CORE_WARN(message.str());
+	}
+
+	void EditorRenderer::LogMaterialQueueSuccessOnce(
+		AssetHandle materialHandle,
+		const std::string& objectName,
+		PassType passType,
+		const VulkanGraphicsPipeline& pipeline,
+		const VulkanMaterial* runtimeMaterial) const
+	{
+		const std::string reason = std::string("queued successfully with pipeline '") + pipeline.GetName() + "'";
+		LogMaterialDiagnosticOnce(materialHandle, objectName, passType, reason, runtimeMaterial);
+	}
+
+	std::string EditorRenderer::BuildMaterialDiagnosticLabel(AssetHandle materialHandle) const
+	{
+		std::ostringstream oss;
+		oss << "handle=" << static_cast<uint64_t>(materialHandle);
+
+		if (const AssetMetadata* metadata = AssetManager::GetInstance().GetMetadata(materialHandle))
+		{
+			oss << " path='" << metadata->relativePath.generic_string() << "'";
+		}
+
+		return oss.str();
+	}
+
+	std::string EditorRenderer::BuildShaderLabPropertyDiagnostic(
+		AssetHandle materialHandle,
+		const VulkanMaterial* runtimeMaterial) const
+	{
+		Ref<MaterialAsset> materialAsset = AssetManager::GetInstance().GetMaterialAsset(materialHandle);
+		if (!materialAsset || !Asset::IsValidHandle(materialAsset->ShaderLabHandle))
+		{
+			return {};
+		}
+
+		Ref<ShaderLabAsset> shaderLabAsset = AssetManager::GetInstance().GetShaderLabAsset(materialAsset->ShaderLabHandle);
+		if (!shaderLabAsset || !shaderLabAsset->Desc)
+		{
+			return "shaderLabAsset=unavailable";
+		}
+
+		std::vector<std::string> missingProperties;
+		std::vector<std::string> typeMismatches;
+		for (const MaterialPropertyDesc& property : shaderLabAsset->Desc->Properties)
+		{
+			auto valueIt = materialAsset->PropertyBlock.Values.find(property.Name);
+			if (valueIt == materialAsset->PropertyBlock.Values.end())
+			{
+				missingProperties.push_back(property.Name);
+				continue;
+			}
+
+			if (valueIt->second.ValueType != property.ValueType)
+			{
+				std::ostringstream mismatch;
+				mismatch
+					<< property.Name
+					<< "(expected=" << MaterialValueTypeToString(property.ValueType)
+					<< ", actual=" << MaterialValueTypeToString(valueIt->second.ValueType)
+					<< ")";
+				typeMismatches.push_back(mismatch.str());
+			}
+		}
+
+		std::ostringstream oss;
+		oss << "shaderLab=" << BuildMaterialDiagnosticLabel(materialAsset->ShaderLabHandle);
+		if (missingProperties.empty() && typeMismatches.empty())
+		{
+			oss << " properties=ok";
+		}
+		else
+		{
+			if (!missingProperties.empty())
+			{
+				oss << " missing=[";
+				for (size_t i = 0; i < missingProperties.size(); ++i)
+				{
+					if (i > 0)
+						oss << ", ";
+					oss << missingProperties[i];
+				}
+				oss << "]";
+			}
+
+			if (!typeMismatches.empty())
+			{
+				oss << " typeMismatch=[";
+				for (size_t i = 0; i < typeMismatches.size(); ++i)
+				{
+					if (i > 0)
+						oss << ", ";
+					oss << typeMismatches[i];
+				}
+				oss << "]";
+			}
+		}
+
+		// 一次性把运行时 UBO 成员 offset 和最终会落进去的值打印出来，方便核对 ShaderLab packing。
+		if (shaderLabAsset->RuntimeLayout)
+		{
+			oss << " uboLayout=[";
+			for (size_t i = 0; i < shaderLabAsset->RuntimeLayout->UniformMembers.size(); ++i)
+			{
+				const MaterialUniformMember& member = shaderLabAsset->RuntimeLayout->UniformMembers[i];
+				if (i > 0)
+					oss << ", ";
+				oss << member.Name << "@" << member.Offset << "/" << member.Size;
+			}
+			oss << "]";
+
+			oss << " uboValues=[";
+			for (size_t i = 0; i < shaderLabAsset->RuntimeLayout->UniformMembers.size(); ++i)
+			{
+				const MaterialUniformMember& member = shaderLabAsset->RuntimeLayout->UniformMembers[i];
+				if (i > 0)
+					oss << ", ";
+
+				const MaterialPropertyDesc* propertyDesc = nullptr;
+				for (const MaterialPropertyDesc& property : shaderLabAsset->Desc->Properties)
+				{
+					if (property.Name == member.Name)
+					{
+						propertyDesc = &property;
+						break;
+					}
+				}
+
+				const MaterialPropertyValue* valueToLog = nullptr;
+				auto valueIt = materialAsset->PropertyBlock.Values.find(member.Name);
+				if (valueIt != materialAsset->PropertyBlock.Values.end() && valueIt->second.ValueType == member.ValueType)
+				{
+					valueToLog = &valueIt->second;
+				}
+				else if (propertyDesc && propertyDesc->DefaultValue.ValueType == member.ValueType)
+				{
+					valueToLog = &propertyDesc->DefaultValue;
+				}
+
+				oss << member.Name << "=";
+				if (member.Name == MaterialSystemFieldShadingModelID && runtimeMaterial)
+				{
+					oss << runtimeMaterial->GetLightingRuntime().ShadingModelID;
+				}
+				else if (member.Name == MaterialSystemFieldCustomDataCount && runtimeMaterial)
+				{
+					oss << runtimeMaterial->GetLightingRuntime().CustomDataCount;
+				}
+				else if (valueToLog)
+				{
+					oss << MaterialPropertyValueToString(*valueToLog);
+				}
+				else
+				{
+					oss << "<missing>";
+				}
+			}
+			oss << "]";
+		}
+
+		return oss.str();
+	}
+
+	std::string EditorRenderer::BuildResolvedTextureDiagnostic(
+		AssetHandle materialHandle,
+		const VulkanMaterial& material) const
+	{
+		const MaterialRuntimeLayout* runtimeLayout = material.GetRuntimeLayout();
+		if (!runtimeLayout || runtimeLayout->ResourceBindings.empty())
+		{
+			return {};
+		}
+
+		Ref<MaterialAsset> materialAsset = AssetManager::GetInstance().GetMaterialAsset(materialHandle);
+		if (!materialAsset)
+		{
+			return {};
+		}
+
+		Ref<ShaderLabAsset> shaderLabAsset = AssetManager::GetInstance().GetShaderLabAsset(materialAsset->ShaderLabHandle);
+		if (!shaderLabAsset || !shaderLabAsset->Desc)
+		{
+			return {};
+		}
+
+		std::ostringstream oss;
+		oss << "textures=[";
+		for (size_t i = 0; i < runtimeLayout->ResourceBindings.size(); ++i)
+		{
+			const MaterialResourceBinding& binding = runtimeLayout->ResourceBindings[i];
+			if (i > 0)
+				oss << ", ";
+
+			oss << binding.Name << "->";
+
+			const MaterialPropertyDesc* propertyDesc = nullptr;
+			for (const MaterialPropertyDesc& property : shaderLabAsset->Desc->Properties)
+			{
+				if (property.Name == binding.Name)
+				{
+					propertyDesc = &property;
+					break;
+				}
+			}
+
+			const MaterialPropertyValue* propertyValue = nullptr;
+			auto valueIt = materialAsset->PropertyBlock.Values.find(binding.Name);
+			if (valueIt != materialAsset->PropertyBlock.Values.end() &&
+				valueIt->second.ValueType == binding.ValueType)
+			{
+				propertyValue = &valueIt->second;
+			}
+			else if (propertyDesc && propertyDesc->DefaultValue.ValueType == binding.ValueType)
+			{
+				propertyValue = &propertyDesc->DefaultValue;
+			}
+
+			if (propertyValue && std::holds_alternative<AssetHandle>(propertyValue->Data))
+			{
+				const AssetHandle textureHandle = std::get<AssetHandle>(propertyValue->Data);
+				oss << "asset=" << static_cast<uint64_t>(textureHandle);
+				if (const AssetMetadata* metadata = AssetManager::GetInstance().GetMetadata(textureHandle))
+				{
+					oss << " path='" << metadata->relativePath.generic_string() << "'";
+				}
+			}
+			else if (propertyValue && std::holds_alternative<std::string>(propertyValue->Data))
+			{
+				oss << "default='" << std::get<std::string>(propertyValue->Data) << "'";
+			}
+			else
+			{
+				oss << "source=<fallback>";
+			}
+
+			const Ref<VulkanTexture>& resolvedTexture = material.GetResolvedTexture(binding.Name);
+			if (resolvedTexture && resolvedTexture->IsValid())
+			{
+				oss << " runtime='" << resolvedTexture->GetName() << "'";
+			}
+			else
+			{
+				oss << " runtime=<fallback>";
+			}
+		}
+		oss << "]";
+		return oss.str();
+	}
+
+	std::string EditorRenderer::BuildRuntimePassDiagnostic(const VulkanMaterial& material) const
+	{
+		if (material.GetPasses().empty())
+		{
+			return "<none>";
+		}
+
+		std::ostringstream oss;
+		for (size_t i = 0; i < material.GetPasses().size(); ++i)
+		{
+			const VulkanMaterial::PassRuntime& pass = material.GetPasses()[i];
+			if (i > 0)
+			{
+				oss << "; ";
+			}
+
+			oss
+				<< pass.Name
+				<< "(" << PassTypeToString(pass.Type)
+				<< ", VS=" << (pass.VertexShader ? "yes" : "no")
+				<< ", FS=" << (pass.FragmentShader ? "yes" : "no")
+				<< ", Cull=" << CullModeToString(pass.RenderState.CullMode)
+				<< ", DepthTest=" << (pass.RenderState.DepthTest ? "On" : "Off")
+				<< ", DepthWrite=" << (pass.RenderState.DepthWrite ? "On" : "Off")
+				<< ", DepthOp=" << CompareOpToString(pass.RenderState.DepthCompareOp)
+				<< ", Blend=" << (pass.RenderState.Blend ? "On" : "Off")
+				<< ")";
+		}
+
+		return oss.str();
+	}
+
+	bool EditorRenderer::FillMaterialPipelineRequest(
+		PipelineRequest& request,
+		const RenderGraphTransientRenderTargetDesc& targetDesc,
+		const VulkanGeometry& geometry,
+		const VulkanMaterial& material,
+		PassType passType,
+		std::string* failureReason) const
+	{
+		const VulkanMaterial::PassRuntime* materialPass = FindMaterialPassForScene(material, passType);
+		if (!materialPass)
+		{
+			if (failureReason)
+				*failureReason = "material pass not found for scene";
+			return false;
+		}
+
+		if (!materialPass->VertexShader || !materialPass->FragmentShader)
+		{
+			if (failureReason)
+			{
+				*failureReason = std::string("material pass is missing shader stage: VS=") +
+					(materialPass->VertexShader ? "yes" : "no") +
+					", FS=" +
+					(materialPass->FragmentShader ? "yes" : "no");
+			}
+			return false;
+		}
+
+		request = {};
+		request.Pass = passType;
+		request.Geometry = &geometry;
+		request.VertexShader = materialPass->VertexShader.get();
+		request.FragmentShader = materialPass->FragmentShader.get();
 		request.ColorFormats.reserve(targetDesc.Colors.size());
 		for (const RenderGraphColorAttachmentDesc& color : targetDesc.Colors)
+		{
 			request.ColorFormats.push_back(color.Format);
+		}
 
 		request.DepthFormat = targetDesc.Depth.Enabled ? targetDesc.Depth.Format : VK_FORMAT_UNDEFINED;
 		request.Samples = targetDesc.Samples;
 		request.DescriptorSetLayouts = {
 			m_SceneBindings.GetDescriptorSet(0).GetLayout(),
-			material->GetDescriptorSet(0).GetLayout()
+			material.GetDescriptorSet(0).GetLayout()
 		};
+
+		const bool useLegacyDefaults = material.GetRuntimeLayout() == nullptr;
+		ApplyMaterialRenderState(request, *materialPass, useLegacyDefaults);
+		return true;
+	}
+
+	void EditorRenderer::ApplyMaterialRenderState(
+		PipelineRequest& request,
+		const VulkanMaterial::PassRuntime& materialPass,
+		bool useLegacyDefaults) const
+	{
 		request.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 		request.PolygonMode = VK_POLYGON_MODE_FILL;
-		request.CullMode = VK_CULL_MODE_NONE;
 		request.FrontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-		request.EnableDepthTest = true;
-		request.EnableDepthWrite = true;
-		request.DepthCompareOp = VK_COMPARE_OP_LESS;
-		request.EnableBlending = false;
 		request.PushConstantStages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 		request.PushConstantSize = ObjectDataSize;
+
+		if (useLegacyDefaults)
+		{
+			request.CullMode = VK_CULL_MODE_NONE;
+			request.EnableDepthTest = true;
+			request.EnableDepthWrite = true;
+			request.DepthCompareOp = VK_COMPARE_OP_LESS;
+			request.EnableBlending = false;
+			return;
+		}
+
+		request.CullMode = materialPass.RenderState.CullMode;
+		request.EnableDepthTest = materialPass.RenderState.DepthTest;
+		request.EnableDepthWrite = materialPass.RenderState.DepthWrite;
+		request.DepthCompareOp = materialPass.RenderState.DepthCompareOp;
+		request.EnableBlending = materialPass.RenderState.Blend;
+	}
+
+	VulkanGraphicsPipeline* EditorRenderer::GetPipeline(
+		const RenderGraphTransientRenderTargetDesc& targetDesc,
+		Ref<VulkanGeometry>& geometry,
+		Ref<VulkanMaterial>& material,
+		PassType passType,
+		std::string* failureReason)
+	{
+		if (!m_PipelineFactory)
+		{
+			if (failureReason)
+				*failureReason = "pipeline factory is null";
+			return nullptr;
+		}
+
+		if (!geometry)
+		{
+			if (failureReason)
+				*failureReason = "geometry is null";
+			return nullptr;
+		}
+
+		if (!material)
+		{
+			if (failureReason)
+				*failureReason = "material runtime is null";
+			return nullptr;
+		}
+
+		if (!material->HasDescriptorSets())
+		{
+			if (failureReason)
+				*failureReason = "material descriptor sets are not initialized";
+			return nullptr;
+		}
+
+		PipelineRequest request{};
+		if (!FillMaterialPipelineRequest(request, targetDesc, *geometry, *material, passType, failureReason))
+		{
+			return nullptr;
+		}
 
 		return m_PipelineFactory->GetOrCreate(request);
 	}
@@ -666,14 +1424,14 @@ VulkanGraphicsPipeline* EditorRenderer::GetDeferredLightingPipeline(const Vulkan
 		};
 		request.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 		request.PolygonMode = VK_POLYGON_MODE_FILL;
-		request.CullMode = VK_CULL_MODE_NONE;
 		request.FrontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+		request.PushConstantStages = 0;
+		request.PushConstantSize = 0;
+		request.CullMode = VK_CULL_MODE_NONE;
 		request.EnableDepthTest = true;
 		request.EnableDepthWrite = true;
 		request.DepthCompareOp = VK_COMPARE_OP_ALWAYS;
 		request.EnableBlending = false;
-		request.PushConstantStages = 0;
-		request.PushConstantSize = 0;
 
 		return m_PipelineFactory->GetOrCreate(request);
 	}
@@ -700,12 +1458,8 @@ VulkanGraphicsPipeline* EditorRenderer::GetGridPipeline(const VulkanRenderTarget
 		};
 		request.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 		request.PolygonMode = VK_POLYGON_MODE_FILL;
-		request.CullMode = VK_CULL_MODE_NONE;
 		request.FrontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-		request.EnableDepthTest = rt.HasDepthAttachment();
-		request.EnableDepthWrite = false;
-		request.DepthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
-		request.EnableBlending = true;
+		ApplyShaderLabRenderState(request, m_GridRenderState);
 		request.PushConstantStages = VK_SHADER_STAGE_FRAGMENT_BIT;
 		request.PushConstantSize = EditorGridPass::PushConstantSize;
 
@@ -735,30 +1489,24 @@ VulkanGraphicsPipeline* EditorRenderer::GetTonemapPipeline(const VulkanRenderTar
 		};
 		request.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 		request.PolygonMode = VK_POLYGON_MODE_FILL;
-		request.CullMode = VK_CULL_MODE_NONE;
 		request.FrontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-		request.EnableDepthTest = false;
-		request.EnableDepthWrite = false;
-		request.DepthCompareOp = VK_COMPARE_OP_ALWAYS;
-		request.EnableBlending = false;
+		ApplyShaderLabRenderState(request, m_TonemapRenderState);
 		request.PushConstantStages = 0;
 		request.PushConstantSize = 0;
 
 		return m_PipelineFactory->GetOrCreate(request);
 	}
 
-VulkanGraphicsPipeline* EditorRenderer::GetPickingPipeline(const VulkanRenderTargetView& rt, Ref<VulkanGeometry>& geometry)
+	VulkanGraphicsPipeline* EditorRenderer::GetPickingPipeline(const VulkanRenderTargetView& rt, Ref<VulkanGeometry>& geometry)
 	{
-		if (!m_ViewportPickingPass)
+		if (!m_ViewportPickingPass || !m_PickingVertexShader || !m_PickingFragmentShader)
 			return nullptr;
-
-		VulkanResourceFactory::ShaderBundle shaderBundle = m_VulkanResFactory->GetOrCreateShaderBundle(EditorProjectBootstrap::GetPreLoadShaderHandle("picking"));
 
 		PipelineRequest request{};
 		request.Pass = PassType::EditorPicking;
 		request.Geometry = geometry.get();
-		request.VertexShader = shaderBundle.VertexShader.get();
-		request.FragmentShader = shaderBundle.FragmentShader.get();
+		request.VertexShader = m_PickingVertexShader.get();
+		request.FragmentShader = m_PickingFragmentShader.get();
 
 		request.ColorFormats.clear();
 		for (uint32_t i = 0; i < rt.GetColorAttachmentCount(); ++i)
@@ -770,12 +1518,8 @@ VulkanGraphicsPipeline* EditorRenderer::GetPickingPipeline(const VulkanRenderTar
 		};
 		request.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 		request.PolygonMode = VK_POLYGON_MODE_FILL;
-		request.CullMode = VK_CULL_MODE_NONE;
 		request.FrontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-		request.EnableDepthTest = true;
-		request.EnableDepthWrite = true;
-		request.DepthCompareOp = VK_COMPARE_OP_LESS;
-		request.EnableBlending = false;
+		ApplyShaderLabRenderState(request, m_PickingRenderState);
 		request.PushConstantStages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 		request.PushConstantSize = ViewportPickingPushConstantSize;
 
@@ -784,14 +1528,18 @@ VulkanGraphicsPipeline* EditorRenderer::GetPickingPipeline(const VulkanRenderTar
 
 VulkanGraphicsPipeline* EditorRenderer::GetSkyboxPipeline(const VulkanRenderTargetView& rt)
 	{
-		if (!m_SkyboxMaterial || !m_SkyboxMaterial->GetVertexShader() || !m_SkyboxMaterial->GetFragmentShader())
+		if (!m_SkyboxMaterial)
+			return nullptr;
+
+		const VulkanMaterial::PassRuntime* skyboxPass = m_SkyboxMaterial->FindPass(PassType::PostProcess);
+		if (!skyboxPass || !skyboxPass->VertexShader || !skyboxPass->FragmentShader)
 			return nullptr;
 
 		PipelineRequest request{};
 		request.Pass = PassType::PostProcess;
 		request.UseVertexInput = false;
-		request.VertexShader = m_SkyboxMaterial->GetVertexShader().get();
-		request.FragmentShader = m_SkyboxMaterial->GetFragmentShader().get();
+		request.VertexShader = skyboxPass->VertexShader.get();
+		request.FragmentShader = skyboxPass->FragmentShader.get();
 
 		request.ColorFormats.clear();
 		for (uint32_t i = 0; i < rt.GetColorAttachmentCount(); ++i)
@@ -804,12 +1552,8 @@ VulkanGraphicsPipeline* EditorRenderer::GetSkyboxPipeline(const VulkanRenderTarg
 		};
 		request.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 		request.PolygonMode = VK_POLYGON_MODE_FILL;
-		request.CullMode = VK_CULL_MODE_NONE;
 		request.FrontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-		request.EnableDepthTest = true;
-		request.EnableDepthWrite = false;
-		request.DepthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
-		request.EnableBlending = false;
+		ApplyShaderLabRenderState(request, skyboxPass->RenderState);
 		request.PushConstantStages = VK_SHADER_STAGE_FRAGMENT_BIT;
 		request.PushConstantSize = SkyboxPushConstantSize;
 
@@ -905,6 +1649,16 @@ VulkanGraphicsPipeline* EditorRenderer::GetSkyboxPipeline(const VulkanRenderTarg
 			m_DeferredLightingPass->SetIBLInput(m_IBL);
 		}
 
+		if (m_ForwardOpaquePass)
+		{
+			ScenePassData forwardSceneData = sceneData;
+			forwardSceneData.BeginInfo.ClearColors = false;
+			forwardSceneData.BeginInfo.ClearDepthAttachment = false;
+			forwardSceneData.BeginInfo.TransitionSampledColors = true;
+			forwardSceneData.BeginInfo.TransitionSampledDepth = false;
+			m_ForwardOpaquePass->SetSceneData(forwardSceneData);
+		}
+
 		if (m_TonemapPass)
 		{
 			ScenePassData tonemapSceneData = sceneData;
@@ -954,8 +1708,17 @@ VulkanGraphicsPipeline* EditorRenderer::GetSkyboxPipeline(const VulkanRenderTarg
 
 
 		m_BasePass->ClearDrawItems();
+		if (m_ForwardOpaquePass)
+			m_ForwardOpaquePass->ClearDrawItems();
 		if (m_ViewportPickingPass)
 			m_ViewportPickingPass->ClearDrawItems();
+
+		uint32_t queuedGBufferCount = 0;
+		uint32_t queuedForwardCount = 0;
+		uint32_t runtimeMaterialCreateFailures = 0;
+		uint32_t runtimeNoShaderCount = 0;
+		uint32_t sceneCompatiblePassMissCount = 0;
+		uint32_t pipelineFailureCount = 0;
 
 		auto mesh = m_SceneContext->GetRegistry().group<Transform, MeshRenderer>();
 
@@ -989,8 +1752,28 @@ VulkanGraphicsPipeline* EditorRenderer::GetSkyboxPipeline(const VulkanRenderTarg
 				}
 
 				Ref<VulkanMaterial> material = m_VulkanResFactory->CreateMaterial(materialHandle);
-				if (!material || !material->GetVertexShader() || !material->GetFragmentShader())
+				if (!material)
+				{
+					++runtimeMaterialCreateFailures;
+					LogMaterialDiagnosticOnce(
+						materialHandle,
+						object.GetName(),
+						PassType::Unknown,
+						"resource factory failed to create runtime material");
 					continue;
+				}
+
+				if (!material->HasAnyShader())
+				{
+					++runtimeNoShaderCount;
+					LogMaterialDiagnosticOnce(
+						materialHandle,
+						object.GetName(),
+						PassType::Unknown,
+						"runtime material has no valid shader stages",
+						material.get());
+					continue;
+				}
 
 				m_VulkanResFactory->RefreshMaterialFrameResources(
 					materialHandle,
@@ -1000,17 +1783,102 @@ VulkanGraphicsPipeline* EditorRenderer::GetSkyboxPipeline(const VulkanRenderTarg
 				gbufferDesc.Width = surface.GetWidth();
 				gbufferDesc.Height = surface.GetHeight();
 
-				VulkanGraphicsPipeline* pipeline = GetPipeline(gbufferDesc, geometry, material);
+				bool queuedScenePass = false;
+				const VulkanMaterial::PassRuntime* gbufferPass = FindMaterialPassForScene(*material, PassType::GBuffer);
+				if (gbufferPass)
+				{
+					std::string gbufferPipelineFailure;
+					if (VulkanGraphicsPipeline* pipeline = GetPipeline(
+						gbufferDesc,
+						geometry,
+						material,
+						PassType::GBuffer,
+						&gbufferPipelineFailure))
+					{
+						BasePassDrawItem item{};
+						item.Pipeline = pipeline;
+						item.Geometry = geometry.get();
+						item.Material = material.get();
+						item.PerObject = objectData;
+						m_BasePass->AddDrawItem(item);
+						++queuedGBufferCount;
+						queuedScenePass = true;
+						LogMaterialQueueSuccessOnce(
+							materialHandle,
+							object.GetName(),
+							PassType::GBuffer,
+							*pipeline,
+							material.get());
+					}
+					else
+					{
+						++pipelineFailureCount;
+						LogMaterialDiagnosticOnce(
+							materialHandle,
+							object.GetName(),
+							PassType::GBuffer,
+							gbufferPipelineFailure.empty() ? "pipeline creation returned null" : gbufferPipelineFailure,
+							material.get());
+					}
+				}
 
-				if (!pipeline)
+				RenderGraphTransientRenderTargetDesc lightingDesc = m_LightingTargetDesc;
+				lightingDesc.Width = surface.GetWidth();
+				lightingDesc.Height = surface.GetHeight();
+				const VulkanMaterial::PassRuntime* forwardOpaquePass =
+					m_ForwardOpaquePass
+					? FindMaterialPassForScene(*material, PassType::ForwardOpaque)
+					: nullptr;
+				if (forwardOpaquePass)
+				{
+					std::string forwardPipelineFailure;
+					if (VulkanGraphicsPipeline* pipeline = GetPipeline(
+						lightingDesc,
+						geometry,
+						material,
+						PassType::ForwardOpaque,
+						&forwardPipelineFailure))
+					{
+						ForwardOpaqueDrawItem item{};
+						item.Pipeline = pipeline;
+						item.Geometry = geometry.get();
+						item.Material = material.get();
+						item.PerObject = objectData;
+						m_ForwardOpaquePass->AddDrawItem(item);
+						++queuedForwardCount;
+						queuedScenePass = true;
+						LogMaterialQueueSuccessOnce(
+							materialHandle,
+							object.GetName(),
+							PassType::ForwardOpaque,
+							*pipeline,
+							material.get());
+					}
+					else
+					{
+						++pipelineFailureCount;
+						LogMaterialDiagnosticOnce(
+							materialHandle,
+							object.GetName(),
+							PassType::ForwardOpaque,
+							forwardPipelineFailure.empty() ? "pipeline creation returned null" : forwardPipelineFailure,
+							material.get());
+					}
+				}
+
+				if (!gbufferPass && !forwardOpaquePass)
+				{
+					++sceneCompatiblePassMissCount;
+					LogMaterialDiagnosticOnce(
+						materialHandle,
+						object.GetName(),
+						PassType::Unknown,
+						"material has no scene-compatible pass (neither GBuffer nor ForwardOpaque)",
+						material.get());
+				}
+
+				if (!queuedScenePass)
 					continue;
-
-				BasePassDrawItem item{};
-				item.Pipeline = pipeline;
-				item.Geometry = geometry.get();
-				item.Material = material.get();
-				item.PerObject = objectData;
-				m_BasePass->AddDrawItem(item);
 
 				if (m_ViewportPickingPass)
 				{
@@ -1026,6 +1894,19 @@ VulkanGraphicsPipeline* EditorRenderer::GetSkyboxPipeline(const VulkanRenderTarg
 					m_ViewportPickingPass->AddDrawItem(pickingItem);
 				}
 			}
+		}
+
+		if (!m_LoggedSceneSubmissionSummary)
+		{
+			m_LoggedSceneSubmissionSummary = true;
+			KITA_CORE_WARN(
+				"EditorRenderer scene submission summary: gbufferQueued={}, forwardQueued={}, materialCreateFailures={}, noShaderMaterials={}, noScenePassMaterials={}, pipelineFailures={}",
+				queuedGBufferCount,
+				queuedForwardCount,
+				runtimeMaterialCreateFailures,
+				runtimeNoShaderCount,
+				sceneCompatiblePassMissCount,
+				pipelineFailureCount);
 		}
 
 

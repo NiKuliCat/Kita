@@ -224,6 +224,7 @@ namespace Kita {
 			BakeSceneIBL();
 		}
 
+		m_AssetEditorManager.OnUpdate();
 		m_Scene->SimulateSceneEditor();
 		RemoveClosedViewportPanels();
 		for (auto& viewport : m_SceneViewportPanels)

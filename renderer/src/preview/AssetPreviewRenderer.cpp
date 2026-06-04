@@ -7,9 +7,9 @@
 #include "file/Project.h"
 #include "render/BufferLayout.h"
 #include "render/VulkanContext.h"
-#include "render/VulkanImage.h"
 #include "render/VulkanGeometry.h"
 #include "render/VulkanGraphicsPipeline.h"
+#include "render/VulkanImage.h"
 #include "render/VulkanMaterial.h"
 #include "render/VulkanRenderTarget.h"
 #include "render/VulkanResourceFactory.h"
@@ -178,10 +178,6 @@ namespace Kita {
 
 	void AssetPreviewRenderer::Invalidate(AssetHandle handle)
 	{
-		if (m_Context)
-		{
-			m_Context->WaitIdle();
-		}
 		m_ThumbnailCache.Invalidate(handle);
 		m_CubemapPreviewMaterials.erase(handle);
 	}
@@ -295,7 +291,51 @@ namespace Kita {
 			return nullptr;
 		}
 
-		// TODO: 与 cubemap 预览共用离屏 target、球体 mesh、相机和灯光，只替换为真实材质绑定。
+		if (!EnsureSharedResources())
+		{
+			return nullptr;
+		}
+
+		Ref<VulkanMaterial> material = m_ResourceFactory->CreateMaterial(handle);
+		if (!material)
+		{
+			return nullptr;
+		}
+
+		m_ResourceFactory->RefreshMaterialFrameResources(handle, m_Context->GetCurrentFrameIndex());
+		if (!material->HasDescriptorSets())
+		{
+			return nullptr;
+		}
+
+		const VulkanMaterial::PassRuntime* materialPass = FindPreviewPass(*material);
+		if (!materialPass)
+		{
+			return nullptr;
+		}
+
+		const bool useLegacyDefaults = material->GetRuntimeLayout() == nullptr;
+		VulkanGraphicsPipeline* pipeline = GetMaterialPreviewPipeline(
+			target,
+			*material,
+			*materialPass,
+			useLegacyDefaults);
+		if (!pipeline || !target.SpherePass)
+		{
+			return nullptr;
+		}
+
+		PreviewSphereDrawItem drawItem{};
+		drawItem.Pipeline = pipeline;
+		drawItem.Geometry = m_SphereGeometry.get();
+		drawItem.Material = material.get();
+		drawItem.PerObject = CreateIdentityObjectData();
+		target.SpherePass->SetDrawItem(drawItem);
+		target.SpherePass->SetSceneData(BuildPreviewSceneData());
+
+		VulkanRenderTargetView targetView = target.RenderTarget->CreateView();
+		RenderPassContext passContext(*m_Context, m_Context->GetCurrentCommandBuffer(), targetView);
+		target.SpherePass->Execute(passContext);
 		return &target.RenderTarget->GetSampledColorAttachment(0);
 	}
 
@@ -427,7 +467,32 @@ namespace Kita {
 		return material;
 	}
 
-	VulkanGraphicsPipeline* AssetPreviewRenderer::GetCubemapPreviewPipeline(PreviewTarget& target, VulkanMaterial& material)
+	const VulkanMaterial::PassRuntime* AssetPreviewRenderer::FindPreviewPass(const VulkanMaterial& material) const
+	{
+		const bool useRuntimePasses =
+			material.GetRuntimeLayout() != nullptr &&
+			!material.GetPasses().empty();
+		if (!useRuntimePasses)
+		{
+			return material.FindPass(PassType::GBuffer);
+		}
+
+		if (const VulkanMaterial::PassRuntime* forwardPass = material.FindPass(PassType::ForwardOpaque))
+		{
+			if (forwardPass->Type == PassType::ForwardOpaque)
+			{
+				return forwardPass;
+			}
+		}
+
+		return nullptr;
+	}
+
+	VulkanGraphicsPipeline* AssetPreviewRenderer::GetMaterialPreviewPipeline(
+		PreviewTarget& target,
+		VulkanMaterial& material,
+		const VulkanMaterial::PassRuntime& materialPass,
+		bool useLegacyDefaults)
 	{
 		if (!m_PipelineFactory || !m_SphereGeometry || !target.RenderTarget)
 		{
@@ -435,11 +500,11 @@ namespace Kita {
 		}
 
 		PipelineRequest request{};
-		request.Pass = PassType::ForwardOpaque;
+		request.Pass = materialPass.Type == PassType::Unknown ? PassType::ForwardOpaque : materialPass.Type;
 		request.Geometry = m_SphereGeometry.get();
 		request.UseVertexInput = true;
-		request.VertexShader = material.GetVertexShader().get();
-		request.FragmentShader = material.GetFragmentShader().get();
+		request.VertexShader = materialPass.VertexShader.get();
+		request.FragmentShader = materialPass.FragmentShader.get();
 		request.ColorFormats.push_back(target.RenderTarget->GetColorFormat(0));
 		request.DepthFormat = target.RenderTarget->HasDepthAttachment() ? target.RenderTarget->GetDepthFormat() : VK_FORMAT_UNDEFINED;
 		request.Samples = target.RenderTarget->CreateView().GetSamples();
@@ -447,16 +512,44 @@ namespace Kita {
 			m_SceneBindings->GetDescriptorSet(m_Context->GetCurrentFrameIndex()).GetLayout(),
 			material.GetDescriptorSet(m_Context->GetCurrentFrameIndex()).GetLayout()
 		};
-		request.CullMode = VK_CULL_MODE_BACK_BIT;
+		request.Topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+		request.PolygonMode = VK_POLYGON_MODE_FILL;
 		request.FrontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-		request.EnableDepthTest = true;
-		request.EnableDepthWrite = true;
-		request.DepthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
-		request.EnableBlending = false;
 		request.PushConstantStages = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
 		request.PushConstantSize = ObjectDataSize;
 
+		if (useLegacyDefaults)
+		{
+			request.CullMode = VK_CULL_MODE_NONE;
+			request.EnableDepthTest = true;
+			request.EnableDepthWrite = true;
+			request.DepthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+			request.EnableBlending = false;
+		}
+		else
+		{
+			request.CullMode = materialPass.RenderState.CullMode;
+			request.EnableDepthTest = materialPass.RenderState.DepthTest;
+			request.EnableDepthWrite = materialPass.RenderState.DepthWrite;
+			request.DepthCompareOp = materialPass.RenderState.DepthCompareOp;
+			request.EnableBlending = materialPass.RenderState.Blend;
+		}
+
 		return m_PipelineFactory->GetOrCreate(request);
+	}
+
+	VulkanGraphicsPipeline* AssetPreviewRenderer::GetCubemapPreviewPipeline(PreviewTarget& target, VulkanMaterial& material)
+	{
+		VulkanMaterial::PassRuntime previewPass{};
+		previewPass.Type = PassType::ForwardOpaque;
+		previewPass.VertexShader = material.GetVertexShader();
+		previewPass.FragmentShader = material.GetFragmentShader();
+		previewPass.RenderState.CullMode = VK_CULL_MODE_BACK_BIT;
+		previewPass.RenderState.DepthTest = true;
+		previewPass.RenderState.DepthWrite = true;
+		previewPass.RenderState.DepthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+		previewPass.RenderState.Blend = false;
+		return GetMaterialPreviewPipeline(target, material, previewPass, false);
 	}
 
 	ScenePassData AssetPreviewRenderer::BuildPreviewSceneData()

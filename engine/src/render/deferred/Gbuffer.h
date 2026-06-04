@@ -21,6 +21,7 @@ namespace Kita {
 		static constexpr uint32_t Normal = 1;
 		static constexpr uint32_t Material = 2;
 		static constexpr uint32_t Emissive = 3;
+		static constexpr uint32_t CustomData = 4;
 	};
 
 	inline constexpr std::string_view GetGBufferMaterialBindingComment()
@@ -36,7 +37,8 @@ namespace Kita {
 		return
 			"GBuffer MRT layout: "
 			"RT0=BaseColor+Opacity, RT1=NormalWS/EncodedNormal, "
-			"RT2=Metallic/Roughness/AO/Flags, RT3=Emissive";
+			"RT2=Metallic/Roughness/AO/ShadingModelID, "
+			"RT3=Emissive+CustomData0, RT4=CustomData1/2/3";
 	}
 
 }

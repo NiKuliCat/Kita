@@ -17,6 +17,7 @@ namespace Kita {
         GBuffer,
         DeferredLighting,
         ShadowCaster,
+        DepthOnly,
         UI
     };
     struct RenderPassDesc

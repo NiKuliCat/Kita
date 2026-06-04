@@ -46,6 +46,7 @@ namespace Kita {
             case PassType::GBuffer:            return "GBuffer";
             case PassType::DeferredLighting:   return "DeferredLighting";
             case PassType::ShadowCaster:       return "ShadowCaster";
+            case PassType::DepthOnly:          return "DepthOnly";
             case PassType::UI:                 return "UI";
             default:                           return "Unknown";
             }

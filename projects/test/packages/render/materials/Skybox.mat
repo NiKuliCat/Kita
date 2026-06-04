@@ -1,11 +1,12 @@
 {
-    "version": 1,
+    "version": 3,
+    "shaderLab": "1769014164229530735",
     "shader": "178923190729111001",
-    "albedoTexture": "6589409252264297846",
-    "baseColor": [
-        1.0,
-        1.0,
-        1.0,
-        1.0
-    ]
+    "properties": {
+        "_Albedo": {
+            "kind": "TextureCube",
+            "asset": "6589409252264297846"
+        }
+    },
+    "orphans": {}
 }

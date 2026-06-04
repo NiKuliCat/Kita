@@ -7,6 +7,7 @@
 namespace Kita {
 
 	class VulkanResourceFactory;
+	struct ShaderLabAssetDesc;
 
 	class MaterialAssetEditor : public IAssetEditor
 	{
@@ -20,6 +21,7 @@ namespace Kita {
 		virtual bool CanSave() const override { return m_SourceAsset != nullptr; }
 		virtual void Save() override;
 		virtual void Revert() override;
+		virtual void OnUpdate() override;
 		virtual void OnImGuiRender() override;
 
 	private:
@@ -31,6 +33,18 @@ namespace Kita {
 		void DrawColorRow(const char* label, const char* colorId, glm::vec4& value, const glm::vec4& resetValue);
 		void DrawColorRow(const char* label, const char* colorId, glm::vec3& value, const glm::vec3& resetValue);
 		void DrawFloatRow(const char* label, const char* valueId, float& value, float resetValue, float speed, float minValue, float maxValue);
+		void DrawShaderLabProperties(const ShaderLabAssetDesc& desc);
+		void DrawLegacyProperties();
+		void DrawMaterialPropertyRow(
+			const std::string& label,
+			const std::string& valueId,
+			MaterialPropertyValue& value,
+			const MaterialPropertyValue* resetValue,
+			const MaterialPropertyUIHint* uiHint,
+			bool orphan);
+		void NormalizeWorkingCopyProperties();
+		void RebuildLegacyPropertyBlock();
+		void ApplyPendingRuntimeChanges();
 		bool IsWorkingCopyDirty() const;
 		void SyncWorkingCopyToAssetData();
 
@@ -44,6 +58,7 @@ namespace Kita {
 		ThumbnailCache* m_ThumbnailCache = nullptr;
 		VulkanResourceFactory* m_ResourceFactory = nullptr;
 		UIAttributeUtil::TableStyle m_TableStyle = UIAttributeUtil::CreateDefaultTableStyle();
+		bool m_RuntimeRefreshPending = false;
 	};
 
 }

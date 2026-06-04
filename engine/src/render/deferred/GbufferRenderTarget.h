@@ -24,7 +24,8 @@ namespace Kita {
 			{"GBuffer0",VK_FORMAT_R8G8B8A8_UNORM},
 			{"GBuffer1",VK_FORMAT_R8G8B8A8_UNORM},
 			{"GBuffer2",VK_FORMAT_R16G16B16A16_SFLOAT },
-			{"GBuffer3",VK_FORMAT_R16G16B16A16_SFLOAT }
+			{"GBuffer3",VK_FORMAT_R16G16B16A16_SFLOAT },
+			{"GBuffer4",VK_FORMAT_R16G16B16A16_SFLOAT }
 		};
 		desc.Depth.Enabled = true;
 		desc.Depth.Name = "Depth";

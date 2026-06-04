@@ -19,6 +19,7 @@ namespace Kita {
 			}
 
 			return extension == ".mat"
+				|| extension == ".shader"
 				|| extension == ".glsl"
 				|| extension == ".slang"
 				|| extension == ".vert"
@@ -430,6 +431,11 @@ namespace Kita {
 		return GetAsset<ShaderAsset>(handle);
 	}
 
+	Ref<ShaderLabAsset> AssetManager::GetShaderLabAsset(AssetHandle handle)
+	{
+		return GetAsset<ShaderLabAsset>(handle);
+	}
+
 	Ref<TextureAsset> AssetManager::GetTextureAsset(AssetHandle handle)
 	{
 		return GetAsset<TextureAsset>(handle);
@@ -593,6 +599,11 @@ namespace Kita {
 		if (ext == ".mat")
 		{
 			return AssetType::Material;
+		}
+
+		if (ext == ".shader")
+		{
+			return AssetType::ShaderLab;
 		}
 
 		if (ext == ".glsl" || ext == ".slang" || ext == ".vert" || ext == ".frag")

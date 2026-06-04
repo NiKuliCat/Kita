@@ -2,11 +2,9 @@
     "asset": {
         "shader": {
             "default": "packages/render/shaders/BaseGBuffer.slang",
-            "picking": "packages/render/shaders/EditorPicking.slang",
-            "deferredLighting": "packages/render/shaders/DeferredLighting.slang",
-            "grid": "packages/render/shaders/EditorGrid.slang",
-            "skybox": "packages/render/shaders/Skybox.slang",
-            "tonemap": "packages/render/shaders/ToneMapping.slang"
+            "picking": "packages/render/shaders/EditorPicking.shader",
+            "grid": "packages/render/shaders/EditorGrid.shader",
+            "tonemap": "packages/render/shaders/ToneMapping.shader"
         },
         "texture": {
             "test": "packages/render/textures/test.jpg",

@@ -52,6 +52,7 @@ namespace Kita {
 	private:
 		ThumbnailHandle GetOrCreateTextureThumbnail(AssetHandle handle, uint32_t preferredSize);
 		ThumbnailHandle GetOrCreateCubemapThumbnail(AssetHandle handle, uint32_t size);
+		ThumbnailHandle GetOrCreateMaterialThumbnail(AssetHandle handle, uint32_t size);
 		void ReleaseThumbnail(CachedThumbnail& thumbnail);
 		void RetireThumbnail(CachedThumbnail& thumbnail);
 		void ProcessPendingReleases();

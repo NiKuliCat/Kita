@@ -162,6 +162,7 @@
     <ClInclude Include="src\asset\AssetFactory.h" />
     <ClInclude Include="src\asset\AssetManager.h" />
     <ClInclude Include="src\asset\ShaderCompileCache.h" />
+    <ClInclude Include="src\asset\ShaderLabAsset.h" />
     <ClInclude Include="src\component\LightComponent.h" />
     <ClInclude Include="src\component\MeshRenderer.h" />
     <ClInclude Include="src\component\Object.h" />
@@ -185,8 +186,6 @@
     <ClInclude Include="src\kita_pch.h" />
     <ClInclude Include="src\platform\windows\WindowsWindow.h" />
     <ClInclude Include="src\render\BufferLayout.h" />
-    <ClInclude Include="src\render\deferred\GBufferRenderTarget.h" />
-    <ClInclude Include="src\render\graph\RenderGraphTransientRenderTarget.h" />
     <ClInclude Include="src\render\Light.h" />
     <ClInclude Include="src\render\ShaderCompiler.h" />
     <ClInclude Include="src\render\VulkanBuffer.h" />
@@ -199,6 +198,7 @@
     <ClInclude Include="src\render\VulkanMaterial.h" />
     <ClInclude Include="src\render\VulkanRenderCommand.h" />
     <ClInclude Include="src\render\VulkanRenderTarget.h" />
+    <ClInclude Include="src\render\VulkanRenderTargetView.h" />
     <ClInclude Include="src\render\VulkanRenderer.h" />
     <ClInclude Include="src\render\VulkanResourceFactory.h" />
     <ClInclude Include="src\render\VulkanShader.h" />
@@ -209,14 +209,18 @@
     <ClInclude Include="src\render\VulkanVertexBuffer.h" />
     <ClInclude Include="src\render\deferred\BasePass.h" />
     <ClInclude Include="src\render\deferred\DeferredLightingPass.h" />
+    <ClInclude Include="src\render\deferred\DeferredLightingUberShaderBuilder.h" />
     <ClInclude Include="src\render\deferred\GBuffer.h" />
+    <ClInclude Include="src\render\deferred\GBufferRenderTarget.h" />
     <ClInclude Include="src\render\font\FontManager.h" />
     <ClInclude Include="src\render\graph\RenderGraph.h" />
     <ClInclude Include="src\render\graph\RenderGraphAllocator.h" />
     <ClInclude Include="src\render\graph\RenderGraphCompiled.h" />
     <ClInclude Include="src\render\graph\RenderGraphContext.h" />
     <ClInclude Include="src\render\graph\RenderGraphResource.h" />
+    <ClInclude Include="src\render\graph\RenderGraphTransientRenderTarget.h" />
     <ClInclude Include="src\render\ibl\IBLGenerator.h" />
+    <ClInclude Include="src\render\material\MaterialRuntimeLayout.h" />
     <ClInclude Include="src\render\mesh\Mesh.h" />
     <ClInclude Include="src\render\pass\ForwardOpaquePass.h" />
     <ClInclude Include="src\render\pass\FullscreenPassBase.h" />
@@ -231,6 +235,9 @@
     <ClInclude Include="src\render\scene\OrthographicCamera.h" />
     <ClInclude Include="src\render\scene\PerspectiveCamera.h" />
     <ClInclude Include="src\render\scene\SceneRenderConfig.h" />
+    <ClInclude Include="src\render\shaderLab\ShaderLabCompiler.h" />
+    <ClInclude Include="src\render\shaderLab\ShaderLabParser.h" />
+    <ClInclude Include="src\render\shaderLab\ShaderLabType.h" />
     <ClInclude Include="src\serialize\JsonUtils.h" />
     <ClInclude Include="src\serialize\MaterialSerializer.h" />
     <ClInclude Include="src\serialize\SceneSerializer.h" />
@@ -690,6 +697,7 @@
     <ClCompile Include="src\render\VulkanMaterial.cpp" />
     <ClCompile Include="src\render\VulkanRenderCommand.cpp" />
     <ClCompile Include="src\render\VulkanRenderTarget.cpp" />
+    <ClCompile Include="src\render\VulkanRenderTargetView.cpp" />
     <ClCompile Include="src\render\VulkanRenderer.cpp" />
     <ClCompile Include="src\render\VulkanResourceFactory.cpp" />
     <ClCompile Include="src\render\VulkanShader.cpp" />
@@ -700,6 +708,7 @@
     <ClCompile Include="src\render\VulkanVertexBuffer.cpp" />
     <ClCompile Include="src\render\deferred\BasePass.cpp" />
     <ClCompile Include="src\render\deferred\DeferredLightingPass.cpp" />
+    <ClCompile Include="src\render\deferred\DeferredLightingUberShaderBuilder.cpp" />
     <ClCompile Include="src\render\font\FontManager.cpp" />
     <ClCompile Include="src\render\graph\RenderGraph.cpp" />
     <ClCompile Include="src\render\graph\RenderGraphAllocator.cpp" />
@@ -716,6 +725,8 @@
     <ClCompile Include="src\render\pipeline\PipelineFactory.cpp" />
     <ClCompile Include="src\render\scene\OrthographicCamera.cpp" />
     <ClCompile Include="src\render\scene\PerspectiveCamera.cpp" />
+    <ClCompile Include="src\render\shaderLab\ShaderLabCompiler.cpp" />
+    <ClCompile Include="src\render\shaderLab\ShaderLabParser.cpp" />
     <ClCompile Include="src\serialize\JsonUtils.cpp" />
     <ClCompile Include="src\serialize\SceneSerializer.cpp" />
     <ClCompile Include="src\system\TimeSystem.cpp" />

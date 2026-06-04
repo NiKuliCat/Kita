@@ -1,5 +1,6 @@
 #pragma once
 #include "asset/Asset.h"
+#include "asset/ShaderLabAsset.h"
 #include "core/Core.h"
 
 namespace Kita {
@@ -33,6 +34,7 @@ namespace Kita {
 		}
 
 		Ref<ShaderAsset> GetShaderAsset(AssetHandle handle);
+		Ref<ShaderLabAsset> GetShaderLabAsset(AssetHandle handle);
 		Ref<TextureAsset> GetTextureAsset(AssetHandle handle);
 		Ref<MaterialAsset> GetMaterialAsset(AssetHandle handle);
 		Ref<MeshAsset> GetMeshAsset(AssetHandle handle);
