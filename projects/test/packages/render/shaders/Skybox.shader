@@ -1,5 +1,7 @@
-Shader "Kita/Environment/Skybox"
+Material "Kita/Environment/Skybox"
 {
+    Domain = PostProcess
+
     Properties
     {
         _Albedo("Skybox", TextureCube) = "black"

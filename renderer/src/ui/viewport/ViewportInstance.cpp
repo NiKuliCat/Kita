@@ -92,8 +92,6 @@ namespace Kita {
 		if (!m_Panel || !m_Surface || !m_Renderer || !m_ViewportCamera)
 			return;
 
-		ProcessPendingPickRequest();
-
 		const glm::vec2& desiredSize = m_Panel->GetFrameState().ViewportSize;
 		m_ViewportCamera->SetViewport(desiredSize.x, desiredSize.y);
 		m_Surface->EnsureSize(
@@ -104,6 +102,7 @@ namespace Kita {
 			m_PickRegistry->Clear();
 		m_Renderer->Render(*m_Surface);
 		m_Panel->SetDisplayTexture(m_Surface->GetTextureID());
+		ProcessPendingPickRequest();
 	}
 
 	void ViewportInstance::OnImGuiRender()
@@ -256,10 +255,13 @@ namespace Kita {
 		const ViewportPickRequest request = m_Panel->ConsumePickRequest();
 		const uint32_t pickId = m_Surface->ReadPickingPixel(request.PixelX, request.PixelY);
 		KITA_CORE_INFO(
-			"Viewport pick readback: pixel=({}, {}), pickId={}",
+			"Viewport pick readback: pixel=({}, {}), pickId={}, registryEntries={}, surface={}x{}",
 			request.PixelX,
 			request.PixelY,
-			pickId);
+			pickId,
+			m_PickRegistry ? m_PickRegistry->GetEntryCount() : 0u,
+			m_Surface->GetWidth(),
+			m_Surface->GetHeight());
 		ApplyPickResult(pickId);
 	}
 

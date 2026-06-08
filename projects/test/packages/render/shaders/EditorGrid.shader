@@ -1,5 +1,7 @@
-Shader "Kita/Editor/Grid"
+Material "Kita/Editor/Grid"
 {
+    Domain = PostProcess
+
     Pass "Grid"
     {
         LightMode = PostProcess

@@ -1,27 +1,33 @@
 #pragma once
 
 #include "IAssetEditor.h"
+#include "preview/LookDevPreviewViewport.h"
 #include "ui/ThumbnailCache.h"
 #include "ui/UIAttributeUtil.h"
 
 namespace Kita {
 
 	class VulkanResourceFactory;
-	struct ShaderLabAssetDesc;
+	struct MaterialDefinitionDesc;
 
 	class MaterialAssetEditor : public IAssetEditor
 	{
 	public:
-		MaterialAssetEditor(AssetHandle handle, ThumbnailCache* thumbnailCache, VulkanResourceFactory* resourceFactory);
+		MaterialAssetEditor(
+			AssetHandle handle,
+			ThumbnailCache* thumbnailCache,
+			VulkanResourceFactory* resourceFactory,
+			PreviewSceneRenderer* previewSceneRenderer);
 
 		virtual AssetHandle GetAssetHandle() const override { return m_AssetHandle; }
-		virtual AssetType GetAssetType() const override { return AssetType::Material; }
+		virtual AssetType GetAssetType() const override { return AssetType::MaterialInstance; }
 		virtual const std::string& GetDisplayName() const override { return m_DisplayName; }
 		virtual bool IsDirty() const override;
 		virtual bool CanSave() const override { return m_SourceAsset != nullptr; }
 		virtual void Save() override;
 		virtual void Revert() override;
 		virtual void OnUpdate() override;
+		virtual void OnRender() override;
 		virtual void OnImGuiRender() override;
 
 	private:
@@ -33,7 +39,7 @@ namespace Kita {
 		void DrawColorRow(const char* label, const char* colorId, glm::vec4& value, const glm::vec4& resetValue);
 		void DrawColorRow(const char* label, const char* colorId, glm::vec3& value, const glm::vec3& resetValue);
 		void DrawFloatRow(const char* label, const char* valueId, float& value, float resetValue, float speed, float minValue, float maxValue);
-		void DrawShaderLabProperties(const ShaderLabAssetDesc& desc);
+		void DrawMaterialDefinitionProperties(const MaterialDefinitionDesc& desc);
 		void DrawLegacyProperties();
 		void DrawMaterialPropertyRow(
 			const std::string& label,
@@ -57,6 +63,8 @@ namespace Kita {
 		MaterialAsset m_SavedCopy{};
 		ThumbnailCache* m_ThumbnailCache = nullptr;
 		VulkanResourceFactory* m_ResourceFactory = nullptr;
+		PreviewSceneRenderer* m_PreviewSceneRenderer = nullptr;
+		LookDevPreviewViewport m_LookDevPreview;
 		UIAttributeUtil::TableStyle m_TableStyle = UIAttributeUtil::CreateDefaultTableStyle();
 		bool m_RuntimeRefreshPending = false;
 	};

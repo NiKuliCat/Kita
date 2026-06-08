@@ -373,6 +373,29 @@ namespace Kita {
 			return false;
 		}
 
+		static bool TryParseMaterialDomain(const std::string& text, MaterialDomain& outDomain)
+		{
+			if (text == "Surface")
+			{
+				outDomain = MaterialDomain::Surface;
+				return true;
+			}
+
+			if (text == "PostProcess")
+			{
+				outDomain = MaterialDomain::PostProcess;
+				return true;
+			}
+
+			if (text == "Utility")
+			{
+				outDomain = MaterialDomain::Utility;
+				return true;
+			}
+
+			return false;
+		}
+
 		static PassType ParsePassType(const std::string& lightMode)
 		{
 			if (lightMode == "GBuffer") return PassType::GBuffer;
@@ -382,6 +405,8 @@ namespace Kita {
 			if (lightMode == "ForwardOpaque") return PassType::ForwardOpaque;
 			if (lightMode == "ForwardTransparent") return PassType::ForwardTransparent;
 			if (lightMode == "PostProcess") return PassType::PostProcess;
+			if (lightMode == "EditorPicking" || lightMode == "Picking") return PassType::EditorPicking;
+			if (lightMode == "UI") return PassType::UI;
 			return PassType::Unknown;
 		}
 
@@ -421,13 +446,26 @@ namespace Kita {
 			{
 			}
 
-			ShaderLabAssetDesc Parse()
+			MaterialDefinitionDesc Parse()
 			{
-				ShaderLabAssetDesc desc{};
+				MaterialDefinitionDesc desc{};
 
-				ConsumeIdentifierText("Shader");
-				desc.ShaderName = Consume(TokenType::String, "shader name").Text;
-				Consume(TokenType::LBrace, "'{' after shader name");
+				const Token& rootToken = ConsumeIdentifier("keyword 'Material'");
+				if (rootToken.Text == "Material")
+				{
+					desc.UsesLegacyShaderKeyword = false;
+				}
+				else if (rootToken.Text == "Shader")
+				{
+					desc.UsesLegacyShaderKeyword = true;
+				}
+				else
+				{
+					throw ParseException(rootToken.Line, rootToken.Column, "Expected keyword 'Material'");
+				}
+
+				desc.MaterialName = Consume(TokenType::String, "material name").Text;
+				Consume(TokenType::LBrace, "'{' after material name");
 
 				while (!Check(TokenType::RBrace))
 				{
@@ -442,6 +480,19 @@ namespace Kita {
 					if (MatchIdentifierText("Tags"))
 					{
 						ParseTagsBlock(desc.Tags);
+						continue;
+					}
+
+					if (MatchIdentifierText("Domain"))
+					{
+						Consume(TokenType::Equals, "'=' after Domain");
+						const std::string value = ParseLooseValueText();
+						if (!TryParseMaterialDomain(value, desc.Domain))
+						{
+							const Token& token = Peek();
+							throw ParseException(token.Line, token.Column, "Unsupported Domain '" + value + "'");
+						}
+						SkipOptionalSemicolons();
 						continue;
 					}
 
@@ -461,18 +512,18 @@ namespace Kita {
 					throw ParseException(token.Line, token.Column, "Unexpected top-level token '" + token.Text + "'");
 				}
 
-				Consume(TokenType::RBrace, "'}' at end of shader");
+				Consume(TokenType::RBrace, "'}' at end of material");
 
-				if (desc.ShaderName.empty())
+				if (desc.MaterialName.empty())
 				{
 					const Token& token = Peek();
-					throw ParseException(token.Line, token.Column, "Shader name cannot be empty");
+					throw ParseException(token.Line, token.Column, "Material name cannot be empty");
 				}
 
 				if (desc.Passes.empty())
 				{
 					const Token& token = Peek();
-					throw ParseException(token.Line, token.Column, "ShaderLab asset must contain at least one Pass");
+					throw ParseException(token.Line, token.Column, "Material asset must contain at least one Pass");
 				}
 
 				return desc;
@@ -646,7 +697,7 @@ namespace Kita {
 				throw ParseException(token.Line, token.Column, "Unsupported property default value type");
 			}
 
-			void ParsePropertiesBlock(ShaderLabAssetDesc& outDesc)
+			void ParsePropertiesBlock(MaterialDefinitionDesc& outDesc)
 			{
 				Consume(TokenType::LBrace, "'{' after Properties");
 
@@ -1046,23 +1097,23 @@ namespace Kita {
 
 	}
 
-	ShaderLabParseResult ShaderLabParser::ParseFile(const std::filesystem::path& path)
+	MaterialParseResult MaterialDefinitionParser::ParseFile(const std::filesystem::path& path)
 	{
 		const std::string source = ReadTextFile(path);
 		if (source.empty())
 		{
-			ShaderLabParseResult result{};
+			MaterialParseResult result{};
 			result.Success = false;
-			result.Error.Message = "ShaderLab file is empty or cannot be opened";
+			result.Error.Message = "Material file is empty or cannot be opened";
 			return result;
 		}
 
 		return ParseText(source, path);
 	}
 
-	ShaderLabParseResult ShaderLabParser::ParseText(std::string_view source, const std::filesystem::path& sourcePath)
+	MaterialParseResult MaterialDefinitionParser::ParseText(std::string_view source, const std::filesystem::path& sourcePath)
 	{
-		ShaderLabParseResult result{};
+		MaterialParseResult result{};
 
 		try
 		{

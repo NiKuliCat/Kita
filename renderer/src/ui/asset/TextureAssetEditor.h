@@ -1,6 +1,7 @@
 #pragma once
 
 #include "IAssetEditor.h"
+#include "preview/LookDevPreviewViewport.h"
 #include "ui/ThumbnailCache.h"
 #include "ui/UIAttributeUtil.h"
 
@@ -11,7 +12,11 @@ namespace Kita {
 	class TextureAssetEditor : public IAssetEditor
 	{
 	public:
-		TextureAssetEditor(AssetHandle handle, ThumbnailCache* thumbnailCache, VulkanResourceFactory* resourceFactory);
+		TextureAssetEditor(
+			AssetHandle handle,
+			ThumbnailCache* thumbnailCache,
+			VulkanResourceFactory* resourceFactory,
+			PreviewSceneRenderer* previewSceneRenderer);
 
 		virtual AssetHandle GetAssetHandle() const override { return m_AssetHandle; }
 		virtual AssetType GetAssetType() const override { return AssetType::Texture; }
@@ -20,12 +25,15 @@ namespace Kita {
 		virtual bool CanSave() const override { return m_TextureAsset != nullptr; }
 		virtual void Save() override;
 		virtual void Revert() override;
+		virtual void OnRender() override;
 		virtual void OnImGuiRender() override;
 
 	private:
 		void DrawToolbar();
 		void DrawPreview();
 		void DrawDetails();
+		void SyncPreviewMode();
+		bool UsesLookDevPreview() const;
 		bool IsWorkingCopyDirty() const;
 		void ApplyWorkingCopyToAsset();
 		void RefreshTextureResource();
@@ -38,6 +46,8 @@ namespace Kita {
 		TextureImportSettings m_SavedCopy{};
 		ThumbnailCache* m_ThumbnailCache = nullptr;
 		VulkanResourceFactory* m_ResourceFactory = nullptr;
+		PreviewSceneRenderer* m_PreviewSceneRenderer = nullptr;
+		LookDevPreviewViewport m_LookDevPreview;
 		UIAttributeUtil::TableStyle m_TableStyle = UIAttributeUtil::CreateDefaultTableStyle();
 	};
 

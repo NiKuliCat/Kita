@@ -190,7 +190,7 @@ namespace Kita {
 	{
 		if (UIAttributeUtil::BeginPropertyTable("##InspectorMaterialTable", m_TableStyle))
 		{
-			const auto materialAssets = AssetManager::GetInstance().GetAssetsByType(AssetType::Material);
+			const auto materialAssets = AssetManager::GetInstance().GetAssetsByType(AssetType::MaterialInstance);
 			auto& materialHandles = meshRenderer.MaterialAssetHandles;
 
 			if (materialHandles.empty())

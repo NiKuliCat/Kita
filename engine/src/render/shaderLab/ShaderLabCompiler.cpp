@@ -161,9 +161,9 @@ namespace Kita {
 			}
 		}
 
-		static bool HasPassType(const std::vector<ShaderLabPassDesc>& passes, PassType passType)
+		static bool HasPassType(const std::vector<MaterialPassDesc>& passes, PassType passType)
 		{
-			for (const ShaderLabPassDesc& pass : passes)
+			for (const MaterialPassDesc& pass : passes)
 			{
 				if (pass.Type == passType)
 					return true;
@@ -179,7 +179,7 @@ namespace Kita {
 
 	}
 
-	MaterialRuntimeLayout ShaderLabCompiler::BuildMaterialLayout(
+	MaterialRuntimeLayout MaterialCompiler::BuildMaterialLayout(
 		const std::vector<MaterialPropertyDesc>& properties,
 		bool includeSystemFields)
 	{
@@ -239,15 +239,15 @@ namespace Kita {
 		return layout;
 	}
 
-	ShaderLabLightingRuntimeDesc ShaderLabCompiler::BuildLightingRuntime(
-		const ShaderLabLightingDesc& lightingDesc)
+	MaterialLightingRuntimeDesc MaterialCompiler::BuildLightingRuntime(
+		const MaterialLightingDesc& lightingDesc)
 	{
 		ShaderLabLightingRuntimeDesc runtimeDesc{};
 		runtimeDesc.Enabled = lightingDesc.Enabled;
 		runtimeDesc.ShadingModelName = lightingDesc.ShadingModel.empty()
 			? "DefaultLit"
 			: lightingDesc.ShadingModel;
-		runtimeDesc.CustomDataCount = std::min(lightingDesc.CustomDataCount, ShaderLabMaxCustomDataCount);
+		runtimeDesc.CustomDataCount = std::min(lightingDesc.CustomDataCount, MaterialMaxCustomDataCount);
 		runtimeDesc.LightingHookInclude = lightingDesc.Include;
 		runtimeDesc.LightingHookFunction = lightingDesc.Evaluate;
 
@@ -259,7 +259,7 @@ namespace Kita {
 		return runtimeDesc;
 	}
 
-	std::string ShaderLabCompiler::BuildMaterialPrelude(
+	std::string MaterialCompiler::BuildMaterialPrelude(
 		const std::vector<MaterialPropertyDesc>& properties,
 		const MaterialRuntimeLayout& materialLayout)
 	{
@@ -329,8 +329,8 @@ namespace Kita {
 		return oss.str();
 	}
 
-	std::string ShaderLabCompiler::BuildLightingPrelude(
-		const ShaderLabLightingDesc& lightingDesc)
+	std::string MaterialCompiler::BuildLightingPrelude(
+		const MaterialLightingDesc& lightingDesc)
 	{
 		if (!lightingDesc.Enabled)
 		{
@@ -344,19 +344,19 @@ namespace Kita {
 		return oss.str();
 	}
 
-	std::string ShaderLabCompiler::ReadUserSource(const std::filesystem::path& path)
+	std::string MaterialCompiler::ReadUserSource(const std::filesystem::path& path)
 	{
 		return ShaderCompiler::ReadTextFile(path);
 	}
 
-	std::string ShaderLabCompiler::GenerateWrappedSource(
-		const ShaderLabAssetDesc& assetDesc,
-		const ShaderLabPassDesc& passDesc,
+	std::string MaterialCompiler::GenerateWrappedSource(
+		const MaterialDefinitionDesc& assetDesc,
+		const MaterialPassDesc& passDesc,
 		const MaterialRuntimeLayout& materialLayout,
 		const std::string& userSource)
 	{
 		std::ostringstream oss;
-		oss << "// ShaderLab Asset: " << assetDesc.ShaderName << "\n";
+		oss << "// Material Asset: " << assetDesc.MaterialName << "\n";
 		oss << "// Pass: " << passDesc.Name << "\n";
 		oss << "// Source: " << passDesc.Program.Source.string() << "\n\n";
 		oss << BuildMaterialPrelude(assetDesc.Properties, materialLayout);
@@ -366,16 +366,16 @@ namespace Kita {
 		return oss.str();
 	}
 
-	ShaderCompiler::CompileRequest ShaderLabCompiler::BuildCompileRequest(
-		const ShaderLabAssetDesc& assetDesc,
-		const ShaderLabPassDesc& passDesc,
-		const std::filesystem::path& shaderLabPath,
+	ShaderCompiler::CompileRequest MaterialCompiler::BuildCompileRequest(
+		const MaterialDefinitionDesc& assetDesc,
+		const MaterialPassDesc& passDesc,
+		const std::filesystem::path& materialPath,
 		ShaderCompiler::Stage stage)
 	{
 		ShaderCompiler::CompileRequest request{};
 		request.SourcePath = passDesc.Program.Source;
 		request.ModuleName = ToModuleSafeName(
-			assetDesc.ShaderName.empty() ? "ShaderLab" : assetDesc.ShaderName,
+			assetDesc.MaterialName.empty() ? "Material" : assetDesc.MaterialName,
 			passDesc.Name.empty() ? "Pass" : passDesc.Name,
 			stage == ShaderCompiler::Stage::Vertex ? "vs" : "fs");
 		request.EntryPointName =
@@ -391,36 +391,51 @@ namespace Kita {
 			request.IncludeDirs.push_back(passDesc.Program.Source.parent_path());
 
 		// 同时补上 ShaderLab 文件自身目录，便于以后支持相对共享 include。
-		if (!shaderLabPath.empty())
-			request.IncludeDirs.push_back(shaderLabPath.parent_path());
+		if (!materialPath.empty())
+			request.IncludeDirs.push_back(materialPath.parent_path());
 
 		return request;
 	}
 
-	ShaderLabCompileResult ShaderLabCompiler::CompileAsset(
-		const ShaderLabAssetDesc& assetDesc,
-		const std::filesystem::path& shaderLabPath) const
+	MaterialCompileResult MaterialCompiler::CompileAsset(
+		const MaterialDefinitionDesc& assetDesc,
+		const std::filesystem::path& materialPath) const
 	{
-		ShaderLabCompileResult result{};
-		ShaderLabAssetDesc resolvedAssetDesc = assetDesc;
+		MaterialCompileResult result{};
+		MaterialDefinitionDesc resolvedAssetDesc = assetDesc;
 		std::ostringstream diagnostics;
 
 		const bool hasGBufferPass = HasPassType(resolvedAssetDesc.Passes, PassType::GBuffer);
-		const bool isSurfaceShader = resolvedAssetDesc.Lighting.Enabled || hasGBufferPass;
-		if (isSurfaceShader && !resolvedAssetDesc.Lighting.Enabled)
+		const bool inferredSurfaceMaterial =
+			resolvedAssetDesc.Domain == MaterialDomain::Surface ||
+			resolvedAssetDesc.Lighting.Enabled ||
+			hasGBufferPass;
+		if (resolvedAssetDesc.UsesLegacyShaderKeyword)
+		{
+			diagnostics << "[Material] Legacy root keyword 'Shader' is deprecated. Use 'Material'.\n";
+		}
+
+		if (resolvedAssetDesc.Domain == MaterialDomain::Surface && !resolvedAssetDesc.Lighting.Enabled)
 		{
 			resolvedAssetDesc.Lighting.Enabled = true;
 			resolvedAssetDesc.Lighting.ShadingModel = "DefaultLit";
 			resolvedAssetDesc.Lighting.CustomDataCount = 0;
-			diagnostics << "[ShaderLab] Missing top-level Lighting block, fallback to DefaultLit.\n";
+			diagnostics << "[Material] Surface material missing Lighting block, fallback to DefaultLit.\n";
 		}
 
-		if (resolvedAssetDesc.Lighting.Enabled)
+		if (resolvedAssetDesc.Domain != MaterialDomain::Surface && resolvedAssetDesc.Lighting.Enabled)
+		{
+			result.Success = false;
+			result.Diagnostics = "Only Surface materials can declare a Lighting block.";
+			return result;
+		}
+
+		if (resolvedAssetDesc.Domain == MaterialDomain::Surface || inferredSurfaceMaterial)
 		{
 			if (!hasGBufferPass)
 			{
 				result.Success = false;
-				result.Diagnostics = "ShaderLab surface shader must contain a GBuffer pass.";
+				result.Diagnostics = "Surface material must contain a GBuffer pass.";
 				return result;
 			}
 
@@ -429,10 +444,10 @@ namespace Kita {
 				resolvedAssetDesc.Lighting.ShadingModel = "DefaultLit";
 			}
 
-			if (resolvedAssetDesc.Lighting.CustomDataCount > ShaderLabMaxCustomDataCount)
+			if (resolvedAssetDesc.Lighting.CustomDataCount > MaterialMaxCustomDataCount)
 			{
 				result.Success = false;
-				result.Diagnostics = "ShaderLab Lighting.CustomDataCount exceeds the supported limit of 4.";
+				result.Diagnostics = "Material Lighting.CustomDataCount exceeds the supported limit of 4.";
 				return result;
 			}
 
@@ -440,7 +455,7 @@ namespace Kita {
 				(resolvedAssetDesc.Lighting.Include.empty() || resolvedAssetDesc.Lighting.Evaluate.empty()))
 			{
 				result.Success = false;
-				result.Diagnostics = "Custom ShaderLab shading model requires both Lighting.Include and Lighting.Evaluate.";
+				result.Diagnostics = "Custom shading model requires both Lighting.Include and Lighting.Evaluate.";
 				return result;
 			}
 		}
@@ -454,21 +469,22 @@ namespace Kita {
 		if (resolvedAssetDesc.Passes.empty())
 		{
 			result.Success = false;
-			result.Diagnostics = "ShaderLab asset has no passes.";
+			result.Diagnostics = "Material asset has no passes.";
 			return result;
 		}
 
 		ShaderCompiler compiler;
 
-		for (const ShaderLabPassDesc& passDesc : resolvedAssetDesc.Passes)
+		for (const MaterialPassDesc& passDesc : resolvedAssetDesc.Passes)
 		{
-			if (resolvedAssetDesc.Lighting.Enabled && passDesc.Type == PassType::DeferredLighting)
+			if ((resolvedAssetDesc.Domain == MaterialDomain::Surface || inferredSurfaceMaterial) &&
+				passDesc.Type == PassType::DeferredLighting)
 			{
-				diagnostics << "[Pass " << passDesc.Name << "] DeferredLighting pass is ignored for surface ShaderLab assets.\n";
+				diagnostics << "[Pass " << passDesc.Name << "] DeferredLighting pass is ignored for Surface materials.\n";
 				continue;
 			}
 
-			ShaderLabCompiledPass compiledPass{};
+			MaterialCompiledPass compiledPass{};
 			compiledPass.Name = passDesc.Name;
 			compiledPass.Type = passDesc.Type;
 			compiledPass.RenderState = passDesc.RenderState;
@@ -491,9 +507,9 @@ namespace Kita {
 				userSource);
 
 			const ShaderCompiler::CompileRequest vsRequest =
-				BuildCompileRequest(resolvedAssetDesc, passDesc, shaderLabPath, ShaderCompiler::Stage::Vertex);
+				BuildCompileRequest(resolvedAssetDesc, passDesc, materialPath, ShaderCompiler::Stage::Vertex);
 			const ShaderCompiler::CompileRequest fsRequest =
-				BuildCompileRequest(resolvedAssetDesc, passDesc, shaderLabPath, ShaderCompiler::Stage::Fragment);
+				BuildCompileRequest(resolvedAssetDesc, passDesc, materialPath, ShaderCompiler::Stage::Fragment);
 
 			const ShaderCompiler::CompileResult vsResult =
 				compiler.CompileToSpirvFromSource(vsRequest, compiledPass.WrappedSource);
@@ -541,9 +557,10 @@ namespace Kita {
 		const size_t expectedPassCount = std::count_if(
 			resolvedAssetDesc.Passes.begin(),
 			resolvedAssetDesc.Passes.end(),
-			[&](const ShaderLabPassDesc& pass)
+			[&](const MaterialPassDesc& pass)
 			{
-				return !(resolvedAssetDesc.Lighting.Enabled && pass.Type == PassType::DeferredLighting);
+				return !((resolvedAssetDesc.Domain == MaterialDomain::Surface || inferredSurfaceMaterial) &&
+					pass.Type == PassType::DeferredLighting);
 			});
 		result.Success = !result.Passes.empty() && result.Passes.size() == expectedPassCount;
 		return result;

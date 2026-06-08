@@ -1,5 +1,7 @@
-Shader "Kita/PostProcess/ToneMapping"
+Material "Kita/PostProcess/ToneMapping"
 {
+    Domain = PostProcess
+
     Pass "ToneMapping"
     {
         LightMode = PostProcess

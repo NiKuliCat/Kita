@@ -11,65 +11,61 @@
 
 namespace Kita {
 
-	struct ShaderLabCompiledPass
+	struct MaterialCompiledPass
 	{
 		std::string Name;
 		PassType Type = PassType::Unknown;
 
-		ShaderLabRenderStateDesc RenderState;
-		ShaderLabRenderGraphDesc RenderGraph;
-		ShaderLabProgramDesc Program;
+		MaterialRenderStateDesc RenderState;
+		MaterialRenderGraphDesc RenderGraph;
+		MaterialProgramDesc Program;
 
 		ShaderStageBinary VertexStage;
 		ShaderStageBinary FragmentStage;
 
-		// 方便排查编译问题时落日志或导出到临时文件。
+		// 方便排查编译问题时输出包裹后的最终源码。
 		std::string WrappedSource;
 	};
 
-	struct ShaderLabCompileResult
+	struct MaterialCompileResult
 	{
 		bool Success = false;
 
-		ShaderLabAssetDesc SourceAsset;
+		MaterialDefinitionDesc SourceAsset;
 		MaterialRuntimeLayout MaterialLayout;
-		ShaderLabLightingRuntimeDesc LightingRuntime;
-		std::vector<ShaderLabCompiledPass> Passes;
+		MaterialLightingRuntimeDesc LightingRuntime;
+		std::vector<MaterialCompiledPass> Passes;
 
 		std::string Diagnostics;
 	};
 
-	// ShaderLab 编译器：
-	// 1. 根据 Properties 生成统一的材质 UBO/纹理声明
-	// 2. 将用户 Slang 源码包装成可直接编译的完整源码
-	// 3. 为每个 Pass 编译 VS/FS
-	class ShaderLabCompiler
+	class MaterialCompiler
 	{
 	public:
-		ShaderLabCompiler() = default;
+		MaterialCompiler() = default;
 
-		ShaderLabCompileResult CompileAsset(
-			const ShaderLabAssetDesc& assetDesc,
-			const std::filesystem::path& shaderLabPath) const;
+		MaterialCompileResult CompileAsset(
+			const MaterialDefinitionDesc& assetDesc,
+			const std::filesystem::path& materialPath) const;
 
 		static MaterialRuntimeLayout BuildMaterialLayout(
 			const std::vector<MaterialPropertyDesc>& properties,
 			bool includeSystemFields);
 
-		static ShaderLabLightingRuntimeDesc BuildLightingRuntime(
-			const ShaderLabLightingDesc& lightingDesc);
+		static MaterialLightingRuntimeDesc BuildLightingRuntime(
+			const MaterialLightingDesc& lightingDesc);
 
 		static std::string GenerateWrappedSource(
-			const ShaderLabAssetDesc& assetDesc,
-			const ShaderLabPassDesc& passDesc,
+			const MaterialDefinitionDesc& assetDesc,
+			const MaterialPassDesc& passDesc,
 			const MaterialRuntimeLayout& materialLayout,
 			const std::string& userSource);
 
 	private:
 		static ShaderCompiler::CompileRequest BuildCompileRequest(
-			const ShaderLabAssetDesc& assetDesc,
-			const ShaderLabPassDesc& passDesc,
-			const std::filesystem::path& shaderLabPath,
+			const MaterialDefinitionDesc& assetDesc,
+			const MaterialPassDesc& passDesc,
+			const std::filesystem::path& materialPath,
 			ShaderCompiler::Stage stage);
 
 		static std::string BuildMaterialPrelude(
@@ -77,9 +73,13 @@ namespace Kita {
 			const MaterialRuntimeLayout& materialLayout);
 
 		static std::string BuildLightingPrelude(
-			const ShaderLabLightingDesc& lightingDesc);
+			const MaterialLightingDesc& lightingDesc);
 
 		static std::string ReadUserSource(const std::filesystem::path& path);
 	};
+
+	using ShaderLabCompiledPass = MaterialCompiledPass;
+	using ShaderLabCompileResult = MaterialCompileResult;
+	using ShaderLabCompiler = MaterialCompiler;
 
 }

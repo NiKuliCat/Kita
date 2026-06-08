@@ -96,12 +96,41 @@ namespace Kita {
 				}
 			}
 		}
+
+		bool PropertyMapUsesTextureHandle(
+			const std::unordered_map<std::string, MaterialPropertyValue>& properties,
+			AssetHandle textureHandle)
+		{
+			for (const auto& [name, value] : properties)
+			{
+				(void)name;
+				if ((value.ValueType != MaterialValueType::Texture2D &&
+					value.ValueType != MaterialValueType::TextureCube) ||
+					!std::holds_alternative<AssetHandle>(value.Data))
+				{
+					continue;
+				}
+
+				if (std::get<AssetHandle>(value.Data) == textureHandle)
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
 	}
 
-	TextureAssetEditor::TextureAssetEditor(AssetHandle handle, ThumbnailCache* thumbnailCache, VulkanResourceFactory* resourceFactory)
+	TextureAssetEditor::TextureAssetEditor(
+		AssetHandle handle,
+		ThumbnailCache* thumbnailCache,
+		VulkanResourceFactory* resourceFactory,
+		PreviewSceneRenderer* previewSceneRenderer)
 		: m_AssetHandle(handle)
 		, m_ThumbnailCache(thumbnailCache)
 		, m_ResourceFactory(resourceFactory)
+		, m_PreviewSceneRenderer(previewSceneRenderer)
+		, m_LookDevPreview(previewSceneRenderer)
 	{
 		m_TextureAsset = AssetManager::GetInstance().GetTextureAsset(handle);
 		m_DisplayName = GetAssetEditorDisplayName(handle);
@@ -111,6 +140,8 @@ namespace Kita {
 			m_WorkingCopy = m_TextureAsset->ImportSettings;
 			m_SavedCopy = m_TextureAsset->ImportSettings;
 		}
+
+		SyncPreviewMode();
 	}
 
 	bool TextureAssetEditor::IsDirty() const
@@ -141,6 +172,13 @@ namespace Kita {
 		m_WorkingCopy = m_SavedCopy;
 		ApplyWorkingCopyToAsset();
 		RefreshTextureResource();
+		SyncPreviewMode();
+	}
+
+	void TextureAssetEditor::OnRender()
+	{
+		SyncPreviewMode();
+		m_LookDevPreview.OnRender();
 	}
 
 	void TextureAssetEditor::OnImGuiRender()
@@ -241,27 +279,22 @@ namespace Kita {
 
 		ImGui::BeginChild("##TexturePreviewPane", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 
-		if (m_WorkingCopy.Shape == TextureShape::TextureCube)
+		if (UsesLookDevPreview())
 		{
 			const float availWidth = ImGui::GetContentRegionAvail().x;
 			const float availHeight = ImGui::GetContentRegionAvail().y;
 			const float maxPreviewDimension = ImMax(1.0f, ImMin(availWidth, availHeight) * 0.82f);
 			const float previewSize = ImClamp(maxPreviewDimension, kTexturePreviewMinVisibleSize, 360.0f);
-			const uint32_t previewTextureSize = static_cast<uint32_t>(ImClamp(std::ceil(previewSize), 128.0f, 512.0f));
-			const ThumbnailCache::ThumbnailHandle thumbnail =
-				m_ThumbnailCache ? m_ThumbnailCache->GetOrCreate(m_AssetHandle, AssetType::Texture, previewTextureSize) : ThumbnailCache::ThumbnailHandle{};
-
-			if (!thumbnail.IsValid())
-			{
-				ImGui::TextUnformatted("Cubemap preview is unavailable.");
-				ImGui::TextDisabled("Save to rebuild the runtime cubemap.");
-				ImGui::EndChild();
-				return;
-			}
 
 			ImGui::SetCursorPosX(std::max(0.0f, (availWidth - previewSize) * 0.5f));
 			ImGui::SetCursorPosY(ImMax(0.0f, (availHeight - previewSize) * 0.5f));
-			ImGui::Image(thumbnail.TextureID, ImVec2(previewSize, previewSize));
+			m_LookDevPreview.Draw("##TextureLookDevPreview", ImVec2(previewSize, previewSize));
+			if (!m_LookDevPreview.HasValidOutput())
+			{
+				ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 8.0f);
+				ImGui::TextDisabled("LookDev preview is waiting for a valid cubemap runtime texture.");
+				ImGui::TextDisabled("Save after switching Shape to Cube to rebuild the texture.");
+			}
 			ImGui::EndChild();
 			return;
 		}
@@ -451,6 +484,22 @@ namespace Kita {
 		}
 	}
 
+	void TextureAssetEditor::SyncPreviewMode()
+	{
+		if (!UsesLookDevPreview())
+		{
+			m_LookDevPreview.ClearMode();
+			return;
+		}
+
+		m_LookDevPreview.SetCubemapAsset(m_AssetHandle);
+	}
+
+	bool TextureAssetEditor::UsesLookDevPreview() const
+	{
+		return m_TextureAsset && m_WorkingCopy.Shape == TextureShape::TextureCube;
+	}
+
 	void TextureAssetEditor::RefreshTextureResource()
 	{
 		if (!Asset::IsValidHandle(m_AssetHandle))
@@ -461,6 +510,11 @@ namespace Kita {
 		if (m_ThumbnailCache)
 		{
 			m_ThumbnailCache->Invalidate(m_AssetHandle);
+		}
+
+		if (m_PreviewSceneRenderer)
+		{
+			m_PreviewSceneRenderer->Invalidate(m_AssetHandle);
 		}
 
 		if (!m_ResourceFactory)
@@ -477,7 +531,7 @@ namespace Kita {
 			return;
 		}
 
-		const std::vector<AssetMetadata> materialAssets = AssetManager::GetInstance().GetAssetsByType(AssetType::Material);
+		const std::vector<AssetMetadata> materialAssets = AssetManager::GetInstance().GetAssetsByType(AssetType::MaterialInstance);
 		for (const AssetMetadata& metadata : materialAssets)
 		{
 			Ref<MaterialAsset> materialAsset = AssetManager::GetInstance().GetMaterialAsset(metadata.handle);
@@ -493,7 +547,9 @@ namespace Kita {
 				textures.MetallicRoughness == m_AssetHandle ||
 				textures.AmbientOcclusion == m_AssetHandle ||
 				textures.Emissive == m_AssetHandle ||
-				textures.Opacity == m_AssetHandle;
+				textures.Opacity == m_AssetHandle ||
+				PropertyMapUsesTextureHandle(materialAsset->PropertyBlock.Values, m_AssetHandle) ||
+				PropertyMapUsesTextureHandle(materialAsset->PropertyBlock.OrphanValues, m_AssetHandle);
 
 			if (usesTexture)
 			{

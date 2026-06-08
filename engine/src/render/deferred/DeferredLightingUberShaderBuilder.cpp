@@ -75,17 +75,20 @@ namespace Kita {
 		{
 			std::vector<SurfaceShaderRecord> records;
 			const std::vector<AssetMetadata> shaderLabAssets =
-				assetManager.GetAssetsByType(AssetType::ShaderLab);
+				assetManager.GetAssetsByType(AssetType::MaterialDefinition);
 
 			for (const AssetMetadata& metadata : shaderLabAssets)
 			{
-				Ref<ShaderLabAsset> shaderLabAsset = assetManager.GetShaderLabAsset(metadata.handle);
+				Ref<MaterialDefinitionAsset> shaderLabAsset = assetManager.GetMaterialDefinitionAsset(metadata.handle);
 				if (!shaderLabAsset)
 				{
 					diagnostics << "[DeferredLightingUber] Failed to load ShaderLab asset '"
 						<< metadata.relativePath.generic_string() << "'.\n";
 					continue;
 				}
+
+				if (!shaderLabAsset->Desc || shaderLabAsset->Desc->Domain != MaterialDomain::Surface)
+					continue;
 
 				if (!shaderLabAsset->LightingRuntime || !shaderLabAsset->LightingRuntime->Enabled)
 					continue;

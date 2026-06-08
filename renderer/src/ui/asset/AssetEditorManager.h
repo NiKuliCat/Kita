@@ -2,10 +2,11 @@
 
 #include "IAssetEditor.h"
 
-namespace Kita {
+	namespace Kita {
 
-	class ThumbnailCache;
-	class VulkanResourceFactory;
+		class ThumbnailCache;
+		class PreviewSceneRenderer;
+		class VulkanResourceFactory;
 
 	class AssetEditorManager
 	{
@@ -13,11 +14,13 @@ namespace Kita {
 		AssetEditorManager() = default;
 
 		void SetThumbnailCache(ThumbnailCache* thumbnailCache) { m_ThumbnailCache = thumbnailCache; }
+		void SetPreviewSceneRenderer(PreviewSceneRenderer* previewSceneRenderer) { m_PreviewSceneRenderer = previewSceneRenderer; }
 		void SetResourceFactory(VulkanResourceFactory* resourceFactory) { m_ResourceFactory = resourceFactory; }
 		void SetDockSpaceId(ImGuiID dockSpaceId) { m_DockSpaceId = dockSpaceId; }
 
 		bool OpenEditor(AssetHandle handle);
 		void OnUpdate();
+		void OnRender();
 		void OnImGuiRender();
 
 	private:
@@ -48,6 +51,7 @@ namespace Kita {
 		bool m_ShowFloatingHostWindow = false;
 		bool m_RequestHostWindowFocus = false;
 		ThumbnailCache* m_ThumbnailCache = nullptr;
+		PreviewSceneRenderer* m_PreviewSceneRenderer = nullptr;
 		VulkanResourceFactory* m_ResourceFactory = nullptr;
 	};
 

@@ -12,6 +12,7 @@
 #include "ui/ThumbnailCache.h"
 #include "ui/viewport/ViewportInstance.h"
 #include "preview/AssetPreviewRenderer.h"
+#include "preview/PreviewSceneRenderer.h"
 namespace Kita{
 
 	struct EditorPreviewTextureHandle
@@ -96,6 +97,7 @@ namespace Kita{
 		Unique<VulkanResourceFactory> m_EditorVulkanResourceFactory = nullptr;
 		Unique<PipelineFactory> m_PipelineFactory = nullptr;
 		Unique<AssetPreviewRenderer> m_AssetPreviewRenderer = nullptr;
+		Unique<PreviewSceneRenderer> m_PreviewSceneRenderer = nullptr;
 		Unique<ThumbnailCache> m_ContentBrowserThumbnailCache = nullptr;
 		Unique<SvgIconAtlas> m_ContentBrowserIconAtlas = nullptr;
 	};

@@ -1,5 +1,7 @@
-Shader "Kita/Deferred/Lighting"
+Material "Kita/Deferred/Lighting"
 {
+    Domain = PostProcess
+
     Pass "DeferredLighting"
     {
         LightMode = DeferredLighting

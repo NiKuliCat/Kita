@@ -1,6 +1,7 @@
 #include "renderer_pch.h"
 #include "AssetEditorManager.h"
 
+#include "MaterialDefinitionAssetEditor.h"
 #include "MaterialAssetEditor.h"
 #include "MeshAssetEditor.h"
 #include "TextureAssetEditor.h"
@@ -101,6 +102,19 @@ namespace Kita {
 			}
 
 			entry.Editor->OnUpdate();
+		}
+	}
+
+	void AssetEditorManager::OnRender()
+	{
+		for (auto& entry : m_OpenEditors)
+		{
+			if (!entry.Editor || !entry.IsOpen)
+			{
+				continue;
+			}
+
+			entry.Editor->OnRender();
 		}
 	}
 
@@ -232,11 +246,13 @@ namespace Kita {
 		switch (metadata.type)
 		{
 		case AssetType::Texture:
-			return CreateUnique<TextureAssetEditor>(metadata.handle, m_ThumbnailCache, m_ResourceFactory);
+			return CreateUnique<TextureAssetEditor>(metadata.handle, m_ThumbnailCache, m_ResourceFactory, m_PreviewSceneRenderer);
 		case AssetType::Mesh:
 			return CreateUnique<MeshAssetEditor>(metadata.handle);
-		case AssetType::Material:
-			return CreateUnique<MaterialAssetEditor>(metadata.handle, m_ThumbnailCache, m_ResourceFactory);
+		case AssetType::MaterialInstance:
+			return CreateUnique<MaterialAssetEditor>(metadata.handle, m_ThumbnailCache, m_ResourceFactory, m_PreviewSceneRenderer);
+		case AssetType::MaterialDefinition:
+			return CreateUnique<MaterialDefinitionAssetEditor>(metadata.handle, m_ThumbnailCache, m_ResourceFactory, m_PreviewSceneRenderer);
 		default:
 			return nullptr;
 		}

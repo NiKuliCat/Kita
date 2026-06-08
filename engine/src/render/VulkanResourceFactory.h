@@ -60,6 +60,7 @@ namespace Kita {
 
 		void InvalidateShader(AssetHandle shaderHandle);
 		void InvalidateTexture(AssetHandle textureHandle);
+		void InvalidateMaterialDefinition(AssetHandle materialDefinitionHandle);
 		void InvalidateMaterial(AssetHandle materialHandle);
 		void InvalidateMesh(AssetHandle meshHandle);
 		void Clear();

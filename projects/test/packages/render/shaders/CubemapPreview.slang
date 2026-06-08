@@ -17,27 +17,11 @@ struct VSOutput
     float3 positionWS : TEXCOORD1;
 };
 
-struct MaterialGpuParams
-{
-    float4 BaseColor;
-    float4 Emissive;
-    float4 SurfaceParams;
-    float4 MiscParams;
-    float4 TextureFlags0;
-    float4 TextureFlags1;
-};
-
 [[vk::binding(0, 0)]]
 ConstantBuffer<SceneCameraData> g_Camera;
 
 [[vk::binding(1, 0)]]
 ConstantBuffer<SceneDirectionalLightData> g_MainLight;
-
-[[vk::binding(0, 1)]]
-SamplerCube g_CubemapTexture;
-
-[[vk::binding(1, 1)]]
-ConstantBuffer<MaterialGpuParams> g_Material;
 
 [[vk::push_constant]]
 ObjectData g_Object;
@@ -82,11 +66,11 @@ float4 PSMain(VSOutput input) : SV_Target0
     float3 viewDir = normalize(g_Camera.CameraPosWS.xyz - input.positionWS);
     float3 sampleDir = reflect(-viewDir, normalWS);
 
-    float3 envColor = max(g_CubemapTexture.Sample(sampleDir).rgb, 0.0.xxx);
+    float3 envColor = max(_Albedo.Sample(sampleDir).rgb, 0.0.xxx);
     float fresnel = pow(1.0 - saturate(dot(normalWS, viewDir)), 5.0);
     float3 color = lerp(envColor, envColor * 1.08, fresnel);
 
-    color *= max(g_Material.BaseColor.rgb, float3(0.001, 0.001, 0.001));
+    color *= max(_BaseColor.rgb, float3(0.001, 0.001, 0.001));
     color = ACESApprox(color);
     return float4(LinearToSRGB(color), 1.0);
 }

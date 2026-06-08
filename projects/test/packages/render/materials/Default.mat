@@ -1,7 +1,6 @@
 {
-    "version": 3,
-    "shaderLab": "832084914854843335",
-    "shader": "13780338159838875874",
+    "version": 4,
+    "material": "832084914854843335",
     "properties": {
         "_BaseColor": {
             "kind": "Color",

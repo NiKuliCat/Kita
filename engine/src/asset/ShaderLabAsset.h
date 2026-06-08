@@ -9,23 +9,25 @@
 
 namespace Kita {
 
-	struct ShaderLabAsset : public Asset
+	struct MaterialDefinitionAsset : public Asset
 	{
-		virtual AssetType GetType() const override { return AssetType::ShaderLab; }
+		virtual AssetType GetType() const override { return AssetType::MaterialDefinition; }
 
 		std::filesystem::path SourcePath;
 
-		// 解析后的静态 ShaderLab 描述。
-		std::shared_ptr<ShaderLabAssetDesc> Desc = nullptr;
+		// 保存解析后的母材质定义文本描述。
+		std::shared_ptr<MaterialDefinitionDesc> Desc = nullptr;
 
-		// 编译后的材质运行时布局。
+		// 保存编译后的运行时参数布局。
 		std::shared_ptr<MaterialRuntimeLayout> RuntimeLayout = nullptr;
 
-		// 缓存统一 DeferredLighting 所需的材质级 lighting 元数据。
-		std::shared_ptr<ShaderLabLightingRuntimeDesc> LightingRuntime = nullptr;
+		// 缓存 Surface 材质参与 deferred lighting 所需的元信息。
+		std::shared_ptr<MaterialLightingRuntimeDesc> LightingRuntime = nullptr;
 
 		// 每个 Pass 编译出的运行时 shader binary。
-		std::vector<ShaderLabCompiledPass> CompiledPasses;
+		std::vector<MaterialCompiledPass> CompiledPasses;
 	};
+
+	using ShaderLabAsset = MaterialDefinitionAsset;
 
 }

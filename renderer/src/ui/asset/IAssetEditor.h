@@ -19,6 +19,7 @@ namespace Kita {
 		virtual void Revert() = 0;
 
 		virtual void OnUpdate() {}
+		virtual void OnRender() {}
 		virtual void OnImGuiRender() = 0;
 	};
 

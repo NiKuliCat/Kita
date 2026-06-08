@@ -395,14 +395,14 @@ namespace Kita {
 		outMaterial.ClearTextures();
 		outMaterial.SetParams(BuildLegacyGpuParams(materialAsset));
 
-		if (Asset::IsValidHandle(materialAsset.ShaderLabHandle))
+		if (Asset::IsValidHandle(materialAsset.MaterialDefinitionHandle))
 		{
-			Ref<ShaderLabAsset> shaderLabAsset = m_AssetManager.GetShaderLabAsset(materialAsset.ShaderLabHandle);
+			Ref<MaterialDefinitionAsset> shaderLabAsset = m_AssetManager.GetMaterialDefinitionAsset(materialAsset.MaterialDefinitionHandle);
 			if (!shaderLabAsset || !shaderLabAsset->RuntimeLayout)
 			{
 				KITA_CORE_WARN(
 					"VulkanResourceFactory: ShaderLab asset missing runtime layout, handle={}",
-					materialAsset.ShaderLabHandle);
+					materialAsset.MaterialDefinitionHandle);
 			}
 			else
 			{
@@ -412,7 +412,7 @@ namespace Kita {
 				{
 					KITA_CORE_WARN(
 						"VulkanResourceFactory: normalized ShaderLab material properties, shaderLabHandle={}, filledDefaults={}, movedToOrphans={}",
-						materialAsset.ShaderLabHandle,
+						materialAsset.MaterialDefinitionHandle,
 						normalizedPropertyBlock.FilledDefaults,
 						normalizedPropertyBlock.MovedToOrphans);
 				}
@@ -690,6 +690,26 @@ namespace Kita {
 	void VulkanResourceFactory::InvalidateTexture(AssetHandle textureHandle)
 	{
 		m_TextureCache.erase(textureHandle);
+	}
+
+	void VulkanResourceFactory::InvalidateMaterialDefinition(AssetHandle materialDefinitionHandle)
+	{
+		if (!Asset::IsValidHandle(materialDefinitionHandle))
+		{
+			return;
+		}
+
+		for (auto it = m_MaterialCache.begin(); it != m_MaterialCache.end();)
+		{
+			Ref<MaterialAsset> materialAsset = m_AssetManager.GetMaterialAsset(it->first);
+			if (materialAsset && materialAsset->MaterialDefinitionHandle == materialDefinitionHandle)
+			{
+				it = m_MaterialCache.erase(it);
+				continue;
+			}
+
+			++it;
+		}
 	}
 
 	void VulkanResourceFactory::InvalidateMaterial(AssetHandle materialHandle)

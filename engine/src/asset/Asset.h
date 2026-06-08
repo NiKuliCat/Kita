@@ -18,11 +18,13 @@ namespace Kita {
 	enum class AssetType
 	{
 		None = 0,
-		Material,
+		MaterialInstance = 1,
 		Shader,
 		Texture,
 		Mesh,
-		ShaderLab
+		MaterialDefinition = 5,
+		Material = MaterialInstance,
+		ShaderLab = MaterialDefinition
 	};
 
 
@@ -118,15 +120,17 @@ namespace Kita {
 	};
 
 
-	struct MaterialAsset : public Asset
+	struct MaterialInstanceAsset : public Asset
 	{
-		virtual AssetType GetType() const override { return AssetType::Material; }
-		AssetHandle ShaderLabHandle = InvalidAssetHandle;
+		virtual AssetType GetType() const override { return AssetType::MaterialInstance; }
+		AssetHandle MaterialDefinitionHandle = InvalidAssetHandle;
 		MaterialPropertyBlock PropertyBlock;
 		AssetHandle ShaderHandle = InvalidAssetHandle;
 		MaterialSurfaceParams m_SurfaceParams;
 		MaterialTextures m_Textures;
 	};
+
+	using MaterialAsset = MaterialInstanceAsset;
 
 	struct ShaderStageBinary
 	{

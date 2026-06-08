@@ -171,6 +171,8 @@ IF EXIST "C:\VulkanSDK\1.4.341.1\Bin\slang.dll"\ (xcopy /Q /E /Y /I "C:\VulkanSD
     <ClInclude Include="src\EditorLayer.h" />
     <ClInclude Include="src\file\Project.h" />
     <ClInclude Include="src\preview\AssetPreviewRenderer.h" />
+    <ClInclude Include="src\preview\LookDevPreviewViewport.h" />
+    <ClInclude Include="src\preview\PreviewSceneRenderer.h" />
     <ClInclude Include="src\preview\PreviewSpherePass.h" />
     <ClInclude Include="src\preview\PreviewThumbnailCache.h" />
     <ClInclude Include="src\project\EditorProjectBootstrap.h" />
@@ -194,6 +196,7 @@ IF EXIST "C:\VulkanSDK\1.4.341.1\Bin\slang.dll"\ (xcopy /Q /E /Y /I "C:\VulkanSD
     <ClInclude Include="src\ui\asset\AssetEditorUtils.h" />
     <ClInclude Include="src\ui\asset\IAssetEditor.h" />
     <ClInclude Include="src\ui\asset\MaterialAssetEditor.h" />
+    <ClInclude Include="src\ui\asset\MaterialDefinitionAssetEditor.h" />
     <ClInclude Include="src\ui\asset\MeshAssetEditor.h" />
     <ClInclude Include="src\ui\asset\TextureAssetEditor.h" />
     <ClInclude Include="src\ui\viewport\EditorGizmoController.h" />
@@ -208,6 +211,8 @@ IF EXIST "C:\VulkanSDK\1.4.341.1\Bin\slang.dll"\ (xcopy /Q /E /Y /I "C:\VulkanSD
     <ClCompile Include="src\EditorLayer.cpp" />
     <ClCompile Include="src\file\Project.cpp" />
     <ClCompile Include="src\preview\AssetPreviewRenderer.cpp" />
+    <ClCompile Include="src\preview\LookDevPreviewViewport.cpp" />
+    <ClCompile Include="src\preview\PreviewSceneRenderer.cpp" />
     <ClCompile Include="src\preview\PreviewSpherePass.cpp" />
     <ClCompile Include="src\preview\PreviewThumbnailCache.cpp" />
     <ClCompile Include="src\project\EditorProjectBootstrap.cpp" />
@@ -229,6 +234,7 @@ IF EXIST "C:\VulkanSDK\1.4.341.1\Bin\slang.dll"\ (xcopy /Q /E /Y /I "C:\VulkanSD
     <ClCompile Include="src\ui\UIAttributeUtil.cpp" />
     <ClCompile Include="src\ui\asset\AssetEditorManager.cpp" />
     <ClCompile Include="src\ui\asset\MaterialAssetEditor.cpp" />
+    <ClCompile Include="src\ui\asset\MaterialDefinitionAssetEditor.cpp" />
     <ClCompile Include="src\ui\asset\MeshAssetEditor.cpp" />
     <ClCompile Include="src\ui\asset\TextureAssetEditor.cpp" />
     <ClCompile Include="src\ui\viewport\EditorGizmoController.cpp" />

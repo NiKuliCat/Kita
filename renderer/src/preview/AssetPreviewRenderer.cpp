@@ -26,7 +26,7 @@ namespace Kita {
 
 	namespace
 	{
-		constexpr const char* kCubemapPreviewShaderPath = "packages/render/shaders/CubemapPreview.slang";
+		constexpr const char* kCubemapPreviewShaderLabPath = "packages/render/shaders/CubemapPreview.shader";
 		constexpr uint32_t kSphereSegments = 48;
 		constexpr uint32_t kSphereRings = 24;
 
@@ -151,7 +151,21 @@ namespace Kita {
 		Clear();
 	}
 
-	PreviewThumbnailHandle AssetPreviewRenderer::GetOrRender(const AssetPreviewRequest& request)
+	PreviewThumbnailHandle AssetPreviewRenderer::TryGetCached(const AssetPreviewRequest& request)
+	{
+		if (!Asset::IsValidHandle(request.Handle))
+		{
+			return {};
+		}
+
+		AssetPreviewRequest normalizedRequest = request;
+		normalizedRequest.Size = NormalizePreviewSize(request.Size);
+
+		const PreviewThumbnailKey key = MakeKey(normalizedRequest);
+		return m_ThumbnailCache.Find(key);
+	}
+
+	PreviewThumbnailHandle AssetPreviewRenderer::Render(const AssetPreviewRequest& request)
 	{
 		if (!Asset::IsValidHandle(request.Handle))
 		{
@@ -176,6 +190,16 @@ namespace Kita {
 		return m_ThumbnailCache.StoreRenderedImage(key, *image, normalizedRequest.Size, normalizedRequest.Size);
 	}
 
+	PreviewThumbnailHandle AssetPreviewRenderer::GetOrRender(const AssetPreviewRequest& request)
+	{
+		if (PreviewThumbnailHandle cached = TryGetCached(request); cached.IsValid())
+		{
+			return cached;
+		}
+
+		return Render(request);
+	}
+
 	void AssetPreviewRenderer::Invalidate(AssetHandle handle)
 	{
 		m_ThumbnailCache.Invalidate(handle);
@@ -190,6 +214,7 @@ namespace Kita {
 		m_SphereGeometry = nullptr;
 		m_PipelineFactory.reset();
 		m_SceneBindings.reset();
+		m_CubemapPreviewShaderLabHandle = InvalidAssetHandle;
 	}
 
 	PreviewThumbnailKey AssetPreviewRenderer::MakeKey(const AssetPreviewRequest& request) const
@@ -429,38 +454,45 @@ namespace Kita {
 		}
 
 		AssetManager& assetManager = AssetManager::GetInstance();
-		if (!Asset::IsValidHandle(m_CubemapPreviewShaderHandle))
+		if (!Asset::IsValidHandle(m_CubemapPreviewShaderLabHandle))
 		{
-			m_CubemapPreviewShaderHandle = assetManager.GetHandleByPath(kCubemapPreviewShaderPath);
-			if (!Asset::IsValidHandle(m_CubemapPreviewShaderHandle))
+			m_CubemapPreviewShaderLabHandle = assetManager.GetHandleByPath(kCubemapPreviewShaderLabPath);
+			if (!Asset::IsValidHandle(m_CubemapPreviewShaderLabHandle))
 			{
 				if (const Ref<Project> project = Project::GetActive())
 				{
-					m_CubemapPreviewShaderHandle =
-						assetManager.ImportAsset(project->GetAssetRootDirectory() / kCubemapPreviewShaderPath);
+					m_CubemapPreviewShaderLabHandle =
+						assetManager.ImportAsset(project->GetAssetRootDirectory() / kCubemapPreviewShaderLabPath);
 				}
 			}
 		}
 
-		if (!Asset::IsValidHandle(m_CubemapPreviewShaderHandle))
+		if (!Asset::IsValidHandle(m_CubemapPreviewShaderLabHandle))
 		{
-			KITA_CORE_WARN("AssetPreviewRenderer: missing cubemap preview shader '{}'", kCubemapPreviewShaderPath);
+			KITA_CORE_WARN("AssetPreviewRenderer: missing cubemap preview ShaderLab '{}'", kCubemapPreviewShaderLabPath);
 			return nullptr;
 		}
 
-		VulkanResourceFactory::ShaderBundle shaderBundle = m_ResourceFactory->GetOrCreateShaderBundle(m_CubemapPreviewShaderHandle);
-		if (!shaderBundle.IsValid())
+		MaterialAsset previewMaterialAsset{};
+		previewMaterialAsset.MaterialDefinitionHandle = m_CubemapPreviewShaderLabHandle;
+
+		MaterialPropertyValue baseColor{};
+		baseColor.ValueType = MaterialValueType::Color;
+		baseColor.Data = glm::vec4(1.0f);
+		previewMaterialAsset.PropertyBlock.Values["_BaseColor"] = baseColor;
+
+		MaterialPropertyValue cubemapValue{};
+		cubemapValue.ValueType = MaterialValueType::TextureCube;
+		cubemapValue.Data = handle;
+		previewMaterialAsset.PropertyBlock.Values["_Albedo"] = cubemapValue;
+
+		Ref<VulkanMaterial> material = m_ResourceFactory->CreateMaterial(previewMaterialAsset);
+		if (!material)
 		{
 			return nullptr;
 		}
 
-		Ref<VulkanMaterial> material = CreateRef<VulkanMaterial>();
-		MaterialGpuParams params{};
-		params.BaseColor = glm::vec4(1.0f);
-		params.SurfaceParams = glm::vec4(0.0f, 0.18f, 1.0f, 1.0f);
-		material->SetParams(params);
-		material->SetVertexShader(shaderBundle.VertexShader);
-		material->SetFragmentShader(shaderBundle.FragmentShader);
+		material->SetResolvedTexture("_Albedo", texture);
 		material->SetAlbedoTexture(texture);
 		material->EnsureDescriptors(*m_Context, m_Context->GetFramesInFlight());
 		m_CubemapPreviewMaterials[handle] = material;
@@ -540,16 +572,13 @@ namespace Kita {
 
 	VulkanGraphicsPipeline* AssetPreviewRenderer::GetCubemapPreviewPipeline(PreviewTarget& target, VulkanMaterial& material)
 	{
-		VulkanMaterial::PassRuntime previewPass{};
-		previewPass.Type = PassType::ForwardOpaque;
-		previewPass.VertexShader = material.GetVertexShader();
-		previewPass.FragmentShader = material.GetFragmentShader();
-		previewPass.RenderState.CullMode = VK_CULL_MODE_BACK_BIT;
-		previewPass.RenderState.DepthTest = true;
-		previewPass.RenderState.DepthWrite = true;
-		previewPass.RenderState.DepthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
-		previewPass.RenderState.Blend = false;
-		return GetMaterialPreviewPipeline(target, material, previewPass, false);
+		const VulkanMaterial::PassRuntime* previewPass = material.FindPass(PassType::ForwardOpaque);
+		if (!previewPass)
+		{
+			return nullptr;
+		}
+
+		return GetMaterialPreviewPipeline(target, material, *previewPass, false);
 	}
 
 	ScenePassData AssetPreviewRenderer::BuildPreviewSceneData()

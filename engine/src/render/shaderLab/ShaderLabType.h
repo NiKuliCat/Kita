@@ -11,12 +11,27 @@
 #include "asset/Asset.h"
 #include "render/pass/RenderDataStruct.h"
 
-
 namespace Kita {
 
-	// ShaderLab Pass 的固定渲染状态描述。
-		// 第二步先只覆盖当前引擎已经用到的状态项，后续如需 Stencil/BlendOp 再扩展。
-	struct ShaderLabRenderStateDesc
+	enum class MaterialDomain : uint8_t
+	{
+		Surface = 0,
+		PostProcess,
+		Utility
+	};
+
+	inline const char* MaterialDomainToString(MaterialDomain domain)
+	{
+		switch (domain)
+		{
+		case MaterialDomain::Surface: return "Surface";
+		case MaterialDomain::PostProcess: return "PostProcess";
+		case MaterialDomain::Utility: return "Utility";
+		default: return "Surface";
+		}
+	}
+
+	struct MaterialRenderStateDesc
 	{
 		VkCullModeFlags CullMode = VK_CULL_MODE_BACK_BIT;
 		bool DepthTest = true;
@@ -25,36 +40,33 @@ namespace Kita {
 		bool Blend = false;
 	};
 
-	struct ShaderLabColorOutputDesc
+	struct MaterialColorOutputDesc
 	{
 		std::string Name;
 		VkFormat Format = VK_FORMAT_UNDEFINED;
 	};
 
-	// RenderGraph 描述先只做“材质 Pass 与渲染目标布局”的静态声明，
-	// 不直接参与第二步运行时绑定。
-	struct ShaderLabRenderGraphDesc
+	struct MaterialRenderGraphDesc
 	{
 		std::string InputLayout;
 		std::string OutputLayout;
 
-		std::vector<ShaderLabColorOutputDesc> Colors;
+		std::vector<MaterialColorOutputDesc> Colors;
 		bool HasDepth = false;
 		std::string DepthName;
 		VkFormat DepthFormat = VK_FORMAT_UNDEFINED;
 	};
 
-	struct ShaderLabProgramDesc
+	struct MaterialProgramDesc
 	{
 		std::filesystem::path Source;
 		std::string VertexEntry = "VSMain";
 		std::string FragmentEntry = "PSMain";
 	};
 
-	inline constexpr uint32_t ShaderLabMaxCustomDataCount = 4;
+	inline constexpr uint32_t MaterialMaxCustomDataCount = 4;
 
-	// Lighting 元数据描述表面材质如何参与统一的延迟光照框架。
-	struct ShaderLabLightingDesc
+	struct MaterialLightingDesc
 	{
 		bool Enabled = false;
 		std::string ShadingModel = "DefaultLit";
@@ -63,8 +75,7 @@ namespace Kita {
 		std::string Evaluate;
 	};
 
-	// 运行时缓存的 lighting 信息，供 GBuffer 编码和 Uber lighting 分发共用。
-	struct ShaderLabLightingRuntimeDesc
+	struct MaterialLightingRuntimeDesc
 	{
 		bool Enabled = false;
 		std::string ShadingModelName = "DefaultLit";
@@ -74,27 +85,37 @@ namespace Kita {
 		std::string LightingHookFunction;
 	};
 
-	struct ShaderLabPassDesc
+	struct MaterialPassDesc
 	{
 		std::string Name;
 		std::string LightMode;
 		PassType Type = PassType::Unknown;
 
 		std::unordered_map<std::string, std::string> Tags;
-		ShaderLabRenderStateDesc RenderState;
-		ShaderLabRenderGraphDesc RenderGraph;
-		ShaderLabProgramDesc Program;
+		MaterialRenderStateDesc RenderState;
+		MaterialRenderGraphDesc RenderGraph;
+		MaterialProgramDesc Program;
 	};
 
-	// ShaderLab 资产的纯描述数据。
-	// 第二步只负责把 .shader 解析成这个结构，还不做编译与反射。
-	struct ShaderLabAssetDesc
+	struct MaterialDefinitionDesc
 	{
-		std::string ShaderName;
+		std::string MaterialName;
+		MaterialDomain Domain = MaterialDomain::Surface;
+		bool UsesLegacyShaderKeyword = false;
 		std::vector<MaterialPropertyDesc> Properties;
-		ShaderLabLightingDesc Lighting;
+		MaterialLightingDesc Lighting;
 		std::unordered_map<std::string, std::string> Tags;
-		std::vector<ShaderLabPassDesc> Passes;
+		std::vector<MaterialPassDesc> Passes;
 	};
+
+	using ShaderLabRenderStateDesc = MaterialRenderStateDesc;
+	using ShaderLabColorOutputDesc = MaterialColorOutputDesc;
+	using ShaderLabRenderGraphDesc = MaterialRenderGraphDesc;
+	using ShaderLabProgramDesc = MaterialProgramDesc;
+	using ShaderLabLightingDesc = MaterialLightingDesc;
+	using ShaderLabLightingRuntimeDesc = MaterialLightingRuntimeDesc;
+	using ShaderLabPassDesc = MaterialPassDesc;
+	using ShaderLabAssetDesc = MaterialDefinitionDesc;
+	inline constexpr uint32_t ShaderLabMaxCustomDataCount = MaterialMaxCustomDataCount;
 
 }

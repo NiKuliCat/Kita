@@ -104,20 +104,20 @@ namespace Kita {
 			return properties;
 		}
 
-		const ShaderLabAssetDesc* GetShaderLabDesc(AssetHandle handle)
+		const MaterialDefinitionDesc* GetMaterialDefinitionDesc(AssetHandle handle)
 		{
 			if (!Asset::IsValidHandle(handle))
 			{
 				return nullptr;
 			}
 
-			Ref<ShaderLabAsset> shaderLabAsset = AssetManager::GetInstance().GetShaderLabAsset(handle);
-			if (!shaderLabAsset || !shaderLabAsset->Desc)
+			Ref<MaterialDefinitionAsset> materialDefinitionAsset = AssetManager::GetInstance().GetMaterialDefinitionAsset(handle);
+			if (!materialDefinitionAsset || !materialDefinitionAsset->Desc)
 			{
 				return nullptr;
 			}
 
-			return shaderLabAsset->Desc.get();
+			return materialDefinitionAsset->Desc.get();
 		}
 
 		const MaterialPropertyValue* FindPropertyValue(const PropertyMap& properties, const std::string& name)
@@ -284,13 +284,20 @@ namespace Kita {
 		}
 	}
 
-	MaterialAssetEditor::MaterialAssetEditor(AssetHandle handle, ThumbnailCache* thumbnailCache, VulkanResourceFactory* resourceFactory)
+	MaterialAssetEditor::MaterialAssetEditor(
+		AssetHandle handle,
+		ThumbnailCache* thumbnailCache,
+		VulkanResourceFactory* resourceFactory,
+		PreviewSceneRenderer* previewSceneRenderer)
 		: m_AssetHandle(handle)
 		, m_ThumbnailCache(thumbnailCache)
 		, m_ResourceFactory(resourceFactory)
+		, m_PreviewSceneRenderer(previewSceneRenderer)
+		, m_LookDevPreview(previewSceneRenderer)
 	{
 		m_SourceAsset = AssetManager::GetInstance().GetMaterialAsset(handle);
 		m_DisplayName = GetAssetEditorDisplayName(handle);
+		m_LookDevPreview.SetMaterialAsset(handle);
 		if (const AssetMetadata* metadata = AssetManager::GetInstance().GetMetadata(handle))
 		{
 			const Ref<Project> project = Project::GetActive();
@@ -305,12 +312,12 @@ namespace Kita {
 			m_WorkingCopy = *m_SourceAsset;
 			m_SavedCopy = *m_SourceAsset;
 
-			if (const ShaderLabAssetDesc* desc = GetShaderLabDesc(m_WorkingCopy.ShaderLabHandle))
+			if (const MaterialDefinitionDesc* desc = GetMaterialDefinitionDesc(m_WorkingCopy.MaterialDefinitionHandle))
 			{
 				NormalizePropertyBlock(m_WorkingCopy, *desc);
 				NormalizePropertyBlock(m_SavedCopy, *desc);
 			}
-			else if (!Asset::IsValidHandle(m_WorkingCopy.ShaderLabHandle))
+			else if (!Asset::IsValidHandle(m_WorkingCopy.MaterialDefinitionHandle))
 			{
 				RebuildLegacyPropertyBlockForAsset(m_WorkingCopy);
 				RebuildLegacyPropertyBlockForAsset(m_SavedCopy);
@@ -350,6 +357,11 @@ namespace Kita {
 	void MaterialAssetEditor::OnUpdate()
 	{
 		ApplyPendingRuntimeChanges();
+	}
+
+	void MaterialAssetEditor::OnRender()
+	{
+		m_LookDevPreview.OnRender();
 	}
 
 	void MaterialAssetEditor::OnImGuiRender()
@@ -401,7 +413,7 @@ namespace Kita {
 		drawList->AddRectFilled(headerMin, ImVec2(headerMax.x, headerMin.y + 2.0f), ImGui::ColorConvertFloat4ToU32(materialHeaderAccentColor));
 
 		ImGui::AlignTextToFramePadding();
-		ImGui::TextUnformatted("Material");
+		ImGui::TextUnformatted("Material Instance");
 		ImGui::SameLine();
 		ImGui::TextDisabled("%s", m_DisplayName.c_str());
 
@@ -466,22 +478,18 @@ namespace Kita {
 		drawList->AddRectFilled(previewMin, previewMax, IM_COL32(26, 26, 26, 255), 6.0f);
 		drawList->AddRect(previewMin, previewMax, IM_COL32(12, 12, 12, 255), 6.0f, 0, 1.0f);
 
-		const ThumbnailCache::ThumbnailHandle thumbnail =
-			m_ThumbnailCache ? m_ThumbnailCache->GetOrCreate(m_AssetHandle, AssetType::Material, static_cast<uint32_t>(previewSize)) : ThumbnailCache::ThumbnailHandle{};
-		if (thumbnail.IsValid())
-		{
-			drawList->AddImage(thumbnail.TextureID, previewMin, previewMax, ImVec2(0.0f, 0.0f), ImVec2(1.0f, 1.0f));
-		}
-		else
+		ImGui::SetCursorScreenPos(previewMin);
+		m_LookDevPreview.Draw("##MaterialLookDevPreview", ImVec2(previewSize, previewSize));
+		if (!m_LookDevPreview.HasValidOutput())
 		{
 			const ImVec2 center((previewMin.x + previewMax.x) * 0.5f, (previewMin.y + previewMax.y) * 0.5f);
 			const float radius = previewSize * 0.30f;
-			drawList->AddCircleFilled(center, radius, IM_COL32(118, 118, 118, 255), 48);
+			drawList->AddCircleFilled(center, radius, IM_COL32(118, 118, 118, 220), 48);
 			drawList->AddCircle(center, radius, IM_COL32(38, 38, 38, 255), 48, 2.0f);
 			drawList->AddText(
 				ImVec2(previewMin.x + 14.0f, previewMin.y + 12.0f),
 				IM_COL32(168, 168, 168, 255),
-				"Material preview unavailable");
+				"Rendering preview...");
 		}
 
 		ImGui::Dummy(ImVec2(available.x, previewSize + 24.0f));
@@ -494,21 +502,34 @@ namespace Kita {
 	{
 		if (!m_SourceAsset)
 		{
-			ImGui::TextUnformatted("Material asset is unavailable.");
+			ImGui::TextUnformatted("Material instance asset is unavailable.");
 			return;
 		}
 
 		ImGui::BeginChild("##MaterialDetailsPane", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
 		if (UIAttributeUtil::BeginPropertyTable("##MaterialPropertyTable", m_TableStyle))
 		{
-			DrawAssetRow("ShaderLab", "##MaterialShaderLab", m_WorkingCopy.ShaderLabHandle, AssetType::ShaderLab, m_SavedCopy.ShaderLabHandle);
-			DrawAssetRow("Shader", "##MaterialShader", m_WorkingCopy.ShaderHandle, AssetType::Shader, m_SavedCopy.ShaderHandle);
-
-			if (const ShaderLabAssetDesc* desc = GetShaderLabDesc(m_WorkingCopy.ShaderLabHandle))
+			const auto drawReadOnlyRow = [this](const char* label, const std::string& value)
 			{
-				DrawShaderLabProperties(*desc);
+				UIAttributeUtil::BeginPropertyRow(m_TableStyle, materialPropertyRowHeight);
+				UIAttributeUtil::DrawPropertyLabelCell(label, m_TableStyle, materialPropertyRowHeight);
+				UIAttributeUtil::PreparePropertyValueCell(m_TableStyle, UIAttributeUtil::GetControlYOffset(m_TableStyle, materialPropertyRowHeight));
+				ImGui::TextUnformatted(value.c_str());
+				UIAttributeUtil::DrawEmptyResetCell(m_TableStyle, materialPropertyRowHeight);
+			};
+
+			DrawAssetRow("Parent Material", "##MaterialDefinition", m_WorkingCopy.MaterialDefinitionHandle, AssetType::MaterialDefinition, m_SavedCopy.MaterialDefinitionHandle);
+
+			if (const MaterialDefinitionDesc* desc = GetMaterialDefinitionDesc(m_WorkingCopy.MaterialDefinitionHandle))
+			{
+				drawReadOnlyRow("Domain", MaterialDomainToString(desc->Domain));
+				if (desc->Domain == MaterialDomain::Surface)
+				{
+					drawReadOnlyRow("Shading Model", desc->Lighting.ShadingModel.empty() ? "DefaultLit" : desc->Lighting.ShadingModel);
+				}
+				DrawMaterialDefinitionProperties(*desc);
 			}
-			else if (!Asset::IsValidHandle(m_WorkingCopy.ShaderLabHandle))
+			else if (!Asset::IsValidHandle(m_WorkingCopy.MaterialDefinitionHandle))
 			{
 				DrawLegacyProperties();
 			}
@@ -516,9 +537,9 @@ namespace Kita {
 			{
 				ImGui::TableNextRow(ImGuiTableRowFlags_None, materialPropertyRowHeight);
 				ImGui::TableSetColumnIndex(0);
-				ImGui::TextDisabled("ShaderLab");
+				ImGui::TextDisabled("Parent Material");
 				ImGui::TableSetColumnIndex(1);
-				ImGui::TextDisabled("Schema asset is unavailable.");
+				ImGui::TextDisabled("Master material asset is unavailable.");
 				ImGui::TableSetColumnIndex(2);
 			}
 
@@ -756,7 +777,7 @@ namespace Kita {
 		}
 	}
 
-	void MaterialAssetEditor::DrawShaderLabProperties(const ShaderLabAssetDesc& desc)
+	void MaterialAssetEditor::DrawMaterialDefinitionProperties(const MaterialDefinitionDesc& desc)
 	{
 		for (const MaterialPropertyDesc& property : desc.Properties)
 		{
@@ -1091,13 +1112,13 @@ namespace Kita {
 
 	void MaterialAssetEditor::NormalizeWorkingCopyProperties()
 	{
-		if (const ShaderLabAssetDesc* desc = GetShaderLabDesc(m_WorkingCopy.ShaderLabHandle))
+		if (const MaterialDefinitionDesc* desc = GetMaterialDefinitionDesc(m_WorkingCopy.MaterialDefinitionHandle))
 		{
 			NormalizePropertyBlock(m_WorkingCopy, *desc);
 			return;
 		}
 
-		if (!Asset::IsValidHandle(m_WorkingCopy.ShaderLabHandle))
+		if (!Asset::IsValidHandle(m_WorkingCopy.MaterialDefinitionHandle))
 		{
 			RebuildLegacyPropertyBlock();
 		}
@@ -1127,11 +1148,16 @@ namespace Kita {
 		{
 			m_ThumbnailCache->Invalidate(m_AssetHandle);
 		}
+
+		if (m_PreviewSceneRenderer && Asset::IsValidHandle(m_AssetHandle))
+		{
+			m_PreviewSceneRenderer->Invalidate(m_AssetHandle);
+		}
 	}
 
 	bool MaterialAssetEditor::IsWorkingCopyDirty() const
 	{
-		return m_WorkingCopy.ShaderLabHandle != m_SavedCopy.ShaderLabHandle ||
+		return m_WorkingCopy.MaterialDefinitionHandle != m_SavedCopy.MaterialDefinitionHandle ||
 			m_WorkingCopy.ShaderHandle != m_SavedCopy.ShaderHandle ||
 			m_WorkingCopy.m_Textures.Albedo != m_SavedCopy.m_Textures.Albedo ||
 			m_WorkingCopy.m_Textures.Normal != m_SavedCopy.m_Textures.Normal ||
@@ -1160,7 +1186,7 @@ namespace Kita {
 
 		NormalizeWorkingCopyProperties();
 
-		m_SourceAsset->ShaderLabHandle = m_WorkingCopy.ShaderLabHandle;
+		m_SourceAsset->MaterialDefinitionHandle = m_WorkingCopy.MaterialDefinitionHandle;
 		m_SourceAsset->PropertyBlock = m_WorkingCopy.PropertyBlock;
 		m_SourceAsset->ShaderHandle = m_WorkingCopy.ShaderHandle;
 		m_SourceAsset->m_Textures = m_WorkingCopy.m_Textures;

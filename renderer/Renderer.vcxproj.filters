@@ -34,6 +34,12 @@
     <ClInclude Include="src\preview\AssetPreviewRenderer.h">
       <Filter>preview</Filter>
     </ClInclude>
+    <ClInclude Include="src\preview\LookDevPreviewViewport.h">
+      <Filter>preview</Filter>
+    </ClInclude>
+    <ClInclude Include="src\preview\PreviewSceneRenderer.h">
+      <Filter>preview</Filter>
+    </ClInclude>
     <ClInclude Include="src\preview\PreviewSpherePass.h">
       <Filter>preview</Filter>
     </ClInclude>
@@ -101,6 +107,9 @@
     <ClInclude Include="src\ui\asset\MaterialAssetEditor.h">
       <Filter>ui\asset</Filter>
     </ClInclude>
+    <ClInclude Include="src\ui\asset\MaterialDefinitionAssetEditor.h">
+      <Filter>ui\asset</Filter>
+    </ClInclude>
     <ClInclude Include="src\ui\asset\MeshAssetEditor.h">
       <Filter>ui\asset</Filter>
     </ClInclude>
@@ -133,6 +142,12 @@
       <Filter>file</Filter>
     </ClCompile>
     <ClCompile Include="src\preview\AssetPreviewRenderer.cpp">
+      <Filter>preview</Filter>
+    </ClCompile>
+    <ClCompile Include="src\preview\LookDevPreviewViewport.cpp">
+      <Filter>preview</Filter>
+    </ClCompile>
+    <ClCompile Include="src\preview\PreviewSceneRenderer.cpp">
       <Filter>preview</Filter>
     </ClCompile>
     <ClCompile Include="src\preview\PreviewSpherePass.cpp">
@@ -188,6 +203,9 @@
       <Filter>ui\asset</Filter>
     </ClCompile>
     <ClCompile Include="src\ui\asset\MaterialAssetEditor.cpp">
+      <Filter>ui\asset</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ui\asset\MaterialDefinitionAssetEditor.cpp">
       <Filter>ui\asset</Filter>
     </ClCompile>
     <ClCompile Include="src\ui\asset\MeshAssetEditor.cpp">

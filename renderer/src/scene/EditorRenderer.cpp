@@ -83,18 +83,18 @@ namespace Kita {
 				return false;
 			}
 
-			if (metadata->type != AssetType::ShaderLab)
+			if (metadata->type != AssetType::MaterialDefinition)
 			{
 				outReason =
 					"preload shader '" + std::string(preloadName) +
-					"' must reference a ShaderLab asset in the unified runtime path";
+					"' must reference a Material asset in the unified runtime path";
 				return false;
 			}
 
-			Ref<ShaderLabAsset> shaderLabAsset = assetManager.GetShaderLabAsset(shaderLabHandle);
+			Ref<MaterialDefinitionAsset> shaderLabAsset = assetManager.GetMaterialDefinitionAsset(shaderLabHandle);
 			if (!shaderLabAsset)
 			{
-				outReason = "failed to load ShaderLab asset for preload shader '" + std::string(preloadName) + "'";
+				outReason = "failed to load Material asset for preload shader '" + std::string(preloadName) + "'";
 				return false;
 			}
 
@@ -102,7 +102,7 @@ namespace Kita {
 			if (!compiledPass)
 			{
 				outReason =
-					"ShaderLab asset '" + shaderLabAsset->SourcePath.generic_string() +
+					"Material asset '" + shaderLabAsset->SourcePath.generic_string() +
 					"' has no pass for type '" + std::string(PassTypeToString(passType)) + "'";
 				return false;
 			}
@@ -112,7 +112,7 @@ namespace Kita {
 			if (!shaderBundle.IsValid())
 			{
 				outReason =
-					"failed to build ShaderLab pass bundle for '" +
+					"failed to build material pass bundle for '" +
 					shaderLabAsset->SourcePath.generic_string() + "'";
 				return false;
 			}
@@ -377,6 +377,7 @@ namespace Kita {
 		const RenderGraphAttachmentRef finalColor = RenderGraphAttachmentRef::MakeColor(finalID, 0);
 		const RenderGraphAttachmentRef finalDepth = RenderGraphAttachmentRef::MakeDepth(finalID);
 		const RenderGraphAttachmentRef pickingColor = RenderGraphAttachmentRef::MakeColor(pickingID, 0);
+		const RenderGraphAttachmentRef pickingDepth = RenderGraphAttachmentRef::MakeDepth(pickingID);
 
 		RenderGraphPass& gbufferPass = m_RenderGraph->AddPass("GBuffer");
 		for (const RenderGraphAttachmentRef& color : gbuffer.ColorAttachments)
@@ -592,12 +593,18 @@ namespace Kita {
 		{
 			m_RenderGraph->AddPass("Picking")
 				.WriteColor(pickingColor)
-				.SetExecute([this, pickingID](RenderGraphContext& graphContext)
+				.WriteDepth(pickingDepth)
+				.SetExecute([this, pickingColor, pickingDepth](RenderGraphContext& graphContext)
 					{
+						VulkanRenderTargetView pickingRt = graphContext.BuildRenderTargetView(
+							"Picking",
+							{ pickingColor },
+							&pickingDepth);
+
 						RenderPassContext passContext(
 							graphContext.GetVulkanContext(),
 							graphContext.GetCommandBuffer(),
-							graphContext.GetRenderTargetView(pickingID));
+							pickingRt);
 
 						m_ViewportPickingPass->Execute(passContext);
 					});
@@ -1028,12 +1035,12 @@ namespace Kita {
 		const VulkanMaterial* runtimeMaterial) const
 	{
 		Ref<MaterialAsset> materialAsset = AssetManager::GetInstance().GetMaterialAsset(materialHandle);
-		if (!materialAsset || !Asset::IsValidHandle(materialAsset->ShaderLabHandle))
+		if (!materialAsset || !Asset::IsValidHandle(materialAsset->MaterialDefinitionHandle))
 		{
 			return {};
 		}
 
-		Ref<ShaderLabAsset> shaderLabAsset = AssetManager::GetInstance().GetShaderLabAsset(materialAsset->ShaderLabHandle);
+		Ref<MaterialDefinitionAsset> shaderLabAsset = AssetManager::GetInstance().GetMaterialDefinitionAsset(materialAsset->MaterialDefinitionHandle);
 		if (!shaderLabAsset || !shaderLabAsset->Desc)
 		{
 			return "shaderLabAsset=unavailable";
@@ -1063,7 +1070,7 @@ namespace Kita {
 		}
 
 		std::ostringstream oss;
-		oss << "shaderLab=" << BuildMaterialDiagnosticLabel(materialAsset->ShaderLabHandle);
+		oss << "material=" << BuildMaterialDiagnosticLabel(materialAsset->MaterialDefinitionHandle);
 		if (missingProperties.empty() && typeMismatches.empty())
 		{
 			oss << " properties=ok";
@@ -1176,7 +1183,7 @@ namespace Kita {
 			return {};
 		}
 
-		Ref<ShaderLabAsset> shaderLabAsset = AssetManager::GetInstance().GetShaderLabAsset(materialAsset->ShaderLabHandle);
+		Ref<MaterialDefinitionAsset> shaderLabAsset = AssetManager::GetInstance().GetMaterialDefinitionAsset(materialAsset->MaterialDefinitionHandle);
 		if (!shaderLabAsset || !shaderLabAsset->Desc)
 		{
 			return {};

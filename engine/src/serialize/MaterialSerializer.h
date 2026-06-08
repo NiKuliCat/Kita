@@ -14,14 +14,13 @@ namespace Kita {
 		static bool Serialize(const std::filesystem::path& path, const MaterialAsset& materialAsset)
 		{
 			json root = json::object();
-			root["version"] = 3;
+			root["version"] = 4;
 
-			// 新版材质优先绑定 ShaderLab 资产。
-			root["shaderLab"] = JsonUtils::SerializeAssetHandle(materialAsset.ShaderLabHandle);
-
-			// 过渡阶段仍保留旧字段，便于排查和兼容旧工具链。
-			// 后续整个运行时完全迁完后，可以再考虑移除。
-			root["shader"] = JsonUtils::SerializeAssetHandle(materialAsset.ShaderHandle);
+			root["material"] = JsonUtils::SerializeAssetHandle(materialAsset.MaterialDefinitionHandle);
+			if (!Asset::IsValidHandle(materialAsset.MaterialDefinitionHandle) && Asset::IsValidHandle(materialAsset.ShaderHandle))
+			{
+				root["shader"] = JsonUtils::SerializeAssetHandle(materialAsset.ShaderHandle);
+			}
 
 			root["properties"] = SerializePropertyMap(materialAsset.PropertyBlock.Values);
 			root["orphans"] = SerializePropertyMap(materialAsset.PropertyBlock.OrphanValues);
@@ -60,7 +59,7 @@ namespace Kita {
 				: 1u;
 
 			// 每次反序列化都先清空，避免旧数据残留。
-			materialAsset.ShaderLabHandle = InvalidAssetHandle;
+			materialAsset.MaterialDefinitionHandle = InvalidAssetHandle;
 			materialAsset.ShaderHandle = InvalidAssetHandle;
 			materialAsset.PropertyBlock = {};
 			materialAsset.m_Textures = {};
@@ -68,6 +67,9 @@ namespace Kita {
 
 			switch (version)
 			{
+			case 4:
+				return DeserializeV4(root, path, materialAsset);
+
 			case 3:
 				return DeserializeV3(root, path, materialAsset);
 
@@ -344,11 +346,48 @@ namespace Kita {
 			}
 		}
 
+		static bool DeserializeV4(const json& root, const std::filesystem::path& path, MaterialAsset& materialAsset)
+		{
+			if (root.contains("material"))
+			{
+				materialAsset.MaterialDefinitionHandle = JsonUtils::DeserializeAssetHandle(root.at("material"));
+			}
+			else if (root.contains("shaderLab"))
+			{
+				materialAsset.MaterialDefinitionHandle = JsonUtils::DeserializeAssetHandle(root.at("shaderLab"));
+			}
+
+			if (root.contains("shader"))
+			{
+				materialAsset.ShaderHandle = JsonUtils::DeserializeAssetHandle(root.at("shader"));
+			}
+
+			if (root.contains("properties"))
+			{
+				DeserializePropertyMap(
+					root.at("properties"),
+					materialAsset.PropertyBlock.Values,
+					path,
+					"properties");
+			}
+
+			if (root.contains("orphans"))
+			{
+				DeserializePropertyMap(
+					root.at("orphans"),
+					materialAsset.PropertyBlock.OrphanValues,
+					path,
+					"orphans");
+			}
+
+			return true;
+		}
+
 		static bool DeserializeV3(const json& root, const std::filesystem::path& path, MaterialAsset& materialAsset)
 		{
 			if (root.contains("shaderLab"))
 			{
-				materialAsset.ShaderLabHandle = JsonUtils::DeserializeAssetHandle(root.at("shaderLab"));
+				materialAsset.MaterialDefinitionHandle = JsonUtils::DeserializeAssetHandle(root.at("shaderLab"));
 			}
 
 			// 兼容保留字段

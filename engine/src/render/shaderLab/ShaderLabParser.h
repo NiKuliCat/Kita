@@ -1,32 +1,32 @@
 #pragma once
+
 #include "ShaderLabType.h"
 
 namespace Kita {
 
-	struct ShaderLabParseError
+	struct MaterialParseError
 	{
 		std::string Message;
 		int Line = 0;
 		int Column = 0;
 	};
 
-	struct ShaderLabParseResult
+	struct MaterialParseResult
 	{
 		bool Success = false;
-		ShaderLabAssetDesc Asset;
-		ShaderLabParseError Error;
+		MaterialDefinitionDesc Asset;
+		MaterialParseError Error;
 	};
-	
-	// ShaderLab 文本解析器。
-	// 第二步目标：
-	// 1. 支持新版结构化语法
-	// 2. 给出明确的行列错误
-	// 3. 产出完整 ShaderLabAssetDesc
-	class ShaderLabParser
+
+	class MaterialDefinitionParser
 	{
 	public:
-		static ShaderLabParseResult ParseFile(const std::filesystem::path& path);
-		static ShaderLabParseResult ParseText(std::string_view source, const std::filesystem::path& sourcePath = {});
+		static MaterialParseResult ParseFile(const std::filesystem::path& path);
+		static MaterialParseResult ParseText(std::string_view source, const std::filesystem::path& sourcePath = {});
 	};
+
+	using ShaderLabParseError = MaterialParseError;
+	using ShaderLabParseResult = MaterialParseResult;
+	using ShaderLabParser = MaterialDefinitionParser;
 
 }

@@ -18,9 +18,9 @@ namespace Kita{
 	{
 		switch (metadata.type)
 		{
-		case AssetType::Material:
+		case AssetType::MaterialInstance:
 		{
-			Ref<MaterialAsset> materialAsset = CreateRef<MaterialAsset>();
+			Ref<MaterialInstanceAsset> materialAsset = CreateRef<MaterialInstanceAsset>();
 			materialAsset->m_Handle = metadata.handle;
 
 			if (!MaterialSerializer::Deserialize(assetPath, *materialAsset))

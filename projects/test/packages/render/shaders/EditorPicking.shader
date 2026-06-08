@@ -1,5 +1,7 @@
-Shader "Kita/Editor/Picking"
+Material "Kita/Editor/Picking"
 {
+    Domain = Utility
+
     Pass "Picking"
     {
         LightMode = EditorPicking

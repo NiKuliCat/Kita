@@ -1,7 +1,6 @@
 {
-    "version": 3,
-    "shaderLab": "1769014164229530735",
-    "shader": "178923190729111001",
+    "version": 4,
+    "material": "1769014164229530735",
     "properties": {
         "_Albedo": {
             "kind": "TextureCube",

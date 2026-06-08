@@ -232,56 +232,79 @@ namespace Kita {
 		if (x >= m_CreateInfo.Width || y >= m_CreateInfo.Height)
 			return 0;
 
-		m_Context->WaitIdle();
+		auto readPixelValue = [this](uint32_t readX, uint32_t readY) -> uint32_t
+			{
+				m_Context->WaitIdle();
 
-		VulkanImage& pickingImage = const_cast<VulkanImage&>(m_PickingRenderTarget->GetColorAttachment(0));
-		const VkImageLayout previousLayout = pickingImage.GetCurrentLayout();
+				VulkanImage& pickingImage = const_cast<VulkanImage&>(m_PickingRenderTarget->GetColorAttachment(0));
+				const VkImageLayout previousLayout = pickingImage.GetCurrentLayout();
 
-		VkCommandBuffer commandBuffer = BeginSingleTimeCommands(*m_Context);
+				VkCommandBuffer commandBuffer = BeginSingleTimeCommands(*m_Context);
+				pickingImage.TransitionLayout(commandBuffer, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 
-		pickingImage.TransitionLayout(commandBuffer, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+				VkBufferImageCopy region{};
+				region.bufferOffset = 0;
+				region.bufferRowLength = 0;
+				region.bufferImageHeight = 0;
+				region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+				region.imageSubresource.mipLevel = 0;
+				region.imageSubresource.baseArrayLayer = 0;
+				region.imageSubresource.layerCount = 1;
+				region.imageOffset = {
+					static_cast<int32_t>(readX),
+					static_cast<int32_t>(readY),
+					0
+				};
+				region.imageExtent = { 1, 1, 1 };
 
-		VkBufferImageCopy region{};
-		region.bufferOffset = 0;
-		region.bufferRowLength = 0;
-		region.bufferImageHeight = 0;
-		region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		region.imageSubresource.mipLevel = 0;
-		region.imageSubresource.baseArrayLayer = 0;
-		region.imageSubresource.layerCount = 1;
-		region.imageOffset = {
-			static_cast<int32_t>(x),
-			static_cast<int32_t>(y),
-			0
-		};
-		region.imageExtent = { 1, 1, 1 };
+				vkCmdCopyImageToBuffer(
+					commandBuffer,
+					pickingImage.GetHandle(),
+					VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+					m_PickingReadbackBuffer->GetHandle(),
+					1,
+					&region);
 
-		vkCmdCopyImageToBuffer(
-			commandBuffer,
-			pickingImage.GetHandle(),
-			VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-			m_PickingReadbackBuffer->GetHandle(),
-			1,
-			&region);
+				if (previousLayout != VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL &&
+					previousLayout != VK_IMAGE_LAYOUT_UNDEFINED)
+				{
+					pickingImage.TransitionLayout(commandBuffer, previousLayout);
+				}
 
-		if (previousLayout != VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL &&
-			previousLayout != VK_IMAGE_LAYOUT_UNDEFINED)
+				EndSingleTimeCommands(*m_Context, commandBuffer);
+
+				m_PickingReadbackBuffer->Invalidate(sizeof(uint32_t), 0);
+
+				const bool wasMapped = m_PickingReadbackBuffer->IsMapped();
+				void* mappedData = m_PickingReadbackBuffer->Map(sizeof(uint32_t), 0);
+				KITA_CORE_ASSERT(mappedData, "EditorViewportSurface failed to map picking readback buffer");
+
+				const uint32_t value = *static_cast<const uint32_t*>(mappedData);
+
+				if (!wasMapped)
+					m_PickingReadbackBuffer->Unmap();
+
+				return value;
+			};
+
+		const uint32_t pickedValue = readPixelValue(x, y);
+
+		if (pickedValue == 0 && m_CreateInfo.Height > 1)
 		{
-			pickingImage.TransitionLayout(commandBuffer, previousLayout);
+			const uint32_t flippedY = (m_CreateInfo.Height - 1u) - y;
+			if (flippedY != y)
+			{
+				const uint32_t flippedPickId = readPixelValue(x, flippedY);
+				KITA_CORE_INFO(
+					"Viewport pick readback debug: requested=({}, {})->{}, flipped=({}, {})->{}",
+					x,
+					y,
+					pickedValue,
+					x,
+					flippedY,
+					flippedPickId);
+			}
 		}
-
-		EndSingleTimeCommands(*m_Context, commandBuffer);
-
-		m_PickingReadbackBuffer->Invalidate(sizeof(uint32_t), 0);
-
-		const bool wasMapped = m_PickingReadbackBuffer->IsMapped();
-		void* mappedData = m_PickingReadbackBuffer->Map(sizeof(uint32_t), 0);
-		KITA_CORE_ASSERT(mappedData, "EditorViewportSurface failed to map picking readback buffer");
-
-		uint32_t pickedValue = *static_cast<const uint32_t*>(mappedData);
-
-		if (!wasMapped)
-			m_PickingReadbackBuffer->Unmap();
 
 		return pickedValue;
 	}

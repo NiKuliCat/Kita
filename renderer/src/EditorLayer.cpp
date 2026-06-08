@@ -180,10 +180,15 @@ namespace Kita {
 			m_AssetPreviewRenderer = CreateUnique<AssetPreviewRenderer>(
 				Application::Get().GetVulkanContext(),
 				*m_EditorVulkanResourceFactory);
+			m_PreviewSceneRenderer = CreateUnique<PreviewSceneRenderer>(
+				Application::Get().GetVulkanContext(),
+				*m_EditorVulkanResourceFactory,
+				*m_PipelineFactory);
 			m_ContentBrowserThumbnailCache = CreateUnique<ThumbnailCache>(*m_EditorVulkanResourceFactory);
 			m_ContentBrowserThumbnailCache->SetAssetPreviewRenderer(m_AssetPreviewRenderer.get());
 			m_ContentBrowserPanel.SetThumbnailCache(m_ContentBrowserThumbnailCache.get());
 			m_AssetEditorManager.SetThumbnailCache(m_ContentBrowserThumbnailCache.get());
+			m_AssetEditorManager.SetPreviewSceneRenderer(m_PreviewSceneRenderer.get());
 			m_AssetEditorManager.SetResourceFactory(m_EditorVulkanResourceFactory.get());
 			m_ContentBrowserPanel.SetOpenAssetCallback([this](AssetHandle handle)
 			{
@@ -239,6 +244,9 @@ namespace Kita {
 		m_ContentBrowserPanel.SetThumbnailCache(nullptr);
 		m_ContentBrowserIconAtlas.reset();
 		m_ContentBrowserThumbnailCache.reset();
+		if (m_PreviewSceneRenderer)
+			m_PreviewSceneRenderer->Clear();
+		m_PreviewSceneRenderer.reset();
 		m_AssetPreviewRenderer.reset();
 		if (m_EditorVulkanResourceFactory)
 			m_EditorVulkanResourceFactory->Clear();
@@ -251,6 +259,17 @@ namespace Kita {
 
 	void EditorLayer::OnRender()
 	{
+		if (m_PreviewSceneRenderer)
+		{
+			m_PreviewSceneRenderer->SetIBLSource(m_IBLSource);
+		}
+
+		if (m_ContentBrowserThumbnailCache)
+		{
+			m_ContentBrowserThumbnailCache->ProcessRenderRequests(2);
+		}
+
+		m_AssetEditorManager.OnRender();
 
 		for (auto& viewport : m_SceneViewportPanels)
 		{

@@ -1,5 +1,7 @@
-Shader "Kita/Deferred/GBuffer"
+Material "Kita/Deferred/GBuffer"
 {
+    Domain = Surface
+
     Properties
     {
         _BaseColor("Base Color", Color) = (1.0, 1.0, 1.0, 1.0)

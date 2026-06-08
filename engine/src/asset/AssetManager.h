@@ -34,10 +34,12 @@ namespace Kita {
 		}
 
 		Ref<ShaderAsset> GetShaderAsset(AssetHandle handle);
-		Ref<ShaderLabAsset> GetShaderLabAsset(AssetHandle handle);
+		Ref<MaterialDefinitionAsset> GetMaterialDefinitionAsset(AssetHandle handle);
 		Ref<TextureAsset> GetTextureAsset(AssetHandle handle);
-		Ref<MaterialAsset> GetMaterialAsset(AssetHandle handle);
+		Ref<MaterialInstanceAsset> GetMaterialAsset(AssetHandle handle);
 		Ref<MeshAsset> GetMeshAsset(AssetHandle handle);
+
+		Ref<ShaderLabAsset> GetShaderLabAsset(AssetHandle handle) { return GetMaterialDefinitionAsset(handle); }
 
 		bool GetTextureImportSettings(AssetHandle handle, TextureImportSettings& outSettings) const;
 		bool SaveTextureImportSettings(AssetHandle handle, const TextureImportSettings& settings);

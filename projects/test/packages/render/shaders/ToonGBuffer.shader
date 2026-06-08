@@ -1,5 +1,7 @@
-Shader "Kita/Deferred/ToonGBuffer"
+Material "Kita/Deferred/ToonGBuffer"
 {
+    Domain = Surface
+
     Properties
     {
         _BaseColor("Base Color", Color) = (1.0, 1.0, 1.0, 1.0)

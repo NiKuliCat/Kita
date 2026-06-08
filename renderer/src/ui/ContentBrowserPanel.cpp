@@ -2,6 +2,7 @@
 #include "ContentBrowserPanel.h"
 #include "SvgIconAtlas.h"
 #include "asset/AssetDragDrop.h"
+#include "asset/AssetManager.h"
 
 #include "imgui.h"
 #include <imgui_internal.h>
@@ -20,6 +21,7 @@ namespace Kita {
 			std::transform(extension.begin(), extension.end(), extension.begin(), ::tolower);
 
 			return extension == ".mat"
+				|| extension == ".shader"
 				|| extension == ".glsl"
 				|| extension == ".slang"
 				|| extension == ".vert"
@@ -30,11 +32,33 @@ namespace Kita {
 				|| extension == ".tga"
 				|| extension == ".bmp"
 				|| extension == ".hdr"
+				|| extension == ".exr"
 				|| extension == ".fbx"
 				|| extension == ".obj"
 				|| extension == ".dae"
 				|| extension == ".gltf"
 				|| extension == ".glb";
+		}
+
+		// Content 面板的网格缩略图优先保证稳定性。
+		// 对 cubemap / HDR 这类需要额外离屏预览或浮点采样的资源，先回退为普通图标，
+		// 避免在浏览目录时触发重型预览路径导致闪退。
+		bool ShouldRequestBrowserThumbnail(const ContentEntryInfo& entryInfo)
+		{
+			if (!entryInfo.IsAsset)
+			{
+				return false;
+			}
+
+			if (entryInfo.Type == AssetType::MaterialInstance)
+			{
+				return true;
+			}
+
+			if (entryInfo.Type != AssetType::Texture)
+				return false;
+
+			return true;
 		}
 
 
@@ -465,7 +489,7 @@ namespace Kita {
 
 	ThumbnailCache::ThumbnailHandle ContentBrowserPanel::GetEntryThumbnail(const ContentEntryInfo& entryInfo)
 	{
-		if (!m_ThumbnailCache || entryInfo.IsDirectory || !entryInfo.IsAsset || entryInfo.Type != AssetType::Texture)
+		if (!m_ThumbnailCache || entryInfo.IsDirectory || !ShouldRequestBrowserThumbnail(entryInfo))
 		{
 			return {};
 		}
@@ -833,8 +857,10 @@ namespace Kita {
 			return ICON_FON_PICTURE;
 		case AssetType::Mesh:
 			return ICON_FON_CUBE;
+		case AssetType::MaterialDefinition:
+			return ICON_FON_DOC_TEXT;
 		case AssetType::Shader:
-		case AssetType::Material:
+		case AssetType::MaterialInstance:
 			return ICON_FON_DOC_TEXT;
 		default:
 			return ICON_FON_DOC_TEXT;
@@ -845,8 +871,10 @@ namespace Kita {
 	{
 		switch (type)
 		{
-		case AssetType::Material:
+		case AssetType::MaterialDefinition:
 			return "Material";
+		case AssetType::MaterialInstance:
+			return "Material Instance";
 		case AssetType::Shader:
 			return "Shader";
 		case AssetType::Texture:

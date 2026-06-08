@@ -35,7 +35,8 @@ namespace Kita {
 		AssetPreviewRenderer(const AssetPreviewRenderer&) = delete;
 		AssetPreviewRenderer& operator=(const AssetPreviewRenderer&) = delete;
 
-		// 获取资产预览。若缓存命中直接返回；若未命中则按请求渲染离屏预览并注册给 ImGui。
+		PreviewThumbnailHandle TryGetCached(const AssetPreviewRequest& request);
+		PreviewThumbnailHandle Render(const AssetPreviewRequest& request);
 		PreviewThumbnailHandle GetOrRender(const AssetPreviewRequest& request);
 
 		void Invalidate(AssetHandle handle);
@@ -76,7 +77,7 @@ namespace Kita {
 		Unique<PipelineFactory> m_PipelineFactory = nullptr;
 		Ref<VulkanGeometry> m_SphereGeometry = nullptr;
 		std::unordered_map<AssetHandle, Ref<VulkanMaterial>> m_CubemapPreviewMaterials;
-		AssetHandle m_CubemapPreviewShaderHandle = InvalidAssetHandle;
+		AssetHandle m_CubemapPreviewShaderLabHandle = InvalidAssetHandle;
 	};
 
 }
